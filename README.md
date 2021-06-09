@@ -1,2 +1,3 @@
-# sno.llc
-website
+# SNØCAP Homepage
+
+<https://sno.llc>
