@@ -19,7 +19,7 @@
 <div class="app container-fluid" class:visible>
 	<Header />
 	<section class="row">
-		<Text class="col-xs-offset-1 col-xs-11 col-sm-offset-8 col-sm-4" size={TextSize.Aside}>We vet sector winning investments that combat climate change, and start a revolution.</Text>
+		<Text class="col-xs-offset-1 col-xs-11 col-sm-offset-8 col-sm-4" size={TextSize.Aside}>We're starting a revolution, vetting sector winning investments that combat climate change.</Text>
 	</section>
 	<section class="row end-xs">
 		{#if $media.sm}
