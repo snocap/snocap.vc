@@ -4,7 +4,7 @@
 	"author": "Jon Azoff <jon@sno.llc> (https://sno.llc)",
 	"scripts": {
 		"start": "snowpack dev",
-		"build": "snowpack build",
+		"build": "snowpack build && cp -v CNAME docs/",
 		"format": "prettier --write .",
 		"storybook": "start-storybook -p 6006 -s public --ci",
 		"build-storybook": "build-storybook -s public"
