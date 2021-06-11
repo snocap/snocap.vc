@@ -1,6 +1,6 @@
 {
 	"name": "@snocap/sno.llc",
-	"version": "0.0.9",
+	"version": "0.0.10",
 	"author": "Jon Azoff <jon@sno.llc> (https://sno.llc)",
 	"scripts": {
 		"start": "snowpack dev",
