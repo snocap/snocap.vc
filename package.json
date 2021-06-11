@@ -5,6 +5,7 @@
 	"scripts": {
 		"start": "snowpack dev",
 		"build": "snowpack build && cp -v CNAME docs/",
+		"patch": "npm run build && git add -A && git commit && npm version patch && git push && git push --tags",
 		"format": "prettier --write .",
 		"storybook": "start-storybook -p 6006 -s public --ci",
 		"build-storybook": "build-storybook -s public"
