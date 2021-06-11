@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
 
 export enum FontFamily {
-		Regular = 'regular',
-		Mono = 'mono',
-	}
+	Regular = 'regular',
+	Mono = 'mono',
+}
 
 export enum TextSize {
 	Title = 'title',

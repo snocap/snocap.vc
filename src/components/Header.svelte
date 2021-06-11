@@ -7,13 +7,13 @@
 </script>
 
 <header class="row" class:reverse={!xs}>
-	<nav class="col-xs-2 col-sm-4" class:col-xs-offset-10={xs} class:padded={xs}>
+	<nav data-aos="fade-down" class="col-xs-2 col-sm-4" class:col-xs-offset-10={xs} class:padded={xs}>
 		<Link size={TextSize.Small} href="#people">People</Link>
-		<div class="padding"></div>
+		<div class="padding" />
 		<Link size={TextSize.Small} href="#contact">Contact</Link>
 	</nav>
-	<Text class="col-xs-12 col-sm-8" size={TextSize.Title}>
-		SNØ is building a future {#if !xs}<br/>{/if} beyond sustainability.
+	<Text data-aos="fade-right" class="col-xs-12 col-sm-8" size={TextSize.Title}>
+		SNØ is building a future {#if !xs}<br />{/if} beyond sustainability.
 	</Text>
 </header>
 

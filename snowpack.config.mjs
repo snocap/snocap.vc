@@ -37,6 +37,6 @@ export default {
 		open: 'none',
 	},
 	buildOptions: {
-		out: 'docs'
+		out: 'docs',
 	},
 }

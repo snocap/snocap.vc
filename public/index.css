@@ -1,10 +1,10 @@
-@font-face{
+@font-face {
 	font-family: 'NB Akademie Std';
 	font-weight: 500;
 	src: url('/fonts/nb_akademie_std_light.woff2') format('woff');
 }
 
-@font-face{
+@font-face {
 	font-family: 'NB Akademie Mono Std';
 	font-weight: 500;
 	src: url('/fonts/nb_akademie_mono_std_light.woff2') format('woff');
@@ -13,7 +13,7 @@
 :root {
 	font-size: 12px;
 	font-family: 'NB Akademie Std', sans-serif;
-	background-color: #FFFFFF;
+	background-color: #ffffff;
 }
 
 @media only screen and (min-width: 48em) {
@@ -22,7 +22,8 @@
 	}
 }
 
-html, body {
+html,
+body {
 	padding: 0;
 	margin: 0;
 	min-width: 375px;

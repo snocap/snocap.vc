@@ -1,4 +1,5 @@
-const m = module, r = require
+const m = module,
+	r = require
 
 const autoPreprocess = r('svelte-preprocess')
 
