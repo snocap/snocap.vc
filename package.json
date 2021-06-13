@@ -1,11 +1,12 @@
 {
 	"name": "@snocap/sno.llc",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"author": "Jon Azoff <jon@sno.llc> (https://sno.llc)",
 	"scripts": {
 		"start": "snowpack dev",
 		"build": "snowpack build && cp -v CNAME docs/",
-		"patch": "npm run build && git add -A && git commit && npm version patch && git push && git push --tags",
+		"preversion": "npm run build && git add docs/*",
+		"postversion": "git push && git push --tags",
 		"format": "prettier --write .",
 		"storybook": "start-storybook -p 6006 -s public --ci",
 		"build-storybook": "build-storybook -s public"
