@@ -33,7 +33,7 @@
 	}
 	.row {
 		text-align: left;
-		padding-top: 4rem;
+		padding-top: 2rem;
 	}
 	.text {
 		max-width: 39rem;
