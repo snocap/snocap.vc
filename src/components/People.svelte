@@ -3,7 +3,7 @@
 	import Person from 'components/Person.svelte'
 </script>
 
-<section data-aos="fade" data-aos-id="section" data-header-content="General Partners">
+<section id="people" data-header-content="General Partners">
 		<Person
 			name="Susanna Barla, GP"
 			linkedinURI="https://www.linkedin.com/in/susanna-barla/"
