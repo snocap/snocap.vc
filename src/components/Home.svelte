@@ -5,7 +5,7 @@
 	import media from './lib/media'
 </script>
 
-<section data-aos="fade" data-aos-id="section" data-header-content="is building a future beyond sustainability.">
+<section id="home" data-header-content="is building a future beyond sustainability.">
 	<div class="row">
 		<Text data-aos="fade-left" class="col-xs-offset-1 col-xs-11 col-sm-offset-8 col-sm-4" size={TextSize.Aside}
 		>We're starting a revolution, vetting sector winning investments that combat climate change.</Text
@@ -41,6 +41,7 @@
 		padding-top: 5vh;
 	}
 	section {
+		padding-top: var(--size-header);
 		display: flex;
 		flex-direction: column;
 		height: calc(100vh - var(--size-header));

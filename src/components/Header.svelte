@@ -5,22 +5,26 @@
 	import media from './lib/media'
 	import Link from './lib/Link.svelte'
 	import { onMount } from 'svelte';
-	import type { AOSEvent } from '../types'
 
 	$: xs = !$media.sm
 	$: headerContent = 'is building a future beyond sustainability.'
 
 	onMount(() => {
-		document.addEventListener('aos:in:section', (evt) => {
-			headerContent = (<AOSEvent>evt).detail.dataset.headerContent ?? ''
-		});
+		const options = { root: null, rootMargin: "0px", threshold: [0.4] }
+		Array.from(document.querySelectorAll("[data-header-content]")).forEach(s => {
+			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
+				if (intersectionRatio >= options.threshold[0])
+					headerContent = (<HTMLElement>target).dataset.headerContent ?? ''
+			}, options);
+			observer.observe(s)
+		})
 	})
 </script>
 
 <header class="row" class:xs={xs}>
 	<div data-aos="fade-right" class="col-xs-10 col-sm-8 header-content">
 		<Text size={TextSize.Title}>
-			SNØ {headerContent}
+			<Link size={TextSize.Title} href="#home">SNØ</Link> {headerContent}
 		</Text>
 	</div>
 	<nav data-aos="fade-down" class="col-xs-2 col-sm-4">
@@ -31,14 +35,11 @@
 </header>
 
 <style>
-	:global(body) {
-		padding-top: var(--size-header);
-	}
 	header {
 		height: var(--size-header);
-		margin: calc(-1 * var(--size-header)) 0 0;
+		margin: 0;
 		padding: 2rem;
-		background: rgba(255,0,255,0.95);
+		background: rgba(255,255,255,0.95);
 		z-index: 2;
 		position: fixed;
 		width: 100vw;
