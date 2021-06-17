@@ -39,7 +39,7 @@
 		height: var(--size-header);
 		margin: 0;
 		padding: 2rem;
-		background: rgba(255,255,255,0.95);
+		background: linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,1));
 		z-index: 2;
 		position: fixed;
 		width: 100vw;
