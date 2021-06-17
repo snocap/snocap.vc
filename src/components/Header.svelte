@@ -51,7 +51,7 @@
 		padding-right: 0rem;
 	}
 	.header-content {
-		padding-right: 8rem;
+		padding-right: 16vw;
 	}
 	nav {
 		padding-left: 1.5rem;
