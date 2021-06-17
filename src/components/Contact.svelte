@@ -53,7 +53,7 @@ import { FontFamily, TextSize } from "./lib/types";
 		position: absolute;
 		height: 100%;
 		width: 100%;
-		background: url('/img/mountains.jpg') #ccc center center / cover;
+		background: url('/img/mountains.jpg') #ccc center 20% / cover;
 	}
 	.email {
 		padding-left: 0rem;
