@@ -25,7 +25,7 @@
 			</aside>
 		{/if}
 		<!-- svelte-ignore a11y-media-has-caption -->
-		<video class="col-xs-11 col-sm-9" playsinline autoplay controls={false} loop>
+		<video class="col-xs-11 col-sm-9" playsinline autoplay muted loop controls={false}>
 			<source src="/video/mountain_graded.mp4" type="video/mp4" />
 		</video>
 	</div>
