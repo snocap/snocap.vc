@@ -6,7 +6,7 @@
 		"start": "snowpack dev",
 		"build": "snowpack build && cp -v CNAME docs/",
 		"preversion": "npm run build && git add docs/*",
-		"postversion": "git push && git push --tags",
+		"postversion": "git push",
 		"format": "prettier --write .",
 		"storybook": "start-storybook -p 6006 -s public --ci",
 		"build-storybook": "build-storybook -s public"
