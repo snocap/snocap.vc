@@ -24,7 +24,7 @@
 <header class="row" class:xs={xs}>
 	<div data-aos="fade-right" class="col-xs-10 col-sm-8 header-content">
 		<Text size={TextSize.Title}>
-			<Link size={TextSize.Title} href="#home">SNØ</Link> {headerContent}
+			<Link size={TextSize.Title} href="#home">SNØCAP</Link> {headerContent}
 		</Text>
 	</div>
 	<nav data-aos="fade-down" class="col-xs-2 col-sm-4">
