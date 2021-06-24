@@ -1,7 +1,7 @@
 {
 	"name": "@snocap/snocap.vc",
 	"version": "0.2.1",
-	"author": "Jon Azoff <jon@sno.llc> (https://sno.llc)",
+	"author": "Jon Azoff <jon@snocap.vc> (https://snocap.vc)",
 	"scripts": {
 		"start": "snowpack dev",
 		"build": "snowpack build && cp -v CNAME docs/",

@@ -16,7 +16,7 @@ import { FontFamily, TextSize } from "./lib/types";
 					<Text size={TextSize.Header}>Get in Touch</Text>
 					<br /><br />
 					<Text family={FontFamily.Mono} size={TextSize.Paragraph}>
-						<Link family={FontFamily.Mono} size={TextSize.Paragraph} href="mailto:hello@sno.llc">hello@sno.llc</Link>
+						<Link family={FontFamily.Mono} size={TextSize.Paragraph} href="mailto:hello@snocap.vc">hello@snocap.vc</Link>
 						<br /><br />
 						[<Link
 							family={FontFamily.Mono}

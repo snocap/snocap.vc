@@ -1,3 +1,3 @@
 # SNØCAP Homepage
 
-<https://sno.llc>
+<https://snocap.vc>
