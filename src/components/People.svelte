@@ -5,13 +5,6 @@
 
 <section id="people" data-header-content="General Partners">
 		<Person
-			name="Susanna Barla, GP"
-			linkedinURI="https://www.linkedin.com/in/susanna-barla/"
-			headshotURI="/headshots/sb.jpeg"
-		>
-			Founder, entrepreneur and strategist for highly curated agents of change. She directly helped startup founders raise over $120M across seed and series A rounds - all in the past 5 years. Prior to this she was leading marketing & communication for luxury brands including Martin Margiela, Rick Owens and Louis Vuitton.
-		</Person>
-		<Person
 			name="Nate Salpeter, GP"
 			linkedinURI="https://www.linkedin.com/in/nathaniel-salpeter-77145712/"
 			headshotURI="/headshots/ns.jpeg"
