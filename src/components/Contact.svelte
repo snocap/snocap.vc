@@ -37,6 +37,7 @@ import { FontFamily, TextSize } from "./lib/types";
 		flex-direction: column;
 		height: calc(100vh - var(--size-header));
 		overflow: hidden;
+		min-height: 20rem;
 	}
 	section .row {
 		position: relative;

@@ -5,7 +5,7 @@
 	import media from './lib/media'
 </script>
 
-<section id="home" data-header-content="is building a future beyond sustainability.">
+<section id="home" data-header-content="is a future beyond sustainability.">
 	<div class="row">
 		<Text data-aos="fade-left" class="col-xs-offset-1 col-xs-11 col-sm-offset-8 col-sm-4" size={TextSize.Aside}
 		>We're starting a revolution, vetting sector winning investments that combat climate change.</Text
@@ -46,6 +46,7 @@
 		flex-direction: column;
 		height: calc(100vh - var(--size-header));
 		overflow: hidden;
+		min-height: 37rem;
 	}
 	section .row {
 		flex-shrink: 0;

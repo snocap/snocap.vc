@@ -11,14 +11,14 @@
 }
 
 :root {
-	font-size: 12px;
+	font-size: 11px;
 	font-family: 'NB Akademie Std', sans-serif;
 	background-color: #ffffff;
 }
 
 @media only screen and (min-width: 48em) {
 	:root {
-		font-size: 16px;
+		font-size: 14px;
 	}
 }
 
