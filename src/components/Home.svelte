@@ -5,10 +5,10 @@
 	import media from './lib/media'
 </script>
 
-<section id="home" data-header-content="is a future beyond sustainability.">
+<section id="home" data-header-content="powers platforms to create a better climate future.">
 	<div class="row">
 		<Text data-aos="fade-left" class="col-xs-offset-1 col-xs-11 col-sm-offset-8 col-sm-4" size={TextSize.Aside}
-		>We're starting a revolution, vetting sector winning investments that combat climate change.</Text
+		>Food &bull; Agriculture &bull; Waste &bull; Infrastructure &bull; Crypto</Text
 	>
 	</div>
 	<div class="row end-xs squishy">
@@ -20,7 +20,7 @@
 					orientation={TextOrientation.Vertical}
 					size={TextSize.Small}
 				>
-					If we only sustain,<br />we will never progress.
+					We're not just system thinkers,<br />we're system builders
 				</Text>
 			</aside>
 		{/if}
@@ -31,7 +31,7 @@
 	</div>
 	<div class="row end-xs">
 		<Text data-aos="fade-up" data-aos-offset="-16" class="col-xs-11 col-sm-9" family={FontFamily.Mono} size={TextSize.Small}
-		>We are solving the climate crisis through tech and innovation amplified by narrative and design.</Text
+		><!-- TODO --></Text
 	>
 	</div>
 </section>

@@ -7,7 +7,7 @@
 	import { onMount } from 'svelte';
 
 	$: xs = !$media.sm
-	$: headerContent = 'is a future beyond sustainability.'
+	$: headerContent = 'powers platforms to create a better climate future.'
 
 	onMount(() => {
 		const options = { root: null, rootMargin: "0px", threshold: [0.1] }
@@ -24,11 +24,11 @@
 <header class="row" class:xs={xs}>
 	<div data-aos="fade-right" class="col-xs-10 col-sm-8 header-content">
 		<Text size={TextSize.Title}>
-			<Link size={TextSize.Title} href="#home">SNØCAP</Link> {headerContent}
+			<Link size={TextSize.Title} href="#home">[SNØCAP]</Link> {headerContent}
 		</Text>
 	</div>
 	<nav data-aos="fade-down" class="col-xs-2 col-sm-4">
-		<Link size={TextSize.Small} href="#people">People</Link>
+		<Link size={TextSize.Small} href="#team">Team</Link>
 		<div class="padding" />
 		<Link size={TextSize.Small} href="#contact">Contact</Link>
 	</nav>

@@ -3,7 +3,7 @@
 	import Person from 'components/Person.svelte'
 </script>
 
-<section id="people" data-header-content="General Partners">
+<section id="team" data-header-content="Our Team">
 		<Person
 			name="Nate Salpeter, GP"
 			linkedinURI="https://www.linkedin.com/in/nathaniel-salpeter-77145712/"
