@@ -10,7 +10,7 @@
 	$: headerContent = 'powers platforms to create a better climate future.'
 
 	onMount(() => {
-		const options = { root: null, rootMargin: "0px", threshold: [0.1] }
+		const options = { root: null, rootMargin: "0px", threshold: [0.2] }
 		Array.from(document.querySelectorAll("[data-header-content]")).forEach(s => {
 			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
 				if (intersectionRatio >= options.threshold[0])

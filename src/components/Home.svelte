@@ -8,19 +8,20 @@
 <section id="home" data-header-content="powers platforms to create a better climate future.">
 	<div class="row">
 		<Text data-aos="fade-left" class="col-xs-offset-1 col-xs-11 col-sm-offset-8 col-sm-4" size={TextSize.Aside}
-		>Food &bull; Agriculture &bull; Waste &bull; Infrastructure &bull; Crypto</Text
+		>We're not just system thinkers,<br />we're system builders</Text
 	>
 	</div>
 	<div class="row end-xs squishy">
 		{#if $media.sm}
 			<aside class="col-sm-3">
 				<Text
+					title="Our Sectors"
 					data-aos="fade-right"
 					family={FontFamily.Mono}
 					orientation={TextOrientation.Vertical}
 					size={TextSize.Small}
 				>
-					We're not just system thinkers,<br />we're system builders
+					Food ∙ Agriculture ∙ Waste<br/>Infrastructure ∙ Crypto
 				</Text>
 			</aside>
 		{/if}

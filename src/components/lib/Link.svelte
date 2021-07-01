@@ -9,7 +9,15 @@
 </a>
 
 <style>
+	a {
+		transition: opacity 300ms, transform 300ms;
+		display: inline-block;
+	}
 	a:hover {
-		border-bottom: dashed 1px black;
+		opacity: .7;
+		transform: translateY(-5%);
+	}
+	a:active {
+		transform: translateY(0%);
 	}
 </style>
