@@ -5,7 +5,7 @@
 	import media from './lib/media'
 </script>
 
-<section id="home" data-header-content="powers platforms to create a better climate future.">
+<section id="home" data-header-content="powers platforms for a better climate future.">
 	<div class="row">
 		<Text data-aos="fade-left" class="col-xs-offset-1 col-xs-11 col-sm-offset-8 col-sm-4" size={TextSize.Aside}
 		>We're not just system thinkers,<br />we're system builders</Text
