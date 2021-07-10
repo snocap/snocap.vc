@@ -14,23 +14,32 @@
 	/* sizes */
 	--size-font-sm: 12px;
 	--size-font-lg: 16px;
-	--size-header: 11rem;
-	--size-gutter: 4rem;
+	--size-header: 15rem;
+	--size-gutter: 6rem;
 
 	/* colors */
 	--color-background: rgb(255, 255, 255, 1);
 	--color-foreground: rgb(0, 0, 0, 1);
 
+	line-height: 1.2;
 	font-size: var(--size-font-sm);
 	font-family: 'NB Akademie Std', sans-serif;
 	background-color: #ffffff;
+}
 
+.with-gutter {
+	padding-left: var(--size-gutter) !important;
+	padding-right: 2rem;
 }
 
 @media only screen and (min-width: 48em) {
 	:root {
 		font-size: var(--size-font-lg);
 	}
+}
+
+* {
+	box-sizing: border-box;
 }
 
 html,

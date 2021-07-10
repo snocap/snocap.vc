@@ -16,7 +16,6 @@
 
 <style>
 	span {
-		line-height: 1.2;
 		color: var(--color-foreground);
 		display: inline-block;
 	}
@@ -46,6 +45,6 @@
 
 	.orientation-vertical {
 		writing-mode: vertical-rl;
-		/*transform: rotate(-180deg);*/
+		transform: rotate(-180deg);
 	}
 </style>

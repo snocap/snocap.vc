@@ -10,7 +10,7 @@
 	$: headerContent = 'Powering platforms for<br/>a better climate future.'
 
 	onMount(() => {
-		const options = { root: null, rootMargin: "0px", threshold: [0.2] }
+		const options = { root: null, rootMargin: "0px", threshold: [0.4] }
 		Array.from(document.querySelectorAll("[data-header-content]")).forEach(s => {
 			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
 				if (intersectionRatio >= options.threshold[0])
@@ -21,10 +21,10 @@
 	})
 </script>
 
-<header>
+<header id="top" class="with-gutter">
 	<div class="logo" data-aos="fade-down">
-		<a href="#home">
-			<img class="link smooth-scroll" src="/img/logo-text.svg" alt="SNØCAP" />
+		<a href="#top">
+			<img class="link" src="/img/logo-text.svg" alt="SNØCAP" />
 		</a>
 	</div>
 	<div class="row">
@@ -32,7 +32,7 @@
 			<Text size={TextSize.Title}>{@html headerContent}</Text>
 		</div>
 		<nav data-aos="fade" class="col-sm-5">
-			<Link size={TextSize.Small} href="#team">Team</Link><br/>
+			<Link size={TextSize.Small} href="#general-partners">People</Link><br/>
 			<Link size={TextSize.Small} href="#contact">Contact</Link>
 		</nav>
 	</div>
@@ -42,7 +42,7 @@
 	header {
 		height: var(--size-header);
 		margin: 0;
-		padding: 2rem 2rem 2rem var(--size-gutter);
+		padding: 2rem;
 		background:  linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,0.95), rgba(255,255,255,0.95));
 		z-index: 2;
 		position: fixed;
