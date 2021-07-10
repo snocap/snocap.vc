@@ -1,9 +1,41 @@
+@font-face {
+	font-family: 'NB Akademie Std';
+	font-weight: 500;
+	src: url('/fonts/nb_akademie_std_light.woff2') format('woff');
+}
+
+@font-face {
+	font-family: 'NB Akademie Mono Std';
+	font-weight: 500;
+	src: url('/fonts/nb_akademie_mono_std_light.woff2') format('woff');
+}
+
 :root {
 	/* sizes */
-	--size-header: 15rem;
+	--size-font-sm: 12px;
+	--size-font-lg: 16px;
+	--size-header: 11rem;
+	--size-gutter: 4rem;
 
 	/* colors */
 	--color-background: rgb(255, 255, 255, 1);
 	--color-foreground: rgb(0, 0, 0, 1);
 
+	font-size: var(--size-font-sm);
+	font-family: 'NB Akademie Std', sans-serif;
+	background-color: #ffffff;
+
+}
+
+@media only screen and (min-width: 48em) {
+	:root {
+		font-size: var(--size-font-lg);
+	}
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0;
+	min-width: 375px;
 }

@@ -5,19 +5,21 @@
 </script>
 
 <a {href}>
-	<Text class="text" {...$$restProps}><slot /></Text>
+	<Text class="link text" {...$$restProps}><slot /></Text>
 </a>
 
 <style>
 	a {
-		transition: opacity 300ms, transform 300ms;
 		display: inline-block;
 	}
-	a:hover {
-		opacity: .7;
-		transform: translateY(-5%);
+	:global(.link) {
+		transition: opacity 300ms;
 	}
-	a:active {
-		transform: translateY(0%);
+	:global(.link:hover) {
+		opacity: .5;
+	}
+	:global(.link.active, .link:active) {
+		opacity: .7;
+		text-decoration: underline;
 	}
 </style>

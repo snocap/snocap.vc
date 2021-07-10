@@ -7,7 +7,7 @@
 	import { onMount } from 'svelte';
 
 	$: xs = !$media.sm
-	$: headerContent = 'powers platforms to create a better climate future.'
+	$: headerContent = 'Powering platforms for<br/>a better climate future.'
 
 	onMount(() => {
 		const options = { root: null, rootMargin: "0px", threshold: [0.2] }
@@ -21,42 +21,41 @@
 	})
 </script>
 
-<header class="row" class:xs={xs}>
-	<div data-aos="fade-right" class="col-xs-10 col-sm-8 header-content">
-		<Text size={TextSize.Title}>
-			<Link size={TextSize.Title} href="#home">[SNØCAP]</Link> {headerContent}
-		</Text>
+<header>
+	<div class="logo" data-aos="fade-down">
+		<a href="#home">
+			<img class="link smooth-scroll" src="/img/logo-text.svg" alt="SNØCAP" />
+		</a>
 	</div>
-	<nav data-aos="fade-down" class="col-xs-2 col-sm-4">
-		<Link size={TextSize.Small} href="#team">Team</Link>
-		<div class="padding" />
-		<Link size={TextSize.Small} href="#contact">Contact</Link>
-	</nav>
+	<div class="row">
+		<div data-aos="fade-right" class="col-sm-7">
+			<Text size={TextSize.Title}>{@html headerContent}</Text>
+		</div>
+		<nav data-aos="fade" class="col-sm-5">
+			<Link size={TextSize.Small} href="#team">Team</Link><br/>
+			<Link size={TextSize.Small} href="#contact">Contact</Link>
+		</nav>
+	</div>
 </header>
 
 <style>
 	header {
 		height: var(--size-header);
 		margin: 0;
-		padding: 2rem;
+		padding: 2rem 2rem 2rem var(--size-gutter);
 		background:  linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,0.95), rgba(255,255,255,0.95));
 		z-index: 2;
 		position: fixed;
 		width: 100vw;
 	}
-	header.xs {
-		background: rgba(255,255,255,0.95);
-	}
-	header.xs .header-content {
-		padding-right: 0rem;
-	}
-	.header-content {
-		padding-right: 16vw;
+	img {
+		height: 1.5rem;
+		cursor: pointer;
 	}
 	nav {
-		padding-left: 1.5rem;
+		line-height: 1.5;
 	}
-	.padding {
-		padding: 0.2rem;
+	.logo {
+		margin-bottom: 2rem;
 	}
 </style>
