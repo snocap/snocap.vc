@@ -17,6 +17,7 @@
 
 <style>
 	section {
+		transition: padding-top 300ms;
 		padding-top: var(--size-header);
 		height: 100vh;
 		overflow: hidden;

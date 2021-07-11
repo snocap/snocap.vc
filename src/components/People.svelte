@@ -42,6 +42,7 @@
 
 <style>
 	section {
+		transition: padding-top 300ms;
 		padding: var(--size-header) var(--size-gutter) 0;
 	}
 </style>

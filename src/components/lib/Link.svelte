@@ -16,10 +16,9 @@
 		transition: opacity 300ms;
 	}
 	:global(.link:hover) {
-		opacity: .5;
+		text-decoration: underline;
 	}
 	:global(.link.active, .link:active) {
-		opacity: .7;
-		text-decoration: underline;
+		text-decoration: dotted;
 	}
 </style>

@@ -15,6 +15,11 @@
 			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
 				if (intersectionRatio >= options.threshold[0])
 					headerContent = (<HTMLElement>target).dataset.headerContent ?? ''
+					if (headerContent === 'Powering platforms for<br/>a better climate future.') {
+						document.documentElement.style.setProperty("--size-header", "15rem")
+					} else {
+						document.documentElement.style.setProperty("--size-header", "11rem")
+					}
 			}, options);
 			observer.observe(s)
 		})
@@ -47,6 +52,7 @@
 		z-index: 2;
 		position: fixed;
 		width: 100vw;
+		transition: height 300ms;
 	}
 	img {
 		height: 1.5rem;
