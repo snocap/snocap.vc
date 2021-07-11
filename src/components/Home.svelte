@@ -1,12 +1,13 @@
 <script>
 	import 'components/lib/theme.css'
 	import Text from 'components/lib/Text.svelte'
+	import Carat from 'components/Carat.svelte'
 	import { FontFamily, TextSize, TextOrientation } from './lib/types';
 	import media from './lib/media'
 </script>
 
-<section id="home">
-	<div class="row with-gutter" data-header-content="Powering platforms for<br/>a better climate future.">
+<section id="home" data-header-content="Powering platforms for<br/>a better climate future.">
+	<div class="row with-gutter">
 		<Text data-aos="fade-left" class="col-sm-offset-7 col-sm-5" size={TextSize.Aside}
 		>We're not just system thinkers,<br />we're system builders</Text
 	>
@@ -29,11 +30,7 @@
 			<source src="/video/mountain_graded.mp4" type="video/mp4" />
 		</video>
 	</div>
-	<div class="row with-gutter">
-		<a class="next" href="#mission">
-			<img src="/img/carat-down.svg" alt="next section" />
-		</a>
-	</div>
+	<Carat fragment="mission" />
 </section>
 
 <style>
@@ -48,10 +45,6 @@
 	.row:first-child {
 		height: 6rem;
     flex: 0 0 6rem;
-	}
-	.row:last-child {
-		flex: 0 0 3rem;
-		line-height: 2;
 	}
 	.flex {
 		display: flex;
@@ -68,8 +61,5 @@
 		object-fit: cover;
 		flex: 1;
 		height: 100%;
-	}
-	.next {
-		padding: 1rem;
 	}
 </style>

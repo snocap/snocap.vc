@@ -1,27 +1,22 @@
 <script>
-	import Link from './lib/Link.svelte'
 	import Text from './lib/Text.svelte'
 	import media from './lib/media'
-	import { FontFamily, TextSize } from './lib/types'
+	import { TextSize } from './lib/types'
 
 	export let name: string
-	export let linkedinURI: string
 	export let headshotURI: string
 	export let reversed: boolean = false
 	$: reverse = reversed && $media.sm
 </script>
 
 <div data-aos={reverse ? 'fade-right' : 'fade-left'} class="row end-xs start-sm" class:reverse>
-	<div class="text col-sm-8 col-xs-12">
-		<Text size={TextSize.Header}>{name}</Text>
-		<p>
-			<Text family={FontFamily.Mono} size={TextSize.Paragraph}>
-				<slot /><br /><br />
-				[<Link family={FontFamily.Mono} size={TextSize.Paragraph} href={linkedinURI}>LINKEDIN</Link>]
-			</Text>
-		</p>
+	<div class="text col-sm-9 col-xs-12">
+		<Text size={TextSize.Aside}>
+			<q><slot /></q>
+		</Text>
+		<br/><br/><Text size={TextSize.Paragragh}>{name}</Text>
 	</div>
-	<div class="image col-sm-4 col-xs-12">
+	<div class="image col-sm-3 col-xs-12">
 		<div class="figure" style="background-image:url('{headshotURI}')" />
 	</div>
 </div>
@@ -34,12 +29,15 @@
 	.row {
 		text-align: left;
 		padding-top: 2rem;
+		padding-bottom: 2rem;
 	}
 	.text {
 		text-align: left;
-		margin: auto;
-		vertical-align: middle;
+		margin: auto 0 auto auto;
 		line-height: 1.5;
+	}
+	.reverse .text {
+		margin: auto auto auto 0;
 	}
 	.figure {
 		display: block;
