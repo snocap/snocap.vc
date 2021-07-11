@@ -3,9 +3,10 @@ import 'components/lib/theme.css'
 import Link from "./lib/Link.svelte";
 import Text from "./lib/Text.svelte";
 import { FontFamily, TextSize } from "./lib/types";
-
 </script>
-<section id="contact" data-header-content>
+
+<section id="contact">
+	<div data-header-content="Get in touch"/>
 	<div class="row end-xs squishy">
 		<div data-aos="fade-left" class="col-xs-11 col-sm-9 mountains" />
 	</div>

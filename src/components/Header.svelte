@@ -10,7 +10,7 @@
 	$: headerContent = 'Powering platforms for<br/>a better climate future.'
 
 	onMount(() => {
-		const options = { root: null, rootMargin: "0px", threshold: [0.4] }
+		const options = { root: null, rootMargin: "0px", threshold: [0.5] }
 		Array.from(document.querySelectorAll("[data-header-content]")).forEach(s => {
 			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
 				if (intersectionRatio >= options.threshold[0])
@@ -43,7 +43,7 @@
 		height: var(--size-header);
 		margin: 0;
 		padding: 2rem;
-		background:  linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,0.95), rgba(255,255,255,0.95));
+		background: rgba(255,255,255,0.95);
 		z-index: 2;
 		position: fixed;
 		width: 100vw;

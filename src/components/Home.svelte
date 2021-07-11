@@ -5,8 +5,8 @@
 	import media from './lib/media'
 </script>
 
-<section id="home" data-header-content="Powering platforms for<br/>a better climate future.">
-	<div class="row with-gutter">
+<section id="home">
+	<div class="row with-gutter" data-header-content="Powering platforms for<br/>a better climate future.">
 		<Text data-aos="fade-left" class="col-sm-offset-7 col-sm-5" size={TextSize.Aside}
 		>We're not just system thinkers,<br />we're system builders</Text
 	>
@@ -30,7 +30,7 @@
 		</video>
 	</div>
 	<div class="row with-gutter">
-		<a class="next" href="#general-partners">
+		<a class="next" href="#mission">
 			<img src="/img/carat-down.svg" alt="next section" />
 		</a>
 	</div>
@@ -38,8 +38,8 @@
 
 <style>
 	section {
-		margin-top: var(--size-header);
-		height: calc(100vh - var(--size-header));
+		padding-top: var(--size-header);
+		height: 100vh;
 		overflow: hidden;
 		min-height: 35rem;
 		display: flex;
@@ -61,7 +61,7 @@
 	aside {
 		flex: 0 0 var(--size-gutter);
 		text-align: center;
-		padding: 2rem 0;
+		padding: 1rem 0;
 		line-height: 1.5;
 	}
 	video {
