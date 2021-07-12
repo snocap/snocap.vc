@@ -4,7 +4,7 @@
 	import Carat from 'components/Carat.svelte'
 </script>
 
-<section id="testimonials" data-header-content="Powering platforms for<br/>a better climate future.">
+<section id="testimonials" data-header-content="Powering platforms for <br/> a better climate future.">
 	<div class="with-gutter">
 		<Testimonial
 			name="Felipe Giannetti, Partner @ StartSe"

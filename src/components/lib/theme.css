@@ -12,10 +12,12 @@
 
 :root {
 	/* sizes */
-	--size-font-sm: 12px;
+	--size-font-sm: 11px;
 	--size-font-lg: 16px;
-	--size-header: 15rem;
-	--size-gutter: 6rem;
+	--size-header-sm: 11rem;
+	--size-header-lg: 19rem;
+	--size-header: var(--size-header-lg);
+	--size-gutter: 4rem;
 
 	/* colors */
 	--color-background: rgb(255, 255, 255, 1);
@@ -35,6 +37,9 @@
 @media only screen and (min-width: 48em) {
 	:root {
 		font-size: var(--size-font-lg);
+		--size-header-lg: 15rem;
+		--size-header: var(--size-header-lg);
+		--size-gutter: 6rem;
 	}
 }
 

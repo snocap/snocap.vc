@@ -1,10 +1,12 @@
 <script lang="ts">
 	import 'components/lib/theme.css'
+	import type { EventHandler } from './types'
 	import Text from './Text.svelte'
 	export let href: string
+	export let onclick: EventHandler|undefined = undefined
 </script>
 
-<a {href}>
+<a {href} on:click={onclick}>
 	<Text class="link text" {...$$restProps}><slot /></Text>
 </a>
 

@@ -5,7 +5,7 @@
 	import Carat from 'components/Carat.svelte'
 </script>
 
-<section id="mission" data-header-content="Powering platforms for<br/>a better climate future.">
+<section id="mission" data-header-content="Powering platforms for <br/> a better climate future.">
 	<Text size={TextSize.Header} class="box top">
 		We invest in early-stage, profit-oriented platforms that directly and indirectly solve the climate crisis.
 	</Text>

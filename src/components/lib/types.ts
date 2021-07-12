@@ -17,3 +17,5 @@ export enum TextOrientation {
 	Horizontal = 'horizontal',
 	Vertical = 'vertical',
 }
+
+export type EventHandler = (e:Event) => void
