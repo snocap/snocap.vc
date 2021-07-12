@@ -16,7 +16,7 @@
 		let headerContent = ''
 		tw.typeString(headerContent).start()
 		Array.from(document.querySelectorAll("[data-header-content]")).forEach(s => {
-			const options = { root: null, rootMargin: "0px", threshold: [0.1] }
+			const options = { root: null, rootMargin: "0px", threshold: [0.2] }
 			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
 				if (intersectionRatio < options.threshold[0]) return
 				if (debouncer) clearTimeout(debouncer);
