@@ -25,12 +25,12 @@
 					if (newHeaderContent === headerContent) return
 					headerContent = newHeaderContent
 					tw.stop().deleteAll(1).callFunction(() => {
-		        if (headerContent === 'Powering platforms for <br/> a better climate future.') {
+						if (headerContent === 'Powering platforms for <br/> a better climate future.') {
 							document.documentElement.style.setProperty("--size-header", "var(--size-header-lg)")
 						} else {
 							document.documentElement.style.setProperty("--size-header", "var(--size-header-sm)")
 						}
-		      }).typeString(headerContent).start()
+					}).typeString(headerContent).start()
 				}, 350)
 			}, options);
 			observer.observe(s)
