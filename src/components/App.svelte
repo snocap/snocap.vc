@@ -1,7 +1,6 @@
 <script lang="ts">
 
 	import { onMount } from 'svelte'
-	import SmoothScroll from 'smooth-scroll'
 
 	import AOS from 'aos'
 	import 'aos/dist/aos.css'
@@ -15,8 +14,7 @@
 	import Footer from './Footer.svelte'
 
 	onMount(() => {
-		new SmoothScroll('a[href*="#"]')
-		AOS.init({ duration: 1000 })
+		AOS.init({ duration: 1000, disable: 'phone' })
 	})
 </script>
 

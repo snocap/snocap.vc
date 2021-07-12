@@ -35,11 +35,12 @@
 		padding: 1em;
 	}
 	section > :global(.box.top) {
-		width: 72%;
+		padding: 1rem 14vw;
 		align-items: flex-end;
 	}
 	section > :global(.box.bottom) {
-		width: 45%;
+		padding: 1rem 28vw;
 		align-items: flex-start;
 	}
+
 </style>

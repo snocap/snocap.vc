@@ -3,7 +3,6 @@
 	import Text from 'components/lib/Text.svelte'
 	import Carat from 'components/Carat.svelte'
 	import { FontFamily, TextSize, TextOrientation } from './lib/types';
-	import media from './lib/media'
 </script>
 
 <section id="home" data-header-content="Powering platforms for <br/> a better climate future.">
@@ -13,18 +12,16 @@
 	>
 	</div>
 	<div class="flex">
-		{#if $media.sm}
-			<aside data-aos="fade-right">
-				<Text
-					title="Our Sectors"
-					family={FontFamily.Mono}
-					orientation={TextOrientation.Vertical}
-					size={TextSize.Small}
-				>
-					Crypto ∙ Waste ∙ Food ∙ Ag ∙ Infrastructure
-				</Text>
-			</aside>
-		{/if}
+		<aside data-aos="fade-right">
+			<Text
+				title="Our Sectors"
+				family={FontFamily.Mono}
+				orientation={TextOrientation.Vertical}
+				size={TextSize.Small}
+			>
+				Crypto ∙ Waste ∙ Food ∙ Ag ∙ Infrastructure
+			</Text>
+		</aside>
 		<!-- svelte-ignore a11y-media-has-caption -->
 		<video playsinline autoplay muted loop controls={false}>
 			<source src="/video/mountain_graded.mp4" type="video/mp4" />
@@ -46,6 +43,7 @@
 	.row:first-child {
 		height: 6rem;
     flex: 0 0 6rem;
+    margin: 0;
 	}
 	.flex {
 		display: flex;
