@@ -1,8 +1,7 @@
 <script>
-	import Link from './lib/Link.svelte'
 	import Text from './lib/Text.svelte'
 	import media from './lib/media'
-	import { FontFamily, TextSize } from './lib/types'
+	import { TextSize, FontFamily } from './lib/types'
 
 	export let name: string
 	export let linkedinURI: string
@@ -16,13 +15,15 @@
 		<Text size={TextSize.Header}>{name}</Text>
 		<p>
 			<Text family={FontFamily.Mono} size={TextSize.Paragraph}>
-				<slot /><br /><br />
-				[<Link family={FontFamily.Mono} size={TextSize.Paragraph} href={linkedinURI}>LINKEDIN</Link>]
+				<slot />
 			</Text>
 		</p>
 	</div>
 	<div class="image col-sm-4 col-xs-12">
 		<div class="figure" style="background-image:url('{headshotURI}')" />
+		<a class="social" href={linkedinURI}>
+			<img alt="linkedin page" src="/img/linkedin.svg" />
+		</a>
 	</div>
 </div>
 
@@ -34,6 +35,15 @@
 	.row {
 		text-align: left;
 		padding-top: 2rem;
+	}
+	.social img {
+		width: 1.25rem;
+		opacity: 0.6;
+		transition: opacity 300ms;
+		margin: 1rem 0;
+	}
+	.social:hover img {
+		opacity: 1;
 	}
 	.text {
 		text-align: left;
