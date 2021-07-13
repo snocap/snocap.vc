@@ -27,7 +27,7 @@ import { FontFamily, TextSize } from "./lib/types";
 <style>
 	section {
 		transition: padding-top 300ms;
-		padding-top: var(--size-header);
+		padding-top: var(--size-header-lg);
 		display: flex;
 		flex-direction: column;
 		height: 100vh;

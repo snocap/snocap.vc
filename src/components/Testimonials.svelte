@@ -24,6 +24,6 @@
 <style>
 	section {
 		transition: padding-top 300ms;
-		padding: var(--size-header) 0 0;
+		padding: var(--size-header-lg) 0 0;
 	}
 </style>
