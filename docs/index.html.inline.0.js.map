@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../docs/index.html.inline.0.js"],
+  "sourcesContent": ["\n\t\t\tdocument.documentElement.classList.remove('no-js')\n\t\t\tdocument.documentElement.classList.add('js')\n\t\t"],
+  "mappings": "AACG,SAAS,gBAAgB,UAAU,OAAO,SAC1C,SAAS,gBAAgB,UAAU,IAAI",
+  "names": []
+}
