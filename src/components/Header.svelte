@@ -55,8 +55,8 @@
 			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="#general-partners">People</Link><br/>
 			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="#contact">Contact</Link>
 		</nav>
-		<span class="closer" on:click={toggle(false)} title="close navigation menu">𝖷</span>
-		<span class="opener" on:click={toggle(true)} title="open navigation menu">≡</span>
+		<img class="closer" on:click={toggle(false)} alt="close navigation menu" src="/img/close-icon.svg" />
+		<img class="opener" on:click={toggle(true)} alt="open navigation menu" src="/img/menu-icon.svg" />
 	</div>
 </header>
 
@@ -119,17 +119,14 @@
 	}
 
 	header.xs .opener {
-		content: "≡";
-		left: 0;
-		top: 0;
-		font-size: 3rem;
-		line-height: 5.5rem;
+		left: 0.4rem;
+		top: 2rem;
 		transform: translate(0%, 0%);
 		transition: transform 300ms;
 	}
 
 	header.xs .closer {
-		top: 1.2rem;
+		top: 2rem;
 		left: 1rem;
 		font-size: 1.8rem;
 		line-height: 2;
@@ -139,7 +136,7 @@
 	}
 
 	header.xs nav.open ~ .opener {
-		transform: translate(0%, -100%);
+		transform: translate(0%, -500%);
 	}
 
 	header.xs nav.open ~ .closer {
