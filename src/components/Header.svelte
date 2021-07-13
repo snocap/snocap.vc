@@ -128,8 +128,6 @@
 	header.xs .closer {
 		top: 2rem;
 		left: 1rem;
-		font-size: 1.8rem;
-		line-height: 2;
 		transition: transform 300ms, opacity 300ms;
 		transform: translateY(-300%);
 		opacity: 0;
