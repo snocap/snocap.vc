@@ -1,7 +1,6 @@
 <script>
 import 'components/lib/theme.css'
 import Link from "./lib/Link.svelte";
-import Text from "./lib/Text.svelte";
 import { TextSize } from "./lib/types";
 </script>
 
