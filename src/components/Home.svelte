@@ -19,7 +19,7 @@
 				orientation={TextOrientation.Vertical}
 				size={TextSize.Small}
 			>
-				Crypto ∙ Waste ∙ Food ∙ Ag ∙ Infrastructure
+				Finance ∙ Waste ∙ Food ∙ Ag ∙ Infra
 			</Text>
 		</aside>
 		<!-- svelte-ignore a11y-media-has-caption -->
