@@ -38,13 +38,13 @@
 		headshotURI="/headshots/ag.jpeg">
 		Andrew is a gaming executive and former partner at Andreessen Horowitz (a16z). 20 years in different roles across gaming. Head of biz ops  at mobile games studio TinyCo, acq. Jam City in 2016. Various product and marketing roles at EA, Atari, Miramax Films and Take-Two Interactive. Co-founder of instant-play gaming start-up Knock Knock
 	</Person>
-	<Person
+<!-- 	<Person
 		name="HonMun Yip"
 		linkedinURI="https://www.linkedin.com/in/yiphonmun/"
 		headshotURI="/headshots/hy.jpeg"
 		reversed>
 		Hon Mun has over thirty years of investment, operations, and board level experience with PE funds, family offices and start-ups. For more than a decade and a half, he was based in Hong Kong, Bangkok, Seoul and China performing Post M&A integration, turning-around and growing businesses for Temasek Holdings and family-owned Asia businesses. He ventured into ESG and Sustainability businesses when he was the CEO of a Singapore-China government Joint Venture pioneering in sustainable farming and food security in North East China. He is currently the EVP for Turtletree Lab, COO for an Impact Philanthropy fund and a keen investor in the alternative protein space.
-	</Person>
+	</Person> -->
 </section>
 
 <style>
