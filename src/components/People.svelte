@@ -15,7 +15,7 @@
 		linkedinURI="https://www.linkedin.com/in/jazoff/"
 		headshotURI="/headshots/ja.jpeg"
 		reversed>
-		Software engineering leader with twenty years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past ten years (Zillow, Disney). He’s the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M+ XRP raise), and the manager behind VC software at Carta (7B valuation).
+		Software engineering leader with twenty years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past ten years (Zillow, Disney). He’s the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M+ XRP raise). He managed several teams at Carta (7B valuation), building tools for the VC back office.
 	</Person>
 </section>
 <section id="venture-partners" data-header-content="Venture Partners">
