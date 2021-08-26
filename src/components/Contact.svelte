@@ -15,6 +15,9 @@ import { TextSize } from "./lib/types";
 			<a class="social" href="https://linkedin.com/company/snocapvc">
 				<img alt="linkedin page" src="/img/linkedin.svg" />
 			</a>
+			<a class="social" href="https://blog.snocap.vc">
+				<img alt="medium blog" src="/img/medium.svg" />
+			</a>
 		</div>
 	</div>
 	<div class="mountains-container with-gutter">
