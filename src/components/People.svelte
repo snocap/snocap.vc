@@ -15,7 +15,7 @@
 		linkedinURI="https://www.linkedin.com/in/jazoff/"
 		headshotURI="/headshots/ja.jpeg"
 		reversed>
-		Software engineering leader with twenty years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past ten years (Zillow, Disney). He’s the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M+ XRP raise). He managed several teams at Carta (7B valuation), building tools for the VC back office.
+		Software engineering leader with twenty years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past ten years (Zillow, Disney). He’s the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M+ XRP raise). He managed several teams at Carta (7B valuation), where he led tool development for the VC back office.
 	</Person>
 </section>
 <section id="venture-partners" data-header-content="Venture Partners">
@@ -38,13 +38,13 @@
 		headshotURI="/headshots/ag.jpeg">
 		Andrew is a gaming executive and former partner at Andreessen Horowitz (a16z). 20 years in different roles across gaming. Head of biz ops  at mobile games studio TinyCo, acq. Jam City in 2016. Various product and marketing roles at EA, Atari, Miramax Films and Take-Two Interactive. Co-founder of instant-play gaming start-up Knock Knock
 	</Person>
-<!-- 	<Person
+	<Person
 		name="HonMun Yip"
 		linkedinURI="https://www.linkedin.com/in/yiphonmun/"
 		headshotURI="/headshots/hy.jpeg"
 		reversed>
 		Hon Mun has over thirty years of investment, operations, and board level experience with PE funds, family offices and start-ups. For more than a decade and a half, he was based in Hong Kong, Bangkok, Seoul and China performing Post M&A integration, turning-around and growing businesses for Temasek Holdings and family-owned Asia businesses. He ventured into ESG and Sustainability businesses when he was the CEO of a Singapore-China government Joint Venture pioneering in sustainable farming and food security in North East China. He is currently the EVP for Turtletree Lab, COO for an Impact Philanthropy fund and a keen investor in the alternative protein space.
-	</Person> -->
+	</Person>
 </section>
 
 <style>
