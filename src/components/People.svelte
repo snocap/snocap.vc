@@ -5,16 +5,22 @@
 
 <section id="general-partners" data-header-content="General Partners">
 	<Person
+		name="Shrina Kurani, MP"
+		linkedinURI="https://www.linkedin.com/in/shrina-kurani-94a88b56/"
+		headshotURI="/headshots/sk.jpeg">
+		Mechanical engineer and sustainability scientist with a decade of experience building, investing in, and advocating for frontier climate tech. She invested in early stage, mission driven companies with Better Ventures and built out Republic’s business lines as VP, democratizing access to capital. Shrina ran for United States Congress championing strong climate policy. 
+	</Person>
+	<Person
 		name="Nate Salpeter, GP"
 		linkedinURI="https://www.linkedin.com/in/nathaniel-salpeter-77145712/"
-		headshotURI="/headshots/ns.jpeg">
+		headshotURI="/headshots/ns.jpeg"
+		reversed>
 		Ph.D. Mechanical Engineer with 13 years experience in the climate tech space, including 5 years at Bill Gates’ TerraPower. He is the co-founder of Sweet Farm, a Silicon Valley based non-profit incubating food, agriculture, and climate tech startups. He invests and personally advises in emerging sectors, including being the first investor in and an advisor to TurtleTree Labs
 	</Person>
 	<Person
-		name="Jonathan Azoff, MP"
+		name="Jonathan Azoff, GP"
 		linkedinURI="https://www.linkedin.com/in/jazoff/"
-		headshotURI="/headshots/ja.jpeg"
-		reversed>
+		headshotURI="/headshots/ja.jpeg">
 		Software engineering leader with twenty years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past ten years (Zillow, Disney). He’s the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M+ XRP raise). He managed several teams at Carta (7B valuation), where he led tool development for the VC back office.
 	</Person>
 </section>
