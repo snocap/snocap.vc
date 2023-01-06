@@ -42,7 +42,7 @@
 		name="HonMun Yip"
 		linkedinURI="https://www.linkedin.com/in/yiphonmun/"
 		headshotURI="/headshots/hy.jpeg">
-		Hon Mun has over thirty years of investment, operations, and board level experience with PE funds, family offices and start-ups. For more than a decade and a half, he was based in Hong Kong, Bangkok, Seoul and China performing Post M&A integration, turning-around and growing businesses for Temasek Holdings and family-owned Asia businesses. He ventured into ESG and Sustainability businesses when he was the CEO of a Singapore-China government Joint Venture pioneering in sustainable farming and food security in North East China. He is currently the EVP for Turtletree Lab, COO for an Impact Philanthropy fund and a keen investor in the alternative protein space.
+		Hon Mun has over thirty years of investment, operations, and board level experience with PE funds, family offices and start-ups. For more than a decade and a half, he was based in Hong Kong, Bangkok, Seoul and China performing Post M&A integration, turning-around and growing businesses for Private Equity Funds and family-owned Asia businesses. He ventured into ESG and Sustainability businesses when he was the CEO of a Singapore-China government Joint Venture pioneering in sustainable farming and food security in North East China. He served as the EVP for Turtletree Lab, COO for an Impact Philanthropy fund and an active investor in the alternative protein space.
 	</Person>
 </section>
 
