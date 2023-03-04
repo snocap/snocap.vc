@@ -7,7 +7,9 @@ import { TextSize } from "./lib/types";
 <section id="contact" data-header-content="Get in touch">
 	<div class="row with-gutter">
 		<div data-aos="fade-left" class="links col-sm-offset-7 col-sm-5">
-			<Link size={TextSize.Aside} href="mailto:hello@snocap.vc">hello@snocap.vc</Link>
+			<Link size={TextSize.Aside} href="https://airtable.com/shrhw2LK0yxRos5fW">raising? click here!</Link>
+			<br />
+			<Link size={TextSize.Aside} href="mailto:hello@snocap.vc">general inqury? email us.</Link>
 			<br />
 			<a class="social" href="https://twitter.com/snocapvc">
 				<img alt="twitter page" src="/img/twitter.svg" />
