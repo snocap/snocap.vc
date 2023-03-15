@@ -5,8 +5,7 @@
 <section>
 	<center>
 		&mdash;<br /><br />
-		&copy; {year} SNO Management, LLC. All rights reserved.<br />SNOCAP US, LP is a 506(c) registered
-		offering.
+		&copy; {year} SNO Management, LLC. All rights reserved.
 	</center>
 </section>
 

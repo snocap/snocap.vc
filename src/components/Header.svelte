@@ -56,7 +56,7 @@
 			<br/>
 			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="https://blog.snocap.vc">Writing</Link>
 			<br/>
-			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="https://airtable.com/shrhw2LK0yxRos5fW">Fundraising</Link>
+			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="/apply">Fundraising</Link>
 		</nav>
 		<img class="closer" on:click={toggle(false)} alt="close navigation menu" src="/img/close-icon.svg" />
 		<img class="opener" on:click={toggle(true)} alt="open navigation menu" src="/img/menu-icon.svg" />
