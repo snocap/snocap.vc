@@ -18,19 +18,15 @@
 	onMount(() => {
 		AOS.init({ duration: 1000, disable: 'phone' })
 	})
+
+	if (route === 'apply') {
+		window.location.href = 'https://form-23cf11.zapier.app/apply-to-snocap'
+	}
 </script>
 
 <div class="app container-fluid">
 	{#if route === "apply"}
-		<iframe 
-			title="Application Form" 
-			class="airtable-embed" 
-			src="https://airtable.com/embed/shrhw2LK0yxRos5fW?backgroundColor=white" 
-			frameborder="0" 
-			onmousewheel="" 
-			width="100%" 
-			height="533"
-		/>
+		<div class="apply">Redirecting...</div>
 	{:else}
 		<Header />
 		<Home />
@@ -38,18 +34,17 @@
 		<Testimonials />
 		<People />
 		<Contact />
+		<Footer />
 	{/if}
-	<Footer />
 </div>
 
 <style>
 	.app {
 		padding: 0;
 	}
-	.airtable-embed {
-		background: transparent; 
-		border: none 0;
-		width: 100vw;
-		height: 3705px;
+	.apply {
+		height: 100vh;
+		text-align: center;
+		padding: 1rem;
 	}
 </style>
