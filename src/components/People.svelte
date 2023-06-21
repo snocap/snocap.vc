@@ -15,7 +15,7 @@
 		linkedinURI="https://www.linkedin.com/in/nathaniel-salpeter-77145712/"
 		headshotURI="/headshots/ns.jpeg"
 		reversed>
-		Ph.D. Mechanical Engineer with 13 years experience in the climate tech space, including 5 years at Bill Gates’ TerraPower. He is the co-founder of Sweet Farm, a Silicon Valley based non-profit incubating food, agriculture, and climate tech startups. He invests and personally advises in emerging sectors, including being the first investor in and an advisor to TurtleTree Labs
+		Ph.D. Mechanical Engineer with 13 years experience in the climate tech space, including 5 years at Bill Gates’ TerraPower. He is the co-founder of Sweet Farm, a New York based non-profit incubating food, agriculture, and climate tech startups. He invests and personally advises in emerging sectors, including being the first investor in and an advisor to TurtleTree Labs
 	</Person>
 	<Person
 		name="Jonathan Azoff, GP"
