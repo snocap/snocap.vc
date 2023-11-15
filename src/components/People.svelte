@@ -28,15 +28,22 @@
 	<Person
 		name="Abigail Albright"
 		linkedinURI="https://www.linkedin.com/in/abigailalbright/"
-		headshotURI="/headshots/aa.jpeg">
+		headshotURI="/headshots/aa.jpeg"
+		reversed>
 		Abby Albright is an experienced founding fund partner, having successfully raised a fund in the XR space, specifically focused on placing investments in strong female founding teams.  Abby brings experience from across media formats gained over a wide ranging career in Hollywood and the games industry.
 	</Person>
 	<Person
 		name="Kate Kingen"
 		linkedinURI="https://www.linkedin.com/in/katekingen/"
-		headshotURI="/headshots/kk.jpeg"
-		reversed>
+		headshotURI="/headshots/kk.jpeg">
 		Kate is a category expert, seasoned senior leader, and finance executive with over a decade of experience. She has led growth companies in the food and DTC consumer industries, managed major governmental organizations, and advised on transactions totaling over $21bn in deal value as an investment banker.
+	</Person>
+	<Person
+		name="Kelci Zile"
+		linkedinURI="https://www.linkedin.com/in/kzile/"
+		headshotURI="/headshots/kz.jpeg"
+		reversed>
+		Kelci Zile is the Chief Development Officer of Sound Future (a nonprofit that leverages the power of live events as a testbed climate solutions), sits on the University of Washington Buerk Center for Entrepreneurship board, is the Director of Venture Community for EnVest, and previously led sustainability investments for Madrona Venture Labs. Before investing, she led sustainability for AWS Marketplace and served on the Amazon Sustainability Ambassadors Global Board where she co-led an Amazon-wide internal education series. Her expertise includes the circular economy, supply chain emissions reduction, net-zero planning, and nature-based solutions.
 	</Person>
 	<Person
 		name="HonMun Yip"
