@@ -5,7 +5,7 @@
 	import Carat from 'components/Carat.svelte'
 </script>
 
-<section id="founders" data-header-content="Founder Application">
+<section id="founders" data-header-content="Apply For Funding">
 	<img data-aos="fade-in" class="banner" src="/img/social-banner-nologo.png" alt="SNØCAP Banner" />
 	<Text data-aos="fade-in" size={TextSize.Header} class="box">
 		SNØCAP is a venture capital firm that believes in the power of scientific innovation to solve the climate crisis. 
