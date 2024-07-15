@@ -16,7 +16,7 @@
 		let headerContent = ''
 		tw.typeString(headerContent).start()
 		Array.from(document.querySelectorAll("[data-header-content]")).forEach(s => {
-			const options = { root: null, rootMargin: "0px", threshold: [0.2] }
+			const options = { root: null, rootMargin: "0px", threshold: [0.4] }
 			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
 				if (intersectionRatio < options.threshold[0]) return
 				if (debouncer) clearTimeout(debouncer);
@@ -25,11 +25,10 @@
 					if (newHeaderContent === headerContent) return
 					headerContent = newHeaderContent
 					tw.stop().deleteAll(1).callFunction(() => {
-						if (headerContent === 'Powering platforms for <br/> a better climate future.') {
+						if (headerContent === 'Powering platforms for a better climate future.') {
 							document.documentElement.style.setProperty("--size-header", "var(--size-header-lg)")
 						} else {
 							document.documentElement.style.setProperty("--size-header", "var(--size-header-sm)")
-							window.scroll
 						}
 					}).typeString(headerContent).start()
 				}, 350)
@@ -52,11 +51,11 @@
 			<Text id="typewriter" size={TextSize.Title}></Text>
 		</div>
 		<nav data-aos={xs?"none":"fade"} class="col-sm-5 col-xs-12" class:open>
-			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="#general-partners">People</Link>
+			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="#founders">Apply For Funding</Link>
 			<br/>
-			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="https://blog.snocap.vc">Writing</Link>
-			<br/>
-			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="/apply">Fundraising</Link>
+			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="#general-partners">Our Team</Link>
+			<br/>			
+			<Link onclick={toggle(false)} size={xs?TextSize.Header:TextSize.Small} href="https://blog.snocap.vc">Our Writing</Link>
 		</nav>
 		<img class="closer" on:click={toggle(false)} alt="close navigation menu" src="/img/close-icon.svg" />
 		<img class="opener" on:click={toggle(true)} alt="open navigation menu" src="/img/menu-icon.svg" />

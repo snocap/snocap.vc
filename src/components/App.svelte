@@ -7,8 +7,7 @@
 
 	import Header from './Header.svelte'
   import Home from './Home.svelte'
-	import Mission from './Mission.svelte'
-	import Testimonials from './Testimonials.svelte'
+	import Founders from './Founders.svelte'
 	import People from './People.svelte'
 	import Contact from './Contact.svelte'
 	import Footer from './Footer.svelte'
@@ -30,8 +29,7 @@
 	{:else}
 		<Header />
 		<Home />
-		<Mission />
-		<Testimonials />
+		<Founders />
 		<People />
 		<Contact />
 		<Footer />

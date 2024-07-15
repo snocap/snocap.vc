@@ -6,11 +6,6 @@
 </script>
 
 <section id="home" data-header-content="Powering platforms for <br/> a better climate future.">
-	<div class="row with-gutter">
-		<Text data-aos="fade-left" class="col-sm-offset-7 col-sm-5" size={TextSize.Aside}
-		>We're not just system thinkers,<br />we're system builders</Text
-	>
-	</div>
 	<div class="flex">
 		<aside data-aos="fade-right">
 			<Text
@@ -19,7 +14,7 @@
 				orientation={TextOrientation.Vertical}
 				size={TextSize.Small}
 			>
-				Finance ∙ Waste ∙ Food ∙ Ag ∙ Infra
+				Energy ∙ Industry ∙ Food & Land ∙ Materials ∙ Mobility
 			</Text>
 		</aside>
 		<!-- svelte-ignore a11y-media-has-caption -->
@@ -27,7 +22,7 @@
 			<source src="/video/mountain_graded.mp4" type="video/mp4" />
 		</video>
 	</div>
-	<Carat fragment="mission" />
+	<Carat fragment="founders" />
 </section>
 
 <style>
@@ -40,11 +35,6 @@
 		display: flex;
 		flex-direction: column;
 	}
-	.row:first-child {
-		height: 6rem;
-    flex: 0 0 6rem;
-    margin: 0;
-	}
 	.flex {
 		display: flex;
 		flex: 1;
@@ -55,6 +45,9 @@
 		text-align: center;
 		padding: 1rem 0;
 		line-height: 1.5;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	video {
 		object-fit: cover;

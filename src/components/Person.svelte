@@ -55,6 +55,7 @@
 		display: block;
 		position: relative;
 		background: none #ccc center center / cover;
+		background-size: 101%;
 		height: 0;
 		width: 100%;
 		padding-top: 100%;

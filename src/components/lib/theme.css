@@ -13,7 +13,7 @@
 :root {
 	/* sizes */
 	--size-font-sm: 11px;
-	--size-font-lg: 16px;
+	--size-font-lg: 14px;
 	--size-header-sm: 11rem;
 	--size-header-lg: 19rem;
 	--size-header: var(--size-header-lg);

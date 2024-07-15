@@ -11,6 +11,7 @@ export enum TextSize {
 	Aside = 'aside',
 	Paragraph = 'paragraph',
 	Small = 'small',
+	XSmall = 'xsmall',
 }
 
 export enum TextOrientation {

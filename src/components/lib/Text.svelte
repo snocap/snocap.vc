@@ -42,6 +42,9 @@
 	.size-small {
 		font-size: 1.125rem;
 	}
+	.size-xsmall {
+		font-size: 0.8rem;
+	}
 
 	.orientation-vertical {
 		writing-mode: vertical-rl;

@@ -57,5 +57,6 @@
 	section {
 		transition: padding-top 300ms;
 		padding: var(--size-header-sm) var(--size-gutter) 0;
+		overflow: hidden;
 	}
 </style>
