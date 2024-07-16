@@ -28,7 +28,7 @@
 	}
 
 	.size-title {
-		font-size: 3.125rem;
+		font-size: 3rem;
 	}
 	.size-header {
 		font-size: 2.5rem;

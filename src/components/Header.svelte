@@ -25,7 +25,7 @@
 					if (newHeaderContent === headerContent) return
 					headerContent = newHeaderContent
 					tw.stop().deleteAll(1).callFunction(() => {
-						if (headerContent === 'Powering platforms for a better climate future.') {
+						if (headerContent.length > 40) {
 							document.documentElement.style.setProperty("--size-header", "var(--size-header-lg)")
 						} else {
 							document.documentElement.style.setProperty("--size-header", "var(--size-header-sm)")
@@ -74,7 +74,6 @@
 		transition: height 300ms;
 	}
 	header.xs :global(.title) {
-		display: none;
 		overflow: hidden;
 	}
 	img {
