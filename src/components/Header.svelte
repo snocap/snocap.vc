@@ -11,12 +11,12 @@
 	$: xs = !$media.sm
 
 	onMount(() => {
-		const tw = new Typewriter('#typewriter', { delay: 60, pauseFor: 	0 })
+		const tw = new Typewriter('#typewriter', { delay: 60, pauseFor: 0 })
 		let debouncer: number|undefined
 		let headerContent = ''
 		tw.typeString(headerContent).start()
 		Array.from(document.querySelectorAll("[data-header-content]")).forEach(s => {
-			const options = { root: null, rootMargin: "0px", threshold: [0.4] }
+			const options = { root: null, rootMargin: "0px", threshold: [0.2] }
 			const observer = new IntersectionObserver(([{intersectionRatio, target}]) => {
 				if (intersectionRatio < options.threshold[0]) return
 				if (debouncer) clearTimeout(debouncer);
@@ -73,8 +73,9 @@
 		width: 100vw;
 		transition: height 300ms;
 	}
-	header.xs :global(.title br) {
+	header.xs :global(.title) {
 		display: none;
+		overflow: hidden;
 	}
 	img {
 		height: 1.5rem;
