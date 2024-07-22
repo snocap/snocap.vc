@@ -39,6 +39,7 @@
 <style>
 	.app {
 		padding: 0;
+		max-width: 80rem;
 	}
 	.apply {
 		height: 100vh;

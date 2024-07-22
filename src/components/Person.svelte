@@ -10,7 +10,7 @@
 	$: reverse = reversed && $media.sm
 </script>
 
-<div data-aos={reverse ? 'fade' : 'fade-left'} class="row end-xs start-sm" class:reverse>
+<div data-aos={reverse ? 'fade-right' : 'fade-left'} class="row end-xs start-sm" class:reverse>
 	<div class="text col-sm-8 col-xs-12">
 		<Text size={TextSize.Header}>{name}</Text>
 		<p>

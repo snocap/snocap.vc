@@ -6,7 +6,7 @@ import { TextSize } from "./lib/types";
 
 <section id="contact" data-header-content="Get in touch">
 	<div class="row with-gutter">
-		<div data-aos="fade-left" class="links col-sm-offset-7 col-sm-5">
+		<div data-aos="fade" class="links col-sm-offset-7 col-sm-5">
 			<Link size={TextSize.Aside} href="/apply">raising? click here!</Link>
 			<br />
 			<Link size={TextSize.Aside} href="mailto:hello@snocap.vc">general inqury? email us.</Link>
@@ -23,7 +23,7 @@ import { TextSize } from "./lib/types";
 		</div>
 	</div>
 	<div class="mountains-container with-gutter">
-		<div data-aos="fade-left" class="mountains col-xs-12" />
+		<div data-aos="fade" class="mountains col-xs-12" />
 	</div>
 </section>
 
