@@ -27,7 +27,7 @@
 			<li>Are <strong>raising their first round of capital</strong>, outside of grants and other non-dilutive capital.</li>
 		</ul>
 	</Text>
-	<Text size={TextSize.Aside} data-aos="fade-in" class="box">
+	<Text size={TextSize.Aside} class="box">
 		If this sounds like your startup, or one you know, you can <a href="https://snocap.vc/apply">submit the company for consideration here</a>. 
 		Our team reviews new opportunities every week!
 	</Text>
