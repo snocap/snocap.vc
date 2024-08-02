@@ -16,15 +16,15 @@
 	</Text>
 	<Text size={TextSize.Paragraph} data-aos="fade-in" class="box no-pad-right">
 		<ul>
-			<li>Create product(s) that are <strong>immediately cheaper, or dramatically more effective</strong>, than the products they are replacing.</li>
-			<li>Lower the cost of doing business for their customers, which are <strong>typically other businesses.</strong></li>
-			<li><strong>Reduce the immediate and downstream pollution</strong> their customers emit as a result of adopting their products.</li>
-			<li>Are in the process of <strong>commercializing intellectual property</strong> (IP) that they own or license.</li>
-			<li>Developed their IP through years of <strong>academic research or indiginous learnings</strong>.</li>
-			<li>Have <strong>exhibited corporate interest</strong>, ranging from written support through to direct sponsorship and purchase orders.</li>
-			<li>Will benefit from the <strong>help of engineers and scientists</strong> to predict the market value of their technology.</li>
-			<li>Could immediately <strong>leverage an ecosystem</strong> of academic partners, low cost field trials, and/or grant application support.</li>
-			<li>Are <strong>raising their first round of capital</strong>, outside of grants and other non-dilutive capital.</li>
+			<li>📈 Create product(s) that are <strong>immediately cheaper, or dramatically more effective</strong>, than the products they are replacing.</li>
+			<li>📉 Lower the cost of doing business for their customers, which are <strong>typically other businesses</strong>.</li>
+			<li>🌱 <strong>Reduce the immediate and downstream pollution</strong> their customers emit as a result of adopting their products.</li>
+			<li>🧠 Are in the process of <strong>commercializing intellectual property</strong> (IP) that they own or license.</li>
+			<li>📚 Developed their IP through years of <strong>academic research or indiginous learnings</strong>.</li>
+			<li>📦 Have <strong>exhibited corporate interest</strong>, ranging from written support through to direct sponsorship and purchase orders.</li>
+			<li>🧪 Will benefit from the <strong>help of engineers and scientists</strong> to predict the market value of their technology.</li>
+			<li>🌍 Could immediately <strong>leverage an ecosystem</strong> of academic partners, low cost field trials, and/or grant application support.</li>
+			<li>💰 Are <strong>raising their first round of capital</strong>, outside of grants and other non-dilutive capital.</li>
 		</ul>
 	</Text>
 	<Text size={TextSize.Aside} class="box">
@@ -64,6 +64,10 @@
 		border: dotted 1px #EEE;
 		border-radius: 2px;
 		display: block;
+	}
+
+	section ul, section li {
+		list-style: none;
 	}
 
 </style>
