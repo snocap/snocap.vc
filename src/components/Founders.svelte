@@ -20,7 +20,7 @@
 			<li>📉 Lower the cost of doing business for their customers, which are <strong>typically other businesses</strong>.</li>
 			<li>🌱 <strong>Reduce the immediate and downstream pollution</strong> their customers emit as a result of adopting their products.</li>
 			<li>🧠 Are in the process of <strong>commercializing intellectual property</strong> (IP) that they own or license.</li>
-			<li>📚 Developed their IP through years of <strong>academic research or indiginous learnings</strong>.</li>
+			<li>📚 Developed their IP through years of <strong>academic research or indigenous learnings</strong>.</li>
 			<li>📦 Have <strong>exhibited corporate interest</strong>, ranging from written support through to direct sponsorship and purchase orders.</li>
 			<li>🧪 Will benefit from the <strong>help of engineers and scientists</strong> to predict the market value of their technology.</li>
 			<li>🌍 Could immediately <strong>leverage an ecosystem</strong> of academic partners, low cost field trials, and/or grant application support.</li>
