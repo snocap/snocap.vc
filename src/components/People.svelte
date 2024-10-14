@@ -30,7 +30,7 @@
 		linkedinURI="https://www.linkedin.com/in/abigailalbright/"
 		headshotURI="/headshots/aa.jpeg"
 		reversed>
-		Abby Albright is an experienced founding fund partner, having successfully raised a fund in the XR space, specifically focused on placing investments in strong female founding teams.  Abby brings experience from across media formats gained over a wide ranging career in Hollywood and the games industry.
+		Abby is a seasoned investor and product leader with over a decade of experience. She has expertise in leading product management, business development, and go-to-market strategies for early-stage startups and global franchises alike. As an investor, Abby has supported seed-series B focused venture funds with $2B+in AUM, backed 35+ startups as a generalist angel investor, and co-founded an early-stage spatial computing fund. Startups she has supported have raised over $500M in subsequent funding. Abby holds an MBA from The Wharton School at UPenn and a BA in Neuroscience from UC Berkeley.
 	</Person>
 	<Person
 		name="Kate Kingen"

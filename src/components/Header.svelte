@@ -70,11 +70,14 @@
 		background: rgba(255,255,255,0.95);
 		z-index: 2;
 		position: fixed;
-		width: 100vw;
+		width: 90vw;
 		transition: height 300ms;
 	}
 	header.xs :global(.title) {
 		overflow: hidden;
+	}
+	header.xs {
+		width: 100vw;
 	}
 	img {
 		height: 1.5rem;
