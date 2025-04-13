@@ -3,10 +3,13 @@ interface I18nOptions {
 }
 
 type StringInterpolations = Record<string, string | number>;
+type Translations = Record<string, Record<string, string>>;
 
 const defaultOptions: I18nOptions = {
 	locale: 'en_US'
 };
+
+const translations = import.meta.glob('./translations/*.json', { eager: true }) as Translations;
 
 function interpolate(formatString: string, interpolations: StringInterpolations): string {
 	return formatString.replace(/\{(\w+)\}/g, (_, key) => {
@@ -15,8 +18,8 @@ function interpolate(formatString: string, interpolations: StringInterpolations)
 	});
 }
 
-export async function t(textToTranslate: string, interpolations: StringInterpolations = {}, options: I18nOptions = defaultOptions): Promise<string> {
-	const translations = await import(`./translations/${options.locale}.json`);
-	const formatString = (textToTranslate in translations) ? translations[textToTranslate] : textToTranslate;
+export function t(textToTranslate: string, interpolations: StringInterpolations = {}, options: I18nOptions = defaultOptions): string {
+	const usingTranslations = translations[`./translations/${options.locale}.json`];
+	const formatString = (textToTranslate in usingTranslations) ? usingTranslations[textToTranslate] : textToTranslate;
 	return interpolate(formatString, interpolations);
 }
