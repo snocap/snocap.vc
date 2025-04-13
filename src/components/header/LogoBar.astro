@@ -1,0 +1,51 @@
+---
+import Button from 'components/button/Button.astro';
+import { t } from 'static/i18n';
+import { properties, SocialNetworkName } from 'static/properties/socials';
+
+const socialLinks = [
+	SocialNetworkName.medium, 
+	SocialNetworkName.linkedin, 
+	SocialNetworkName.x,
+	SocialNetworkName.bluesky
+].map((key) => properties[key]);
+---
+<div class="logo-bar">
+	<a class="link-logo link" href="/" title={t('Return home')}>
+		<img class="main-logo-image" src="/assets/branding/logo-text.svg" alt={t('SNØCAP Logo')} />
+	</a>
+	<Button class="link-apply link" href="#founders">
+		{t('Apply for funding')}
+	</Button>
+	{socialLinks.map(({ name, url, title, logo }) => (
+		<Button class="link-social link" title={t(title)} href={url}>
+			<img slot="invert" src={logo} alt={t('{name} Logo', { name })} class="social-logo-image" />
+		</Button>
+	))}
+</div>
+
+<style>
+	.logo-bar {
+		display: flex;
+		column-gap: 0.375rem;
+	}
+	.logo-bar .link {
+		height: 1.625rem;
+	}
+	.link-logo {
+		padding: 1px 0;
+		flex-grow: 2;
+		transition: opacity 0.3s;
+		opacity: 1;
+	}
+	.link-logo:hover {
+		opacity: 0.5;
+	}
+	.link-apply {
+		margin-right: 3rem;
+	}
+	.main-logo-image {
+		height: 100%;
+	}
+
+</style>

@@ -1,0 +1,34 @@
+---
+import FounderExplainer from 'components/founders/FounderExplainer.astro';
+import MountainRangeHero from 'components/hero/MountainRangeHero.astro';
+import EcosystemSlideshow from 'components/ecosystem/EcosystemSlideshow.astro';
+import TeamMemberList from 'components/team/TeamMemberList.astro';
+import PortfolioGrid from 'components/portfolio/PortfolioGrid.astro';
+import NewsFeed from 'components/news/NewsFeed.astro';
+import EventFeed from 'components/events/EventFeed.astro';
+import Layout from 'layouts/Layout.astro';
+---
+
+<Layout>
+	<section id="hero">
+		<MountainRangeHero />
+	</section>
+	<section id="founders">
+		<FounderExplainer />
+	</section>
+	<section id="ecosystem">
+		<EcosystemSlideshow />
+	</section>
+	<section id="team">
+		<TeamMemberList />
+	</section>
+	<section id="portfolio">
+		<PortfolioGrid />
+	</section>
+	<section id="news">
+		<NewsFeed />
+	</section>
+	<section id="events">
+		<EventFeed />
+	</section>
+</Layout>

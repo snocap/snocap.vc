@@ -1,0 +1,38 @@
+---
+const { class: className = '', padding = '0.5rem', fontSize = '62.5%', ...rest } = Astro.props;
+const additionalClasses = className.split(/\s+/g).filter(Boolean);
+---
+<a class:list={['button', ...additionalClasses]} {...rest}>
+	<slot />
+	{Astro.slots.has('invert') && 
+		<div class="button-invert">
+			<slot name="invert" />
+		</div>}
+</a>
+
+<style define:vars={{ fontSize, padding }}>
+	.button {
+		padding: 0 var(--padding);
+		font-size: var(--font-size);
+		line-height: 1;
+		text-decoration: none;
+		color: var(--color-primary);
+		align-content: center;
+		display: inline-block;
+		text-transform: uppercase;
+		border: solid 1px var(--color-primary);
+		border-radius: 2px;
+		transition: background-color 0.3s, color 0.3s;
+	}
+	.button .button-invert {
+		filter: invert(0);
+		transition: filter 0.3s;
+	}
+	.button:hover {
+		background-color: var(--color-primary);
+		color: var(--color-secondary);
+	}
+	.button:hover .button-invert {
+		filter: invert(1);
+	}
+</style>
