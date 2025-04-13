@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'NB Akademie Mono Std';
+  src: url("/assets/fonts/NB Akademie Mono Std/NB Akademie Mono Std.woff2") format("woff2"),
+       url("/assets/fonts/NB Akademie Mono Std/NB Akademie Mono Std.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+	font-family: "NB Akademie Std";
+	src: url("/assets/fonts/NB Akademie Std/NB Akademie Std.woff2") format("woff2"),
+	     url("/assets/fonts/NB Akademie Std/NB Akademie Std.woff") format("woff");
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}

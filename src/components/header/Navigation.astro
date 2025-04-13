@@ -1,3 +1,78 @@
+---
+import { t } from 'static/i18n';
+
+const groups = [
+	[
+		{
+			title: t('Apply for funding'),
+			text: t('Founder'),
+			href: '#founders'
+		},
+		{
+			title: t('Our Ecosystem'),
+			text: t('Ecosystem'),
+			href: '#ecosystem'
+		},
+	],
+	[
+		{
+			title: t('Our Team'),
+			text: t('Team'),
+			href: '#team'
+		},
+		{
+			title: t('Our Portfolio'),
+			text: t('Portfolio'),
+			href: '#portfolio'
+		}
+	],
+	[
+		{
+			title: t('Latest News'),
+			text: t('News'),
+			href: '#news'
+		},
+		{
+			title: t('Official Events'),
+			text: t('Events'),
+			href: '#events'
+		}
+	]
+]
+---
 <nav>
-	Navigation
+	<h3 class="nav-subtitle">
+		{t('Powering platforms for a better climate future.')}
+	</h3>
+	<p class="nav-link-groups">
+		{groups.map((group) => (
+			<span class="nav-link-group">
+				{group.map(({ title, text, href }) => (
+					<a class="nav-link" href={href} title={title}>{text}</a>
+				))}
+			</span>
+		))}
+	</p>
 </nav>
+
+<style>
+	nav {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	h3 {
+		max-width: 19.2rem;
+	}
+	p {
+		display: flex;
+		flex-direction: row;
+		column-gap: 2rem;
+		padding: 0.5rem 0;
+	}
+	p span {
+		display: flex;
+		flex-direction: column;
+		row-gap: 0.25rem;
+	}
+</style>

@@ -3,22 +3,22 @@ const { class: className = '', padding = '0.5rem', fontSize = '62.5%', ...rest }
 const additionalClasses = className.split(/\s+/g).filter(Boolean);
 ---
 <a class:list={['button', ...additionalClasses]} {...rest}>
-	<slot />
-	{Astro.slots.has('invert') && 
-		<div class="button-invert">
-			<slot name="invert" />
-		</div>}
+	<slot />{Astro.slots.has('invert') && 
+	<span class="button-invert">
+		<slot name="invert" />
+	</span>}
 </a>
 
 <style define:vars={{ fontSize, padding }}>
 	.button {
 		padding: 0 var(--padding);
 		font-size: var(--fontSize);
-		line-height: 1;
+		line-height: 2;
 		text-decoration: none;
 		color: var(--color-primary);
-		align-content: center;
-		display: inline-block;
+		justify-content: center;
+		display: flex;
+		flex-direction: column;
 		text-transform: uppercase;
 		border: solid 1px var(--color-primary);
 		border-radius: 2px;
