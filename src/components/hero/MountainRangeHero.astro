@@ -1,3 +1,42 @@
-<Fragment>
-	MountainRangeHero
-</Fragment>
+---
+import { t } from "static/i18n";
+---
+
+<div class="hero-mountain-range">
+	<div class="text-wrapper">
+		<small class="vertical-rl">
+			{t('Energy ∙ Industry ∙ Food & Land ∙ Materials ∙ Mobility')}
+		</small>
+	</div>
+	<div class="video-wrapper">
+		<video playsinline autoplay muted loop controls={false}>
+			<source src="/assets/video/mountain_graded.mp4" type="video/mp4" />
+		</video>
+	</div>
+</div>
+
+<style>
+	.hero-mountain-range {
+		display: flex;
+		flex-direction: row;
+		height: calc((9/ 16) * 100vw);
+		max-height: 65vh;
+		min-height: 27rem;
+	}
+	.text-wrapper {
+		width: var(--gutter-width);
+		display: flex;
+    justify-content: center;
+	}
+	.video-wrapper {
+		flex-grow: 2;
+	}
+	small {
+		transform: rotateZ(180deg);
+	}
+	video {
+		object-fit: cover;
+		width: 100%;
+		height: 100%;
+	}
+</style>

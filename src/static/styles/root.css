@@ -73,12 +73,12 @@ small {
 	letter-spacing: -0.07rem;
 }
 
-small.vertical-lr {
+small.vertical-rl {
 	font-size: 0.875rem;
 	font-weight: 400;
 	line-height: 157.143%;
-	letter-spacing: -0.0875rem;
-	writing-mode: vertical-lr;
+	letter-spacing: 0.1rem;
+	writing-mode: vertical-rl;
 }
 
 a {
