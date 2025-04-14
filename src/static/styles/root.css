@@ -90,6 +90,10 @@ h5 a {
 	text-decoration: underline;
 }
 
+h5 a:hover {
+	text-decoration: underline dotted;
+}
+
 p a {
 	font-weight: 400;
 }

@@ -10,3 +10,4 @@ An Engineering-Led, Deeptech Venture Firm
 - [ ] Add warnings when translations are missing
 - [ ] Move to an async or independent i18n lib
 - [ ] Site metadata and video preview
+- [ ] Copy review for the founders section

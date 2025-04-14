@@ -1,3 +1,115 @@
-<Fragment>
-	FounderExplainer
-</Fragment>
+---
+import { t } from "static/i18n";
+
+const explainerRows = [
+	[
+		{
+			name: t('Efficiency Gains'),
+			icon: '/assets/icons/icon-chart-up.svg',
+			text: t('Create products that are immediately cheaper, or dramatically more effective, than the products they are replacing.'),
+		},
+		{
+			name: t('Cost Savings'),
+			icon: '/assets/icons/icon-chart-down.svg',
+			text: t('Lower the cost of doing business for their customers, which are typically other businesses.'),
+		},
+		{
+			name: t('Pollution Reduction'),
+			icon: '/assets/icons/icon-leaf.svg',
+			text: t('Reduce the immediate and downstream pollution their customers emit as a result of adopting their products.'),
+		},
+	],[
+		{
+			name: t('IP Protection'),
+			icon: '/assets/icons/icon-brain.svg',
+			text: t('Are in the process of commercializing intellectual property (IP) that they own or license.'),
+		},
+		{
+			name: t('Scientific Roots'),
+			icon: '/assets/icons/icon-book.svg',
+			text: t('Developed their IP through years of academic research, self-funded or indigenous learnings.'),
+		},
+		{
+			name: t('Corporate Interest'),
+			icon: '/assets/icons/icon-package.svg',
+			text: t('Have exhibited corporate interest, ranging from written support through to direct sponsorship and purchase orders.'),
+		},
+	],[
+		{
+			name: t('Engineering Support'),
+			icon: '/assets/icons/icon-beaker.svg',
+			text: t('Will benefit from the help of engineers and scientists to predict the market value of their technology.'),
+		},
+		{
+			name: t('Ecosystem Leverage'),
+			icon: '/assets/icons/icon-globe.svg',
+			text: t('Could immediately leverage an ecosystem of academic partners, cheap field trials, and/or grant application support.'),
+		},
+		{
+			name: t('First Round'),
+			icon: '/assets/icons/icon-dollar.svg',
+			text: t('Are raising their first round of institutional capital, outside of grants and other non-dilutive capital.'),
+		},
+	],
+]
+---
+
+<div class="founder-explainer">
+	<h1>{t('SNØCAP is a deeptech venture capital firm run by engineers.')}</h1>
+	<h5>{t('The firm invests in scientific breakthroughs that save money and remove pollution, at the same time. We love businesses that:')}</h5>
+	<div class="explainer-grid">
+		{explainerRows.map((row) => (
+			<div class="explainer-row">
+				{row.map(({ icon, text, name }) => (
+					<div class="explainer-node" title={name} class="explainer-item">
+						<img src={icon} alt={t('{name} Icon', { name })} />
+						<em>{text}</em>
+					</div>
+				))}
+			</div>
+		))}
+	</div>
+	<h5>{t('If this sounds like your startup, or one you know, you can')}&nbsp;<a href="/apply">{t('apply for funding')}</a>. {t('Our team reviews new opportunities every week!')}</h5>
+</div>
+
+<style>
+	.founder-explainer {
+		display: flex;
+		flex-direction: column;
+		padding: 9rem var(--gutter-width);
+		row-gap: 1.25rem;
+	}
+	.explainer-grid {
+		display: flex;
+		flex-direction: column;
+		row-gap: 1.25rem;
+		padding: 2rem 0;
+	}
+	.explainer-row {
+		display: flex;
+		flex-direction: row;
+		justify-items: stretch;
+		column-gap: 1.25rem;
+	}
+	.explainer-node {
+		border: solid 1px var(--color-tertiary);
+		border-radius: 2px;
+		display: flex;
+		flex-direction: row;
+		padding: 1.125rem 2rem;
+		column-gap: 1.375rem;
+		flex: 1 1 0;
+		align-items: center;
+		transition: transform 0.3s;
+	}
+	.explainer-node:hover {
+		transform: scale(1.02);
+	}
+	.explainer-node img {
+		width: 2.625rem;
+		height: 2.625rem;
+	}
+	h5 {
+		max-width: 55rem;
+	}
+</style>
