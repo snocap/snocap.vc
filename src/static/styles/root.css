@@ -79,6 +79,7 @@ small.vertical-rl {
 	line-height: 157.143%;
 	letter-spacing: 0.1rem;
 	writing-mode: vertical-rl;
+	transform: rotateZ(180deg);
 }
 
 a {

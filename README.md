@@ -11,3 +11,5 @@ An Engineering-Led, Deeptech Venture Firm
 - [ ] Move to an async or independent i18n lib
 - [ ] Site metadata and video preview
 - [ ] Copy review for the founders section
+- [ ] Better transitions for slideshow? automatically move between them?
+- [ ] Captions for the ecosystem images? Slideshow in a slideshow?
