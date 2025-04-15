@@ -18,3 +18,4 @@ An Engineering-Led, Deeptech Venture Firm
 - [ ] Support persistant header on scroll
 - [ ] Update top navigation as anchors are scrolled past
 - [ ] Get blog posts live so we can link out
+- [ ] Rebuild Site Cron

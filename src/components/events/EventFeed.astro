@@ -1,3 +1,84 @@
-<ul class="event-feed">
-	<li>Event Feed</li>
-</ul>
+---
+import { fetchUpcomingEvents, LumaCalendarId } from "api/luma";
+import { t, defaultOptions } from "static/i18n";
+import Button from "components/button/Button.astro";
+
+const upcomingEventGroups = await Promise.all([
+	fetchUpcomingEvents(LumaCalendarId.Snocap),
+	fetchUpcomingEvents(LumaCalendarId.NineZeroSeattle),
+	fetchUpcomingEvents(LumaCalendarId.NineZeroSF),
+	fetchUpcomingEvents(LumaCalendarId.SweetFarm),
+	fetchUpcomingEvents(LumaCalendarId.Envest),
+])
+
+const upcomingEvents = upcomingEventGroups
+	.flat()
+	.sort((a, b) => a.start.getTime() - b.start.getTime());
+---
+
+<div class="event-feed">
+	{upcomingEvents.map(({ title, start, url, org }) => (
+		<div class="event-item">
+			<div class="event-datetime">
+				<Button disabled class="start-date">
+					{start.toLocaleDateString(defaultOptions.locale, { month: 'short', day: 'numeric', year: 'numeric' })}
+				</Button>
+				<Button disabled class="start-time">
+					{start.toLocaleTimeString(defaultOptions.locale, { hour: '2-digit', minute: '2-digit' })}
+				</Button>
+			</div>
+			<h3>{title}</h3>
+			<small class="event-org">
+				{org}
+			</small>
+			<Button href={url} target="_blank" rel="noopener noreferrer" class="event-link">
+				{t('View Event')}
+			</Button>
+		</div>
+	))}
+</div>
+
+<style>
+	.event-feed {
+		display: flex;
+		flex-direction: row;
+		row-gap: 2.75rem;
+		padding: 8rem var(--gutter-width);
+		flex-wrap: wrap;
+		justify-content: space-between;
+	}
+	.event-item {
+		border: solid 1px var(--color-tertiary);
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		padding: 1.375rem 0.875rem;
+		row-gap: 0.5rem;
+		width: 45%;
+		max-width: 35rem;
+		min-width: 25rem;
+		overflow: hidden;
+	}
+	.event-datetime {
+		display: flex;
+		flex-direction: row;
+		column-gap: 0.5rem;
+	}
+	.published-date {
+		width: 5.7rem;
+		text-align: center;
+	}
+	h3 {
+		padding-top: 0.5rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		width: 100%;
+	}
+	.event-link {
+		margin-top: 1rem;
+		width: 100%;
+		text-align: center;
+		font-size: larger;
+	}
+</style>

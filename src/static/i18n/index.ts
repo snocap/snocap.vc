@@ -1,12 +1,13 @@
 interface I18nOptions {
-	locale: 'en_US'
+	locale: SupportedLocales
 }
 
+export type SupportedLocales = 'en-US'
 type StringInterpolations = Record<string, string | number>;
 type Translations = Record<string, Record<string, string>>;
 
-const defaultOptions: I18nOptions = {
-	locale: 'en_US'
+export const defaultOptions: I18nOptions = {
+	locale: 'en-US'
 };
 
 const translations = import.meta.glob('./translations/*.json', { eager: true }) as Translations;

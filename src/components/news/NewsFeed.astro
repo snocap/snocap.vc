@@ -1,7 +1,7 @@
 ---
-import { fetchRecentPosts } from "src/api/medium";
-import { t } from "static/i18n";
-import Button from "src/components/button/Button.astro";
+import { fetchRecentPosts } from "api/medium";
+import { t, defaultOptions } from "static/i18n";
+import Button from "components/button/Button.astro";
 
 const recentPosts = await fetchRecentPosts();
 ---
@@ -13,7 +13,7 @@ const recentPosts = await fetchRecentPosts();
 				<img slot="invert" src={`/assets/social/logo-${source}.svg`} alt={t('{name} post', { source })} />
 			</Button>
 			<Button class="published-date" disabled>
-				{new Date(published).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+				{published.toLocaleDateString(defaultOptions.locale, { month: 'short', day: 'numeric', year: 'numeric' })}
 			</Button>
 			<h3>{title}</h3>
 			<Button href={link} target="_blank" rel="noopener noreferrer" class="news-link">
