@@ -22,7 +22,7 @@ export const properties = {
 	[SocialNetworkName.github]: {
 		name: 'Github',
 		title: 'Follow us on Github',
-		url: 'https://github.com/snocapvc',
+		url: 'https://github.com/snocap',
 		logo: '/assets/social/logo-github.svg',
 	},
 	[SocialNetworkName.bluesky]: {
