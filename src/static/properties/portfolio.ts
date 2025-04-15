@@ -14,7 +14,7 @@ export const portfolio: PortfolioItem[] = [
 		logo: "/assets/portfolio/logo-sparxell.png",
 		sectors: ["Materials", "Cosmetics"],
 		website: "https://sparxell.com/",
-		blog: "https://blog.snocap.vc/blah",
+		// blog: "https://blog.snocap.vc/blah",
 	},
 	{
 		id: "revivbio",

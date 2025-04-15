@@ -14,7 +14,7 @@ import Button from 'components/button/Button.astro'
 				class="portfolio-link"
 				href={website}
 			>
-				{website.replace(/^.*\W(\w+?\.\w+$)/, "$1").toLowerCase()}
+				{website.replace(/^.*\W(\w+?\.\w+).*$/, "$1").toLowerCase()}
 			</a>
 			<div class="portfolio-sectors">
 				{sectors.map((sector) => (
@@ -46,24 +46,28 @@ import Button from 'components/button/Button.astro'
 	padding: 8rem var(--gutter-width);
 	column-gap: 7.25rem;
 	flex-wrap: wrap;
+	row-gap: 3.875rem;
+	justify-content: center;
 }
 .portfolio-item {
 	display: flex;
 	flex-direction: column;
-	width: 25%;
-	min-width: 14.5rem;
-	max-width: 15.5rem;
 	align-items: flex-start;
 	row-gap: 0.875rem;
 }
+.portfolio-item h5 {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
 .portfolio-item img {
+	/* background-color: rgba(0, 0, 0, 0.1); */
 	border: dotted 1px var(--color-tertiary);
-	opacity: 0.8;
+	opacity: 0.6;
 	filter: grayscale(1);
 	transition: opacity 0.3s, filter 0.3s;
 	object-fit: contain;
 	object-position: center;
-	padding: 0.5rem;
+	padding: 1rem;
 	width: 14.5rem;
 	height: 6rem;
 }
@@ -75,5 +79,8 @@ import Button from 'components/button/Button.astro'
 	display: flex;
 	flex-direction: row;
 	column-gap: 0.5rem;
+}
+.portfolio-link:hover {
+	text-decoration: underline;
 }
 </style>
