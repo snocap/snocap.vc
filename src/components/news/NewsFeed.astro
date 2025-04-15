@@ -1,3 +1,50 @@
-<ul class="news-feed">
-	<li>News Feed</li>
-</ul>
+---
+import { fetchRecentPosts } from "src/api/medium";
+import { t } from "static/i18n";
+import Button from "src/components/button/Button.astro";
+
+const recentPosts = await fetchRecentPosts();
+---
+
+<div class="news-feed">
+	{recentPosts.map(({ title, link, published, source }) => (
+		<div class="news-item">
+			<Button disabled>
+				<img slot="invert" src={`/assets/social/logo-${source}.svg`} alt={t('{name} post', { source })} />
+			</Button>
+			<Button class="published-date" disabled>
+				{new Date(published).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+			</Button>
+			<h3>{title}</h3>
+			<Button href={link} target="_blank" rel="noopener noreferrer" class="news-link">
+				{t('Read Article')}
+			</Button>
+		</div>
+	))}
+</div>
+
+<style>
+	.news-feed {
+		display: flex;
+		flex-direction: column;
+		row-gap: 2.75rem;
+		padding: 8rem var(--gutter-width);
+	}
+	.news-item {
+		border: solid 1px var(--color-tertiary);
+		display: flex;
+		flex-direction: row;
+		padding: 1rem;
+		column-gap: 1rem;
+	}
+	.published-date {
+		width: 5.7rem;
+		text-align: center;
+	}
+	h3 {
+		flex: 1 1 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+</style>
