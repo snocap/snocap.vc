@@ -2,7 +2,7 @@
 export enum SocialNetworkName {
 	medium = 'medium',
 	linkedin = 'linkedin',
-	x = 'x',
+	github = 'github',
 	bluesky = 'bluesky',
 }
 
@@ -19,11 +19,11 @@ export const properties = {
 		url: 'https://www.linkedin.com/company/snocapvc',
 		logo: '/assets/social/logo-linkedin.svg',
 	},
-	[SocialNetworkName.x]: {
-		name: 'X',
-		title: 'Follow us on X',
-		url: 'https://x.com/snocapvc',
-		logo: '/assets/social/logo-x.svg',
+	[SocialNetworkName.github]: {
+		name: 'Github',
+		title: 'Follow us on Github',
+		url: 'https://github.com/snocapvc',
+		logo: '/assets/social/logo-github.svg',
 	},
 	[SocialNetworkName.bluesky]: {
 		name: 'BlueSky',
