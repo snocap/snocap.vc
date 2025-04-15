@@ -13,3 +13,8 @@ An Engineering-Led, Deeptech Venture Firm
 - [ ] Copy review for the founders section
 - [ ] Better transitions for slideshow? automatically move between them?
 - [ ] Captions for the ecosystem images? Slideshow in a slideshow?
+- [ ] Intercept redirects and rewrite history to use paths
+- [ ] Render duplicate versions of the index for page deeplinks
+- [ ] Support persistant header on scroll
+- [ ] Update top navigation as anchors are scrolled past
+- [ ] Get blog posts live so we can link out

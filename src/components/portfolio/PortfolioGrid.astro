@@ -1,3 +1,79 @@
-<ul class="portfolio-grid">
-	<li>Portfolio Grid</li>
-</ul>
+---
+import { t } from 'static/i18n'
+import { portfolio } from 'static/properties/portfolio'
+import Button from 'components/button/Button.astro'
+---
+<div class="portfolio-grid">
+	{portfolio.map(({ id, name, logo, website, sectors, blog }) => (
+		<div class="portfolio-item">
+			<img class="portfolio-logo" alt={t("{name} Preview Image", { name })} src={logo} />
+			<h5>{name}</h5>
+			<a
+				title={t("Visit {name}", { name })}
+				target="_blank"
+				class="portfolio-link"
+				href={website}
+			>
+				{website.replace(/^.*\W(\w+?\.\w+$)/, "$1").toLowerCase()}
+			</a>
+			<div class="portfolio-sectors">
+				{sectors.map((sector) => (
+					<Button disabled>{t(sector)}</Button>
+				))}
+			</div>
+			{
+				blog && (
+					<p>
+						<a
+							title={t("Click to learn why we invested in {name}", { name })}
+							class="portfolio-blog"
+							href={blog}
+							target="_blank"
+						>
+							{t("+ Why We Invested")}
+						</a>
+					</p>
+				)
+			}
+		</div>
+	))}
+</div>
+
+<style>
+.portfolio-grid {
+	display: flex;
+	flex-direction: row;
+	padding: 8rem var(--gutter-width);
+	column-gap: 7.25rem;
+	flex-wrap: wrap;
+}
+.portfolio-item {
+	display: flex;
+	flex-direction: column;
+	width: 25%;
+	min-width: 14.5rem;
+	max-width: 15.5rem;
+	align-items: flex-start;
+	row-gap: 0.875rem;
+}
+.portfolio-item img {
+	border: dotted 1px var(--color-tertiary);
+	opacity: 0.8;
+	filter: grayscale(1);
+	transition: opacity 0.3s, filter 0.3s;
+	object-fit: contain;
+	object-position: center;
+	padding: 0.5rem;
+	width: 14.5rem;
+	height: 6rem;
+}
+.portfolio-item img:hover {
+	opacity: 1;
+	filter: grayscale(0);
+}
+.portfolio-sectors {
+	display: flex;
+	flex-direction: row;
+	column-gap: 0.5rem;
+}
+</style>
