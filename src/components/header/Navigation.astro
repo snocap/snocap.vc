@@ -1,39 +1,39 @@
 ---
-import { t } from "static/i18n";
+import { t } from "src/lib/i18n";
 
 const groups = [
   [
     {
-      title: t("Apply for funding"),
+      title: t("Apply for funding and build with us"),
       text: t("Founders"),
       href: "#founders",
     },
     {
-      title: t("Our Ecosystem"),
+      title: t("Explore our ecosystem programs and partners"),
       text: t("Ecosystem"),
       href: "#ecosystem",
     },
   ],
   [
     {
-      title: t("Our Team"),
+      title: t("An investment team that gets deeptech"),
       text: t("Team"),
       href: "#team",
     },
     {
-      title: t("Our Portfolio"),
+      title: t("Learn about our portfolio companies"),
       text: t("Portfolio"),
       href: "#portfolio",
     },
   ],
   [
     {
-      title: t("Latest News"),
+      title: t("Read our latest articles and news"),
       text: t("News"),
       href: "#news",
     },
     {
-      title: t("Official Events"),
+      title: t("Join us for live, in-person events"),
       text: t("Events"),
       href: "#events",
     },
@@ -42,7 +42,7 @@ const groups = [
 ---
 
 <nav-collabsible {...Astro.props}>
-  <h3 class="nav-subtitle">
+  <h3 class="nav-subtitle" title={t("Backing deep science for a better future.")}>
     {t("Backing deep science for a better future.")}
   </h3>
   <p class="nav-link-groups">
@@ -66,9 +66,9 @@ const groups = [
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+		align-items: center;
     position: relative;
     z-index: 1;
-    background-color: var(--color-secondary);
     width: 100%;
   }
   h3 {
@@ -85,12 +85,18 @@ const groups = [
     flex-direction: column;
     row-gap: 0.25rem;
   }
+	.nav-link.selected {
+		text-decoration: underline;
+	}
 </style>
 <script>
+	const sections: NodeListOf<HTMLElement> = document.querySelectorAll("section");
 	class CollapsibleNav extends HTMLElement {
 		private isDragging: boolean;
 		private startY: number;
-		private startMarginTop: number;
+		private startMarginTop: number; 
+		private links: NodeListOf<HTMLAnchorElement> = document.querySelectorAll("nav-collabsible a.nav-link");
+		private subtitle: HTMLHeadingElement = document.querySelector("nav-collabsible h3")!;
 
 		constructor() {
 			super();
@@ -109,6 +115,7 @@ const groups = [
 			window.addEventListener("touchend", this.onTouchEnd);
 			window.addEventListener("resize", this.onResize);
 			window.addEventListener("hashchange", this.onHashChange);
+			window.addEventListener("scroll", this.determineSelectedSection);
 		}
 
 		disconnectedCallback() {
@@ -121,6 +128,42 @@ const groups = [
 			window.removeEventListener("touchend", this.onTouchEnd);
 			window.removeEventListener("resize", this.onResize);
 			window.removeEventListener("hashchange", this.onHashChange);
+			window.removeEventListener("scroll", this.determineSelectedSection);
+		}
+
+		updateSubtitle(link: HTMLAnchorElement | null) {
+			if (link) {
+				this.subtitle.textContent = link.title;
+			} else {
+				this.subtitle.textContent = this.subtitle.title;
+			}
+		}
+
+		determineSelectedSection = () => {
+			let selectedSection = null;
+			for (const section of sections) {
+				const rect = section.getBoundingClientRect();
+				if (rect.top + rect.height / 2 >= 0 && rect.top + rect.height / 2 < window.innerHeight) {
+					selectedSection = section;
+					break;
+				}
+			}
+			if (!selectedSection) {
+				return;
+			}
+			let fallbackToDefault = true;
+			this.links.forEach((link) => {
+				const previously = this.classList.contains("selected");
+				const selected = link.getAttribute("href") === `#${selectedSection.id}`;
+				link.classList.toggle("selected", selected);
+				if (selected && !previously) {
+					this.updateSubtitle(link);
+					fallbackToDefault = false;
+				}
+			});
+			if (fallbackToDefault) {
+				this.updateSubtitle(null);
+			}
 		}
 
 		onHashChange = () => {

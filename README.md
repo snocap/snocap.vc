@@ -12,8 +12,8 @@ An Engineering-Led, Deeptech Venture Firm
 - [ ] Better transitions for slideshow? automatically move between them?
 - [ ] Captions for the ecosystem images? Slideshow in a slideshow?
 - [ ] Intercept redirects for smooth scrolling
-- [ ] Update top navigation as anchors are scrolled past
-- [ ] Get blog posts live so we can link out
+- [ ] Get why-we-invested blog posts live so we can link out
 - [ ] Rebuild Site Cron
-- [ ] Apply page
+- [ ] Full Apply page
 - [ ] CI/CD
+- [ ] Mobile Mode
