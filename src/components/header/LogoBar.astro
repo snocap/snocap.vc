@@ -1,6 +1,7 @@
 ---
 import { t } from 'utils/i18n';
 import HeaderButtons from './HeaderButtons.astro';
+import Button from 'components/button/Button.astro';
 
 const { class: className = '' } = Astro.props;
 const classes = Array.from(new Set(['logo-bar', className].filter(Boolean)));
@@ -10,13 +11,20 @@ const classes = Array.from(new Set(['logo-bar', className].filter(Boolean)));
 	<a class="link-logo link" href="/" title={t('Return home')}>
 		<img class="main-logo-image" src="/assets/branding/logo-snocap-text.svg" alt={t('SNØCAP Logo')} />
 	</a>
-	<HeaderButtons orientation="horizontal" />
+	<div class="desktop-buttons">
+		<HeaderButtons class="link" orientation="horizontal" />
+	</div>
+	<div class="mobile-buttons">
+		<Button class="opener">{t('Menu')}</Button>
+	</div>
 </div>
 
 <style>
-	.logo-bar {
+	.logo-bar, .desktop-buttons {
 		display: flex;
 		column-gap: 0.375rem;
+	}
+	.logo-bar {
 		position: relative;
 		padding: var(--row-gap) var(--gutter-width);
 		z-index: 2;
@@ -39,8 +47,17 @@ const classes = Array.from(new Set(['logo-bar', className].filter(Boolean)));
 	.link-logo:hover {
 		opacity: 0.5;
 	}
+	.mobile-buttons {
+		display: none;
+	}
 	@media (max-width: 742px) {
 		.button.link {
+			display: none;
+		}
+		.mobile-buttons{
+			display: flex;
+		}
+		.desktop-buttons {
 			display: none;
 		}
 	}

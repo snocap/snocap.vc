@@ -103,18 +103,23 @@ const groups = [
 	}
 	@media (max-width: 742px) {
 		nav-collabsible {
-			position: absolute;
+			position: fixed;
 			flex-direction: column;
 			z-index: 5;
 			top: 0;
-			left 0;
-			right: 0;
-			bottom: 0;
+			right 0;
 			width: 100vw;
 			height: 100vh;
 			background-color: var(--color-secondary);
 			justify-content: center;
 			padding: 3rem var(--gutter-width);
+			transform: translateX(180%);
+			opacity: 0;
+			transition: transform 0.3s, opacity 0.3s;
+		}
+		nav-collabsible.open {
+			transform: translateX(0);
+			opacity: 1;
 		}
 		.nav-link {
 			font-size: 1.875rem;
@@ -189,6 +194,7 @@ const groups = [
 		}
 
 		addListeners() {
+			this.parentElement?.addEventListener("click", this.handleClick);
 			window.addEventListener("mousedown", this.onMouseDown);
 			window.addEventListener("wheel", this.onScroll);
 			window.addEventListener("mouseup", this.onMouseUp);
@@ -202,6 +208,7 @@ const groups = [
 		}
 
 		removeListeners() {
+			this.parentElement?.removeEventListener("click", this.handleClick);
 			window.removeEventListener("mousedown", this.onMouseDown);
 			window.removeEventListener("wheel", this.onScroll);
 			window.removeEventListener("mouseup", this.onMouseUp);
@@ -216,6 +223,11 @@ const groups = [
 
 		isMobile = () => {
 			return getComputedStyle(this.subtitle).display === "none";
+		}
+
+		handleClick = (event: MouseEvent) => {
+			const target = event.target as HTMLElement;
+			this.classList.toggle("open", target.classList.contains("opener")) 
 		}
 
 		updateSubtitle(link: HTMLAnchorElement | null) {
@@ -312,9 +324,11 @@ const groups = [
 		};
 
 		updateMarginTop(newMarginTop: number) {
-			const elementHeight = this.offsetHeight;
-			const marginTop = Math.max(-elementHeight, Math.min(0, newMarginTop));
-			this.style.marginTop = `${marginTop}px`;
+			if (!this.isMobile()) {
+				const elementHeight = this.offsetHeight;
+				const marginTop = Math.max(-elementHeight, Math.min(0, newMarginTop));
+				this.style.marginTop = `${marginTop}px`;
+			}
 			this.updateBorderOpacity();
 		}
 
