@@ -1,30 +1,30 @@
 ---
-import LogoBar from "./LogoBar.astro"
-import Navigation from "./Navigation.astro"
+import LogoBar from "./LogoBar.astro";
+import Navigation from "./Navigation.astro";
 ---
+
 <header>
-	<div class="restricted">
-		<LogoBar class="logo-bar" />
-		<Navigation class="nav" />
-	</div>
+  <div class="restricted">
+    <LogoBar class="logo-bar" />
+    <Navigation class="nav" />
+  </div>
 </header>
 
 <style>
-	header {
-		top: 0;
-		position: sticky;
-		z-index: 1;
-		width: 100%;
+  header {
+    top: 0;
+    position: sticky;
+    z-index: 1;
+    width: 100%;
     background-color: var(--color-secondary);
-	}
-	.restricted {
-		--row-gap: calc(var(--gutter-width) * 0.4);
-		display: flex;
-		flex-direction: column;
-		max-width: var(--maxWidth);
-		min-width: var(--minWidth);
-		margin: 0 auto;
-		position: relative;
-	}
+  }
+  .restricted {
+    --row-gap: calc(var(--gutter-width) * 0.4);
+    display: flex;
+    flex-direction: column;
+    max-width: var(--maxWidth);
+    min-width: var(--minWidth);
+    margin: 0 auto;
+    position: relative;
+  }
 </style>
-

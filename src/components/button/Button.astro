@@ -1,47 +1,59 @@
 ---
-const { disabled, class: className = '', padding = '0.5rem', fontSize = '62.5%', ...rest } = Astro.props;
+const {
+  disabled,
+  class: className = "",
+  padding = "0.5rem",
+  fontSize = "62.5%",
+  ...rest
+} = Astro.props;
 const additionalClasses = className.split(/\s+/g).filter(Boolean);
-if (disabled) additionalClasses.push('disabled')
+if (disabled) additionalClasses.push("disabled");
 ---
-<a class:list={['button', ...additionalClasses]} {...rest}>
-	<slot />{Astro.slots.has('invert') && 
-	<span class="button-invert">
-		<slot name="invert" />
-	</span>}
+
+<a class:list={["button", ...additionalClasses]} {...rest}>
+  <slot />{
+    Astro.slots.has("invert") && (
+      <span class="button-invert">
+        <slot name="invert" />
+      </span>
+    )
+  }
 </a>
 
 <style define:vars={{ fontSize, padding }}>
-	.button {
-		padding: 0 var(--padding);
-		font-size: var(--fontSize);
-		line-height: 2;
-		text-decoration: none;
-		color: var(--color-primary);
-		justify-content: center;
-		display: flex;
-		flex-direction: column;
-		text-transform: uppercase;
-		border: solid 1px var(--color-primary);
-		border-radius: 2px;
-		transition: background-color 0.3s, color 0.3s;
-	}
-	.button .button-invert {
-		filter: invert(0);
-		transition: filter 0.3s;
-		display: flex;
-		flex-direction: row;
-		align-items: stretch;
-	}
-	.button.disabled {
-		opacity: 0.8;
-		background-color: rgba(0, 0, 0, 0.01);
-		pointer-events: none;
-	}
-	.button:not(.disabled):hover {
-		background-color: var(--color-primary);
-		color: var(--color-secondary);
-	}
-	.button:not(.disabled):hover .button-invert {
-		filter: invert(1);
-	}
+  .button {
+    padding: 0 var(--padding);
+    font-size: var(--fontSize);
+    line-height: 2;
+    text-decoration: none;
+    color: var(--color-primary);
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    text-transform: uppercase;
+    border: solid 1px var(--color-primary);
+    border-radius: 2px;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
+  }
+  .button .button-invert {
+    filter: invert(0);
+    transition: filter 0.3s;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .button.disabled {
+    opacity: 0.8;
+    background-color: rgba(0, 0, 0, 0.01);
+    pointer-events: none;
+  }
+  .button:not(.disabled):hover {
+    background-color: var(--color-primary);
+    color: var(--color-secondary);
+  }
+  .button:not(.disabled):hover .button-invert {
+    filter: invert(1);
+  }
 </style>

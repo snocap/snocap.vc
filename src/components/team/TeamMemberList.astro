@@ -1,81 +1,91 @@
 ---
-import { t } from 'utils/i18n'
-import { team } from 'data/team'
-import Button from 'components/button/Button.astro'
+import { t } from "utils/i18n";
+import { team } from "data/team";
+import Button from "components/button/Button.astro";
 ---
 
 <div class="team-member-list">
-	{team.map(({ name, title, image, bio, linkedinUrl }) => (
-		<div class="team-member">
-			<div class="member-details">
-					<h1>{name}</h1>
-					<h2>{t(title)}</h2>
-					<small class="member-bio" set:html={t(bio).trim().replace(/\n/g, '<br>')}></small>
-					<Button href={linkedinUrl} target="_blank" rel="noopener noreferrer" class="member-linkedin">
-						{t('LinkedIn')}
-					</Button>
-			</div>
-			<div class="member-image">
-				<img src={image} alt={t('{name}\'s Headshot', { name })} />
-			</div>
-		</div>
-	))}
+  {
+    team.map(({ name, title, image, bio, linkedinUrl }) => (
+      <div class="team-member">
+        <div class="member-details">
+          <h1>{name}</h1>
+          <h2>{t(title)}</h2>
+          <small
+            class="member-bio"
+            set:html={t(bio).trim().replace(/\n/g, "<br>")}
+          />
+          <Button
+            href={linkedinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="member-linkedin"
+          >
+            {t("LinkedIn")}
+          </Button>
+        </div>
+        <div class="member-image">
+          <img src={image} alt={t("{name}'s Headshot", { name })} />
+        </div>
+      </div>
+    ))
+  }
 </div>
 
 <style>
-.team-member-list {
-	display: flex;
-	flex-direction: column;
-	padding: 0 var(--gutter-width);
-	row-gap: 5.626rem;
-}
-.team-member {
-	display: flex;
-	flex-direction: row;
-	align-items: stretch;
-}
-.team-member:nth-child(even) {
-	flex-direction: row-reverse;
-}
-.member-details {
-	padding: 0 7rem;
-	width: 66%;
-	align-items: flex-start;
-	display: flex;
-	flex-direction: column;
-}
-.member-bio {
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;	
-	justify-content: center;
-	padding: 1rem 0;
-}
-.member-image {
-	width: 34%;
-}
-.member-image img {
-	width: 100%;
-	object-fit: cover;
-	object-position: top center;
-	aspect-ratio: 16 / 14;
-	filter: grayscale(100%);
-	transition: filter 0.3s ease;
-}
-.member-image img:hover {
-	filter: grayscale(0%);
-}
-@media (max-width: 742px) {
-	.team-member {
-		flex-direction: column-reverse !important;
-	}
-	.member-image {
-		width: 100%;
-		padding-bottom: 1.5rem;
-	}
-	.member-details {
-		padding: 0;
-		width: 100%;
-	}
-}
+  .team-member-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--gutter-width);
+    row-gap: 5.626rem;
+  }
+  .team-member {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .team-member:nth-child(even) {
+    flex-direction: row-reverse;
+  }
+  .member-details {
+    padding: 0 7rem;
+    width: 66%;
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+  }
+  .member-bio {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1rem 0;
+  }
+  .member-image {
+    width: 34%;
+  }
+  .member-image img {
+    width: 100%;
+    object-fit: cover;
+    object-position: top center;
+    aspect-ratio: 16 / 14;
+    filter: grayscale(100%);
+    transition: filter 0.3s ease;
+  }
+  .member-image img:hover {
+    filter: grayscale(0%);
+  }
+  @media (max-width: 742px) {
+    .team-member {
+      flex-direction: column-reverse !important;
+    }
+    .member-image {
+      width: 100%;
+      padding-bottom: 1.5rem;
+    }
+    .member-details {
+      padding: 0;
+      width: 100%;
+    }
+  }
 </style>

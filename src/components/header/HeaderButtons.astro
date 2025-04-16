@@ -1,55 +1,67 @@
 ---
 import Button from "components/button/Button.astro";
-import { socials, SocialNetworkName } from 'data/socials';
+import { socials, SocialNetworkName } from "data/socials";
 import { t } from "utils/i18n";
 
 const socialLinks = [
-	SocialNetworkName.medium, 
-	SocialNetworkName.linkedin, 
-	SocialNetworkName.github,
-	SocialNetworkName.bluesky
+  SocialNetworkName.medium,
+  SocialNetworkName.linkedin,
+  SocialNetworkName.github,
+  SocialNetworkName.bluesky,
 ].map((key) => socials[key]);
 
-const orientation = Astro.props.orientation || 'vertical';
+const orientation = Astro.props.orientation || "vertical";
 ---
+
 <Fragment>
-	<Button class={`link-apply link ${orientation}`} href="/apply">
-		{t('Apply for funding')}
-	</Button>
-	{socialLinks.map(({ name, url, title, logo }) => (
-		<Button class={`link-social link ${orientation}`} title={t(title)} href={url}>
-			<img slot="invert" src={logo} alt={t('{name} Logo', { name })} class="social-logo-image" />
-		</Button>
-	))}
+  <Button class={`link-apply link ${orientation}`} href="/apply">
+    {t("Apply for funding")}
+  </Button>
+  {
+    socialLinks.map(({ name, url, title, logo }) => (
+      <Button
+        class={`link-social link ${orientation}`}
+        title={t(title)}
+        href={url}
+      >
+        <img
+          slot="invert"
+          src={logo}
+          alt={t("{name} Logo", { name })}
+          class="social-logo-image"
+        />
+      </Button>
+    ))
+  }
 </Fragment>
 
 <style>
-	.link {
-		height: 1.625rem;
-	}
-	.link-social {
-		width: 2.3rem;
-	}
-	.link-apply.horizontal {
-		margin-right: 3rem;
-	}
-	.link-apply.vertical {
-		width: 100%;
-		margin: 0;
-		font-size: 20px;		
-		text-align: center;
-		padding: 1.5rem;		
-	}
-	.link-social.vertical {
-		width: 4rem;
-		height: 3rem;
-		padding: 1rem;
-	}
-	.link-social img {
-		width: 100%;
-		max-height: 80%;
-		padding-top: 0.2rem;
-		object-fit: contain;
-		object-position: center center;
-	}
+  .link {
+    height: 1.625rem;
+  }
+  .link-social {
+    width: 2.3rem;
+  }
+  .link-apply.horizontal {
+    margin-right: 3rem;
+  }
+  .link-apply.vertical {
+    width: 100%;
+    margin: 0;
+    font-size: 20px;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .link-social.vertical {
+    width: 4rem;
+    height: 3rem;
+    padding: 1rem;
+  }
+  .link-social img {
+    width: 100%;
+    max-height: 80%;
+    padding-top: 0.2rem;
+    object-fit: contain;
+    object-position: center center;
+  }
 </style>

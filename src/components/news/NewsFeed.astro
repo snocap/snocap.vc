@@ -7,63 +7,79 @@ const recentPosts = await fetchRecentPosts();
 ---
 
 <div class="news-feed">
-	{recentPosts.map(({ title, link, published, source }) => (
-		<div class="news-item">
-			<div class="news-labels">
-				<Button disabled>
-					<img slot="invert" src={`/assets/social/logo-${source}.svg`} alt={t('{name} post', { source })} />
-				</Button>
-				<Button class="published-date" disabled>
-					{published.toLocaleDateString(defaultOptions.locale, { month: 'short', day: 'numeric', year: 'numeric' })}
-				</Button>
-			</div>
-			<h3>{title}</h3>
-			<Button href={link} target="_blank" rel="noopener noreferrer" class="news-link">
-				{t('Read Article')}
-			</Button>
-		</div>
-	))}
+  {
+    recentPosts.map(({ title, link, published, source }) => (
+      <div class="news-item">
+        <div class="news-labels">
+          <Button disabled>
+            <img
+              slot="invert"
+              src={`/assets/social/logo-${source}.svg`}
+              alt={t("{name} post", { source })}
+            />
+          </Button>
+          <Button class="published-date" disabled>
+            {published.toLocaleDateString(defaultOptions.locale, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </Button>
+        </div>
+        <h3>{title}</h3>
+        <Button
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="news-link"
+        >
+          {t("Read Article")}
+        </Button>
+      </div>
+    ))
+  }
 </div>
 
 <style>
-	.news-feed {
-		display: flex;
-		flex-direction: column;
-		row-gap: 2.75rem;
-		padding: 0 var(--gutter-width);
-	}
-	.news-item, .news-labels {
-		display: flex;
-		flex-direction: row;		
-		column-gap: 1rem;
-	}
-	.news-item {
-		border: solid 1px var(--color-tertiary);
-		padding: 1rem;
-	}
-	.published-date {
-		width: 5.7rem;
-		text-align: center;
-	}
-	h3 {
-		flex: 1 1 0;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	@media (max-width: 742px) {
-		.news-item {
-			flex-direction: column;
-			row-gap: 1rem;
-			column-gap: 0;
-		}
-		.news-item h3 {
-			flex: 0 0 auto;
-			font-size: 1.5rem;
-		}
-		.news-link {
-			text-align: center;
-			font-size: 1rem;;
-		}
-	}
+  .news-feed {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2.75rem;
+    padding: 0 var(--gutter-width);
+  }
+  .news-item,
+  .news-labels {
+    display: flex;
+    flex-direction: row;
+    column-gap: 1rem;
+  }
+  .news-item {
+    border: solid 1px var(--color-tertiary);
+    padding: 1rem;
+  }
+  .published-date {
+    width: 5.7rem;
+    text-align: center;
+  }
+  h3 {
+    flex: 1 1 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 742px) {
+    .news-item {
+      flex-direction: column;
+      row-gap: 1rem;
+      column-gap: 0;
+    }
+    .news-item h3 {
+      flex: 0 0 auto;
+      font-size: 1.5rem;
+    }
+    .news-link {
+      text-align: center;
+      font-size: 1rem;
+    }
+  }
 </style>

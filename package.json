@@ -15,9 +15,15 @@
   },
   "devDependencies": {
     "husky": "^9.0.0",
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "prettier-plugin-astro": "^0.14.1"
   },
   "lint-staged": {
-    "*.{js,ts,json,css}": "prettier --write"
+    "*.{astro,js,ts,json,css}": "prettier --write"
+  },
+  "prettier": {
+    "plugins": [
+      "prettier-plugin-astro"
+    ]
   }
 }

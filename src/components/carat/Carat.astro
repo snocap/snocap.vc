@@ -1,22 +1,26 @@
 ---
 import { t } from "src/utils/i18n";
 ---
+
 <div class="carat">
-	<a href={Astro.props.href} title={t('Next section')}>
-		<img src="/assets/icons/icon-carat-down.svg" alt={t('Next section button')} />
-	</a>
+  <a href={Astro.props.href} title={t("Next section")}>
+    <img
+      src="/assets/icons/icon-carat-down.svg"
+      alt={t("Next section button")}
+    />
+  </a>
 </div>
 
 <style>
-	.carat {
-		display: flex;
-		flex-direction: row;
-		padding: 2rem 0 2rem var(--gutter-width);
-	}
-	.carat a {
-		transition: transform 0.3s;
-	}
-	.carat a:hover {
-		transform: translateY(0.25rem);
-	}
+  .carat {
+    display: flex;
+    flex-direction: row;
+    padding: 2rem 0 2rem var(--gutter-width);
+  }
+  .carat a {
+    transition: transform 0.3s;
+  }
+  .carat a:hover {
+    transform: translateY(0.25rem);
+  }
 </style>

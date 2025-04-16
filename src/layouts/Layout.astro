@@ -1,70 +1,69 @@
 ---
-import 'modern-normalize/modern-normalize.css';
-import 'styles/root.css';
+import "modern-normalize/modern-normalize.css";
+import "styles/root.css";
 
-import Header from 'components/header/Header.astro';
-import Footer from 'components/footer/Footer.astro';
-import { t, defaultOptions } from 'utils/i18n';
-import { strings } from 'data/strings';
+import Header from "components/header/Header.astro";
+import Footer from "components/footer/Footer.astro";
+import { t, defaultOptions } from "utils/i18n";
+import { strings } from "data/strings";
 
-const { 
-	maxWidth = '90.0rem',
-	minWidth = '24.5rem' 
-} = Astro.props;
+const { maxWidth = "90.0rem", minWidth = "24.5rem" } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<meta
-			name="description"
-			content={t(strings.oneLiner)}
-		/>
-		<meta property="og:title" content="SNØCAP" />
-		<meta
-			property="og:description"
-			content={t(strings.oneLiner)}
-		/>
-		<meta property="og:image" content={`${strings.canonicalUrl}/assets/metadata/card-twitter.gif`} />
-		<meta property="og:locale" content={ defaultOptions.locale.replace('-', '_') } />
-		<meta property="og:type" content="website" />
-		<meta name="twitter:card" content="summary_large_image" />
-		<meta property="og:url" content={strings.canonicalUrl} />
-		<link rel="canonical" href={strings.canonicalUrl} />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={t(strings.oneLiner)} />
+    <meta property="og:title" content="SNØCAP" />
+    <meta property="og:description" content={t(strings.oneLiner)} />
+    <meta
+      property="og:image"
+      content={`${strings.canonicalUrl}/assets/metadata/card-twitter.gif`}
+    />
+    <meta
+      property="og:locale"
+      content={defaultOptions.locale.replace("-", "_")}
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:url" content={strings.canonicalUrl} />
+    <link rel="canonical" href={strings.canonicalUrl} />
 
-		<link rel="icon" href="/favicon.ico" />
-		<link rel="icon" href="/assets/metadata/favicon.svg" type="image/svg+xml" />
-		<link rel="apple-touch-icon" href="/assets/metadata/icon-apple-180.png" />
-		<link rel="manifest" href="/assets/metadata/icons.webmanifest" />
-		<meta name="theme-color" content="#FFFFFF" />
-		<title>SNØCAP | {t(strings.oneLiner)}</title>
-	</head>
-	<body>
-		<Header />
-		<main>
-			<div id="content">
-				<slot />
-				<Footer />
-			</div> 
-		</main>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/assets/metadata/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/metadata/icon-apple-180.png" />
+    <link rel="manifest" href="/assets/metadata/icons.webmanifest" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <title>SNØCAP | {t(strings.oneLiner)}</title>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <div id="content">
+        <slot />
+        <Footer />
+      </div>
+    </main>
+  </body>
+
+  <style define:vars={{ maxWidth, minWidth }}>
+    body {
+      --gutter-width: 5rem;
+    }
+    main {
+      margin: 0 auto;
+      flex-direction: column;
+      max-width: var(--maxWidth);
+      min-width: var(--minWidth);
+      overflow: hidden;
+    }
+
+    @media (max-width: 742px) {
+      body {
+        --gutter-width: 2.8rem;
+      }
+    }
+  </style>
 </html>
-
-<style define:vars={{ maxWidth, minWidth }}>
-	body {
-		--gutter-width: 5rem;
-	}
-	main {
-		margin: 0 auto;
-		flex-direction: column;
-		max-width: var(--maxWidth);
-		min-width: var(--minWidth);
-		overflow: hidden;
-	}
-	
-	@media (max-width: 742px) {
-		body {
-			--gutter-width: 2.8rem;
-		}
-	}
-</style>

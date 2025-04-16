@@ -64,7 +64,7 @@ let selected: EcosystemPartnerKey = Astro.props.selected ?? partners[0].id;
     flex-direction: row;
     border: solid 1px var(--color-primary);
   }
-	/* note: this should really be tied to --maxWidth but you can't use vars in media queries */
+  /* note: this should really be tied to --maxWidth but you can't use vars in media queries */
   @media (max-width: 1440px) {
     .ecosystem-selector {
       border-right: none 0;
@@ -152,23 +152,23 @@ let selected: EcosystemPartnerKey = Astro.props.selected ?? partners[0].id;
     text-decoration: underline;
   }
   @media (max-width: 742px) {
-		.partner-preview {
+    .partner-preview {
       flex-direction: column-reverse;
       row-gap: 1rem;
       column-gap: 0;
     }
-	}
+  }
 </style>
 
 <script>
   class EcosystemSlideshow extends HTMLElement {
     selected: string;
-		previously: string;
+    previously: string;
 
     constructor() {
       super();
       this.selected = this.getAttribute("selected") || "";
-			this.previously = this.selected;
+      this.previously = this.selected;
     }
 
     connectedCallback() {
@@ -187,7 +187,7 @@ let selected: EcosystemPartnerKey = Astro.props.selected ?? partners[0].id;
     updateSelectedFromHash() {
       const hash = window.location.hash.replace("#", "");
       if (hash) {
-				this.previously = this.selected;
+        this.previously = this.selected;
         this.selected = hash;
         this.updateSelectedElements();
       }
@@ -200,7 +200,7 @@ let selected: EcosystemPartnerKey = Astro.props.selected ?? partners[0].id;
       tabs.forEach((tab) => {
         tab.classList.toggle(
           "selected",
-          tab.getAttribute("href") === `#${this.selected}`
+          tab.getAttribute("href") === `#${this.selected}`,
         );
       });
 
@@ -208,16 +208,19 @@ let selected: EcosystemPartnerKey = Astro.props.selected ?? partners[0].id;
         preview.classList.toggle("selected", preview.id === this.selected);
       });
 
-			// check if nothing is selected, and select the first
-			if (this.querySelector(".selector-tab.selected") === null) {
-				if (this.selected === this.previously) {
-					this.selected = this.querySelector(".selector-tab")?.getAttribute("href")?.replace("#", "") ?? "";
-					this.updateSelectedElements();
-				} else {
-					this.selected = this.previously;
-					this.updateSelectedElements();
-				}
-			}
+      // check if nothing is selected, and select the first
+      if (this.querySelector(".selector-tab.selected") === null) {
+        if (this.selected === this.previously) {
+          this.selected =
+            this.querySelector(".selector-tab")
+              ?.getAttribute("href")
+              ?.replace("#", "") ?? "";
+          this.updateSelectedElements();
+        } else {
+          this.selected = this.previously;
+          this.updateSelectedElements();
+        }
+      }
     }
   }
 
