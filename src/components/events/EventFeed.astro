@@ -81,4 +81,15 @@ const upcomingEvents = upcomingEventGroups
 		text-align: center;
 		font-size: larger;
 	}
+	@media (max-width: 742px) {
+		.event-feed {
+			flex-direction: column;
+			row-gap: 1.5rem;
+			align-items: stretch;
+		}
+		.event-item {
+			width: 100%;
+			max-width: none;
+		}
+	}
 </style>

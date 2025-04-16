@@ -151,6 +151,13 @@ let selected: EcosystemPartnerKey = Astro.props.selected ?? partners[0].id;
   .partner-link:hover {
     text-decoration: underline;
   }
+  @media (max-width: 742px) {
+		.partner-preview {
+      flex-direction: column-reverse;
+      row-gap: 1rem;
+      column-gap: 0;
+    }
+	}
 </style>
 
 <script>

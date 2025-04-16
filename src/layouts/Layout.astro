@@ -9,7 +9,6 @@ import { strings } from 'data/strings';
 
 const { 
 	maxWidth = '90.0rem',
-	mobileBreakpoint = '46.5rem',
 	minWidth = '24.5rem' 
 } = Astro.props;
 ---
@@ -51,7 +50,7 @@ const {
 		</main>
 </html>
 
-<style define:vars={{ maxWidth, minWidth, mobileBreakpoint }}>
+<style define:vars={{ maxWidth, minWidth }}>
 	body {
 		--gutter-width: 5rem;
 	}
@@ -60,5 +59,12 @@ const {
 		flex-direction: column;
 		max-width: var(--maxWidth);
 		min-width: var(--minWidth);
+		overflow: hidden;
+	}
+	
+	@media (max-width: 742px) {
+		body {
+			--gutter-width: 2.8rem;
+		}
 	}
 </style>

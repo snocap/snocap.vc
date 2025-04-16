@@ -11,14 +11,13 @@
 }
 
 html, body {
+	font-size: var(--font-size);
 	font-family: var(--font-family);
 	font-weight: 300;
 }
 
 body {
 	color: var(--color-primary);
-	font-size: var(--font-size);
-	font-family: var(--font-family);
   scroll-behavior: smooth;
 }
 

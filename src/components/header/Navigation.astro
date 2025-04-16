@@ -90,10 +90,14 @@ const groups = [
 	.nav-link.selected {
 		text-decoration: underline;
 	}
+	@media (max-width: 742px) {
+		nav-collabsible {
+			display: none;
+		}
+	}
 </style>
 
 <script>
-
 	import { TypewriterClass } from "typewriter-effect";
 
 	declare global {
@@ -112,18 +116,28 @@ const groups = [
 		private subtitle: HTMLHeadingElement = document.querySelector("nav-collabsible h3")!;
 		private typewriter: TypewriterClass;
 		private lastLink?: HTMLAnchorElement | null;
-		private debounceTimeout?: NodeJS.Timeout
+		private debounceTimeout?: NodeJS.Timeout;
 
 		constructor() {
 			super();
 			this.isDragging = false;
 			this.startY = 0;
 			this.startMarginTop = 0;
-			this.typewriter = new Typewriter(this.subtitle, { delay: 60 })
-			this.determineSelectedSection()
+			this.typewriter = new Typewriter(this.subtitle, { delay: 60 });
+			this.determineSelectedSection();
 		}
 
 		connectedCallback() {
+			this.addListeners();
+			window.addEventListener("scroll", this.toggleListenersOnDisplay);
+		}
+
+		disconnectedCallback() {
+			this.removeListeners();
+			window.removeEventListener("scroll", this.toggleListenersOnDisplay);
+		}
+
+		addListeners() {
 			window.addEventListener("mousedown", this.onMouseDown);
 			window.addEventListener("wheel", this.onScroll);
 			window.addEventListener("mouseup", this.onMouseUp);
@@ -136,7 +150,7 @@ const groups = [
 			window.addEventListener("scroll", this.determineSelectedSection);
 		}
 
-		disconnectedCallback() {
+		removeListeners() {
 			window.removeEventListener("mousedown", this.onMouseDown);
 			window.removeEventListener("wheel", this.onScroll);
 			window.removeEventListener("mouseup", this.onMouseUp);
@@ -149,19 +163,29 @@ const groups = [
 			window.removeEventListener("scroll", this.determineSelectedSection);
 		}
 
+		toggleListenersOnDisplay = () => {
+			if (getComputedStyle(this).display === "none") {
+				this.removeListeners();
+			} else {
+				this.addListeners();
+			}
+			this.updateBorderOpacity();
+		}
+
 		updateSubtitle(link: HTMLAnchorElement | null) {
 			if (link === this.lastLink) return;
 			const text = link ? link.title : this.subtitle.title;
-			this.typewriter.stop().deleteAll('natural').typeString(text).start()
+			this.typewriter.stop().deleteAll('natural').typeString(text).start();
 			this.lastLink = link;
 		}
 
 		debouncedUpdateSubtitle = (link: HTMLAnchorElement | null) => {
-			if (this.debounceTimeout) clearTimeout(this.debounceTimeout)
-			this.debounceTimeout = setTimeout(() => this.updateSubtitle(link), 350)
+			if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
+			this.debounceTimeout = setTimeout(() => this.updateSubtitle(link), 350);
 		}
 
 		determineSelectedSection = () => {
+			
 			let selectedSection = null;
 			for (const section of sections) {
 				const rect = section.getBoundingClientRect();
@@ -245,20 +269,19 @@ const groups = [
 			const elementHeight = this.offsetHeight;
 			const marginTop = Math.max(-elementHeight, Math.min(0, newMarginTop));
 			this.style.marginTop = `${marginTop}px`;
-			this.updateBorderOpacity();
 		}
 
 		updateBorderOpacity() {
 			const currentScrollY = window.scrollY;
 			const maxOpacity = 0.2; // Maximum opacity for the box shadow
-			const fadeStart = this.offsetHeight; // Start fading within offsetHeight of the top
+			const fadeStart = Math.max(this.offsetHeight, 10); // Start fading within offsetHeight of the top
 			const borderOpacity = Math.min(maxOpacity, currentScrollY / fadeStart);
 			if (this.parentElement?.parentElement)
 				this.parentElement.parentElement.style.borderBottom = `solid 1px rgba(0, 0, 0, ${borderOpacity})`;
 		}
 
 		reactQuicklyToChanges() {
-			this.updateMarginTop(-window.scrollY)
+			this.updateMarginTop(-window.scrollY);
 			this.updateBorderOpacity();
 		}
 	}

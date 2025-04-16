@@ -65,4 +65,17 @@ import Button from 'components/button/Button.astro'
 .member-image img:hover {
 	filter: grayscale(0%);
 }
+@media (max-width: 742px) {
+	.team-member {
+		flex-direction: column-reverse !important;
+	}
+	.member-image {
+		width: 100%;
+		padding-bottom: 1.5rem;
+	}
+	.member-details {
+		padding: 0;
+		width: 100%;
+	}
+}
 </style>
