@@ -1,7 +1,6 @@
 name: Deploy to GitHub Pages
 
 on:
-
   # Nightly, at midnight, to pull in new dynamic content
   schedule:
     - cron: "0 0 * * *"
