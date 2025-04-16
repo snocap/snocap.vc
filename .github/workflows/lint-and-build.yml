@@ -1,0 +1,45 @@
+name: Lint and Build
+
+on:
+  push:
+    branches:
+      - main
+      - next
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout
+      
+      - name: Set up Node.js
+        uses: actions/setup-node
+        with:
+          node-version: '23.11.0'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run format
+        run: npm run format
+      
+      - name: Run build
+        run: npm run build
+      
+      - name: Check for changes
+        id: git-check
+        run: |
+          git status --porcelain
+          echo "changes=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push if changes
+        if: steps.git-check.outputs.changes != '0'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git commit -m "chore: lint and build"
+          git push
