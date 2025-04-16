@@ -15,17 +15,17 @@ permissions:
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup and build
         uses: ./.github/workflows/setup
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Set up Git
         run: |
@@ -35,16 +35,16 @@ jobs:
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-      
+
       - name: Run format
         run: npm run format
-      
+
       - name: Check for changes
         id: git-check
         run: |
           git status --porcelain
           echo "changes=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
-      
+
       - name: Commit and push if changes
         if: steps.git-check.outputs.changes != '0'
         run: |

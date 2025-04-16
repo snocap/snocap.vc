@@ -1,13 +1,13 @@
-name: 'Setup and Build'
-description: 'Reusable action to set up Node.js and build the project'
+name: "Setup and Build"
+description: "Reusable action to set up Node.js and build the project"
 inputs:
   node-version-file:
-    description: 'Path to the .node-version file'
+    description: "Path to the .node-version file"
     required: true
-    default: '.node-version'
+    default: ".node-version"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Get NodeJS Version
       id: node-version
@@ -18,7 +18,7 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ steps.node-version.outputs.node-version }}
-        cache: 'npm'
+        cache: "npm"
 
     - name: Install dependencies
       shell: bash
