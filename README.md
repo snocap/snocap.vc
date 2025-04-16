@@ -1,4 +1,5 @@
 # SNØCAP
+
 <https://snocap.vc>
 
 An Engineering-Led, Deeptech Venture Firm
