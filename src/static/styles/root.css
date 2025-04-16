@@ -19,6 +19,7 @@ body {
 	color: var(--color-primary);
 	font-size: var(--font-size);
 	font-family: var(--font-family);
+  scroll-behavior: smooth;
 }
 
 h1, h2, h3, h4, h5, h6 {

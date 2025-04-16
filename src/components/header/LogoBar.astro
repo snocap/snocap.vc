@@ -3,6 +3,9 @@ import Button from 'components/button/Button.astro';
 import { t } from 'static/i18n';
 import { properties, SocialNetworkName } from 'static/properties/socials';
 
+const { class: className = '' } = Astro.props;
+const classes = Array.from(new Set(['logo-bar', className].filter(Boolean)));
+
 const socialLinks = [
 	SocialNetworkName.medium, 
 	SocialNetworkName.linkedin, 
@@ -10,7 +13,7 @@ const socialLinks = [
 	SocialNetworkName.bluesky
 ].map((key) => properties[key]);
 ---
-<div class="logo-bar">
+<div class:list={classes}>
 	<a class="link-logo link" href="/" title={t('Return home')}>
 		<img class="main-logo-image" src="/assets/branding/logo-snocap-text.svg" alt={t('SNØCAP Logo')} />
 	</a>
@@ -29,9 +32,9 @@ const socialLinks = [
 		display: flex;
 		column-gap: 0.375rem;
 		position: relative;
-		padding: var(--row-gap) 0;
-		background-color: var(--color-secondary);
+		padding: var(--row-gap) var(--gutter-width);
 		z-index: 2;
+		background-color: var(--color-secondary);
 	}
 	.logo-bar .link {
 		height: 1.625rem;
