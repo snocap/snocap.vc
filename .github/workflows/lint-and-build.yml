@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - next
 
 permissions:
   contents: write
@@ -16,9 +17,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup environment
+        with:
+          fetch-depth: 0
+      
+      - name: Setup and build
         uses: ./.github/workflows/setup
+        with:
+          node-version-file: '.node-version'
       
       - name: Run format
         run: npm run format
