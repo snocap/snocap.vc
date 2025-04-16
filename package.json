@@ -18,6 +18,6 @@
     "prettier": "^3.5.3"
   },
   "lint-staged": {
-    "*.{js,ts,astro,json,css}": "prettier --write"
+    "*.{js,ts,json,css}": "prettier --write"
   }
 }
