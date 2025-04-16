@@ -9,6 +9,7 @@ import { strings } from 'data/strings';
 
 const { 
 	maxWidth = '90.0rem',
+	mobileBreakpoint = '46.5rem',
 	minWidth = '24.5rem' 
 } = Astro.props;
 ---
@@ -50,7 +51,7 @@ const {
 		</main>
 </html>
 
-<style define:vars={{ maxWidth, minWidth }}>
+<style define:vars={{ maxWidth, minWidth, mobileBreakpoint }}>
 	body {
 		--gutter-width: 5rem;
 	}
