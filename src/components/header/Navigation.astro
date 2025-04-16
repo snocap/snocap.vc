@@ -1,137 +1,198 @@
 ---
-import { t } from 'static/i18n';
+import { t } from "static/i18n";
 
 const groups = [
-	[
-		{
-			title: t('Apply for funding'),
-			text: t('Founders'),
-			href: '#founders'
-		},
-		{
-			title: t('Our Ecosystem'),
-			text: t('Ecosystem'),
-			href: '#ecosystem'
-		},
-	],
-	[
-		{
-			title: t('Our Team'),
-			text: t('Team'),
-			href: '#team'
-		},
-		{
-			title: t('Our Portfolio'),
-			text: t('Portfolio'),
-			href: '#portfolio'
-		}
-	],
-	[
-		{
-			title: t('Latest News'),
-			text: t('News'),
-			href: '#news'
-		},
-		{
-			title: t('Official Events'),
-			text: t('Events'),
-			href: '#events'
-		}
-	]
-]
+  [
+    {
+      title: t("Apply for funding"),
+      text: t("Founders"),
+      href: "#founders",
+    },
+    {
+      title: t("Our Ecosystem"),
+      text: t("Ecosystem"),
+      href: "#ecosystem",
+    },
+  ],
+  [
+    {
+      title: t("Our Team"),
+      text: t("Team"),
+      href: "#team",
+    },
+    {
+      title: t("Our Portfolio"),
+      text: t("Portfolio"),
+      href: "#portfolio",
+    },
+  ],
+  [
+    {
+      title: t("Latest News"),
+      text: t("News"),
+      href: "#news",
+    },
+    {
+      title: t("Official Events"),
+      text: t("Events"),
+      href: "#events",
+    },
+  ],
+];
 ---
+
 <nav-collabsible {...Astro.props}>
-	<h3 class="nav-subtitle">
-		{t('Backing deep science for a better future.')}
-	</h3>
-	<p class="nav-link-groups">
-		{groups.map((group) => (
-			<span class="nav-link-group">
-				{group.map(({ title, text, href }) => (
-					<a class="nav-link" href={href} title={title}>{text}</a>
-				))}
-			</span>
-		))}
-	</p>
+  <h3 class="nav-subtitle">
+    {t("Backing deep science for a better future.")}
+  </h3>
+  <p class="nav-link-groups">
+    {
+      groups.map((group) => (
+        <span class="nav-link-group">
+          {group.map(({ title, text, href }) => (
+            <a class="nav-link" href={href} title={title}>
+              {text}
+            </a>
+          ))}
+        </span>
+      ))
+    }
+  </p>
 </nav-collabsible>
 
 <style>
-	nav-collabsible {
-		padding: 0 var(--gutter-width) var(--row-gap);
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		position: relative;
-		z-index: 1;
-		background-color: var(--color-secondary);
-		width: 100%;
-	}
-	h3 {
-		max-width: 19.2rem;
-	}
-	p {
-		display: flex;
-		flex-direction: row;
-		column-gap: 2rem;
-		padding: 0.5rem 0;
-	}
-	p span {
-		display: flex;
-		flex-direction: column;
-		row-gap: 0.25rem;
-	}
+  nav-collabsible {
+    padding: 0 var(--gutter-width) var(--row-gap);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+    background-color: var(--color-secondary);
+    width: 100%;
+  }
+  h3 {
+    max-width: 19.2rem;
+  }
+  p {
+    display: flex;
+    flex-direction: row;
+    column-gap: 2rem;
+    padding: 0.5rem 0;
+  }
+  p span {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.25rem;
+  }
 </style>
 <script>
 	class CollapsibleNav extends HTMLElement {
-		private lastScrollY: number;
-		private scrollTimeout: number | null;
+		private isDragging: boolean;
+		private startY: number;
+		private startMarginTop: number;
 
 		constructor() {
 			super();
-			this.lastScrollY = 0;
-			this.scrollTimeout = null;
-			this.style.marginTop = '0px';
-			this.style.transition = 'margin-top 0.2s ease, border-bottom 0.2s ease';
+			this.isDragging = false;
+			this.startY = 0;
+			this.startMarginTop = 0;
 		}
 
 		connectedCallback() {
-			window.addEventListener('scroll', this.debouncedOnScroll);
+			window.addEventListener("mousedown", this.onMouseDown);
+			window.addEventListener("wheel", this.onScroll);
+			window.addEventListener("mouseup", this.onMouseUp);
+			window.addEventListener("mousemove", this.onMouseMove);
+			window.addEventListener("touchstart", this.onTouchStart, { passive: false });
+			window.addEventListener("touchmove", this.onTouchMove, { passive: false });
+			window.addEventListener("touchend", this.onTouchEnd);
+			window.addEventListener("resize", this.onResize);
+			window.addEventListener("hashchange", this.onHashChange);
 		}
 
 		disconnectedCallback() {
-			window.removeEventListener('scroll', this.debouncedOnScroll);
+			window.removeEventListener("mousedown", this.onMouseDown);
+			window.removeEventListener("wheel", this.onScroll);
+			window.removeEventListener("mouseup", this.onMouseUp);
+			window.removeEventListener("mousemove", this.onMouseMove);
+			window.removeEventListener("touchstart", this.onTouchStart);
+			window.removeEventListener("touchmove", this.onTouchMove);
+			window.removeEventListener("touchend", this.onTouchEnd);
+			window.removeEventListener("resize", this.onResize);
+			window.removeEventListener("hashchange", this.onHashChange);
 		}
 
-		debouncedOnScroll = (e) => {
-			if (this.scrollTimeout === null || window.scrollY === 0) {
-				this.onScroll(); // Call on the first event
-				this.scrollTimeout = window.setTimeout(() => {
-					this.scrollTimeout = null; // Reset timeout after delay
-				}, 250);
-			}
+		onHashChange = () => {
+			this.reactQuicklyToChanges();
 		};
 
-		onScroll = () => {
+		onResize = () => {
+			this.reactQuicklyToChanges();
+		};
+
+		onMouseDown = (event: MouseEvent) => {
+			this.isDragging = true;
+			this.startY = event.clientY;
+			this.startMarginTop = parseFloat(this.style.marginTop) || 0;
+		};
+
+		onMouseUp = () => {
+			this.isDragging = false;
+		};
+
+		onMouseMove = (event: MouseEvent) => {
+			if (!this.isDragging) return;
+
+			const deltaY = event.clientY - this.startY;
+			this.updateMarginTop(this.startMarginTop + deltaY);
+		};
+
+		onScroll = (event: WheelEvent) => {
+			const deltaY = event.deltaY;
+			const currentMarginTop = parseFloat(this.style.marginTop) || 0;
+			this.updateMarginTop(currentMarginTop - deltaY);
+		};
+
+		onTouchStart = (event: TouchEvent) => {
+			this.isDragging = true;
+			this.startY = event.touches[0].clientY;
+			this.startMarginTop = parseFloat(this.style.marginTop) || 0;
+		};
+
+		onTouchMove = (event: TouchEvent) => {
+			if (!this.isDragging) return;
+
+			event.preventDefault(); // Prevent scrolling while dragging
+			const deltaY = event.touches[0].clientY - this.startY;
+			this.updateMarginTop(this.startMarginTop + deltaY);
+		};
+
+		onTouchEnd = () => {
+			this.isDragging = false;
+		};
+
+		updateMarginTop(newMarginTop: number) {
+			const elementHeight = this.offsetHeight;
+			const marginTop = Math.max(-elementHeight, Math.min(0, newMarginTop));
+			this.style.marginTop = `${marginTop}px`;
+			this.updateBorderOpacity();
+		}
+
+		updateBorderOpacity() {
 			const currentScrollY = window.scrollY;
-
-			// Determine if the navigation should be hidden or shown
-			if (currentScrollY > this.lastScrollY) {
-				// Scrolling down, hide the navigation
-				this.style.marginTop = `-${this.offsetHeight}px`;
-			} else {
-				// Scrolling up, show the navigation
-				this.style.marginTop = '0px';
-			}
-
-			// Adjust the box shadow opacity based on scroll position
-			const maxOpacity = 0.4; // Maximum opacity for the box shadow
-			const borderOpacity = Math.min(maxOpacity, currentScrollY / 100); // Adjust the divisor to control fade speed
+			const maxOpacity = 0.2; // Maximum opacity for the box shadow
+			const fadeStart = this.offsetHeight; // Start fading within offsetHeight of the top
+			const borderOpacity = Math.min(maxOpacity, currentScrollY / fadeStart);
 			if (this.parentElement?.parentElement)
 				this.parentElement.parentElement.style.borderBottom = `solid 1px rgba(0, 0, 0, ${borderOpacity})`;
+		}
 
-			this.lastScrollY = currentScrollY;
-		};
+		reactQuicklyToChanges() {
+			this.updateMarginTop(-window.scrollY)
+			this.updateBorderOpacity();
+		}
 	}
 
-	customElements.define('nav-collabsible', CollapsibleNav);
+	customElements.define("nav-collabsible", CollapsibleNav);
 </script>

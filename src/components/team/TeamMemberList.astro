@@ -11,7 +11,7 @@ import Button from 'components/button/Button.astro'
 					<h1>{name}</h1>
 					<h2>{t(title)}</h2>
 					<small class="member-bio" set:html={t(bio).trim().replace(/\n/g, '<br>')}></small>
-					<Button href="{linkedinUrl}" target="_blank" rel="noopener noreferrer" class="member-linkedin">
+					<Button href={linkedinUrl} target="_blank" rel="noopener noreferrer" class="member-linkedin">
 						{t('LinkedIn')}
 					</Button>
 			</div>
