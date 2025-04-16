@@ -1,7 +1,7 @@
 ---
 import { t } from "src/lib/i18n";
-import { partners } from "src/lib/properties/ecosystem";
-import type { EcosystemPartnerKey } from "src/lib/properties/ecosystem";
+import { partners } from "static/data/ecosystem";
+import type { EcosystemPartnerKey } from "static/data/ecosystem";
 import Button from "components/button/Button.astro";
 
 let selected: EcosystemPartnerKey = Astro.props.selected ?? partners[0].id;
