@@ -19,7 +19,7 @@
     "prettier-plugin-astro": "^0.14.1"
   },
   "lint-staged": {
-    "*.{astro,js,ts,json,css}": "prettier --write"
+    "*.{astro,mjs,ts,json,css}": "prettier --write"
   },
   "prettier": {
     "plugins": [
