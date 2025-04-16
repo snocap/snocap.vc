@@ -6,7 +6,7 @@ export enum SocialNetworkName {
 	bluesky = 'bluesky',
 }
 
-export const properties = {
+export const socials = {
 	[SocialNetworkName.medium]: {
 		name: 'Medium',
 		title: 'Read our Blog',

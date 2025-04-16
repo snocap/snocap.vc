@@ -1,30 +1,16 @@
 ---
-import Button from 'components/button/Button.astro';
 import { t } from 'utils/i18n';
-import { properties, SocialNetworkName } from 'data/socials';
+import HeaderButtons from './HeaderButtons.astro';
 
 const { class: className = '' } = Astro.props;
 const classes = Array.from(new Set(['logo-bar', className].filter(Boolean)));
 
-const socialLinks = [
-	SocialNetworkName.medium, 
-	SocialNetworkName.linkedin, 
-	SocialNetworkName.github,
-	SocialNetworkName.bluesky
-].map((key) => properties[key]);
 ---
 <div class:list={classes}>
 	<a class="link-logo link" href="/" title={t('Return home')}>
 		<img class="main-logo-image" src="/assets/branding/logo-snocap-text.svg" alt={t('SNØCAP Logo')} />
 	</a>
-	<Button class="link-apply link" href="/apply">
-		{t('Apply for funding')}
-	</Button>
-	{socialLinks.map(({ name, url, title, logo }) => (
-		<Button class="link-social link" title={t(title)} href={url}>
-			<img slot="invert" src={logo} alt={t('{name} Logo', { name })} class="social-logo-image" />
-		</Button>
-	))}
+	<HeaderButtons orientation="horizontal" />
 </div>
 
 <style>
@@ -36,8 +22,13 @@ const socialLinks = [
 		z-index: 2;
 		background-color: var(--color-secondary);
 	}
-	.logo-bar .link {
+	.link {
 		height: 1.625rem;
+	}
+	.link-logo img {
+		max-height: 80%;
+		object-fit: contain;
+		object-position: center center;
 	}
 	.link-logo {
 		padding: 1px 0;
@@ -48,23 +39,6 @@ const socialLinks = [
 	.link-logo:hover {
 		opacity: 0.5;
 	}
-	.link-apply {
-		margin-right: 3rem;
-	}
-	.main-logo-image {
-		height: 100%;
-	}
-	.link-social {
-		width: 2.3rem;
-	}
-	.link-social img {
-		width: 100%;
-		max-height: 80%;
-		padding-top: 0.2rem;
-		object-fit: contain;
-		object-position: center center;
-	}
-
 	@media (max-width: 742px) {
 		.button.link {
 			display: none;

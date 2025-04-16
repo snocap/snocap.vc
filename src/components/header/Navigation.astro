@@ -1,6 +1,8 @@
 ---
 import { strings } from "data/strings";
 import { t } from "src/utils/i18n";
+import HeaderButtons from "./HeaderButtons.astro";
+import Button from "components/button/Button.astro";
 
 const groups = [
   [
@@ -46,6 +48,9 @@ const groups = [
   <h3 class="nav-subtitle" title={t(strings.oneLiner)}>
     {t(strings.oneLiner)}
   </h3>
+	<div class="mobile-buttons">
+		<Button class="closer">{t('Close')}</Button>
+	</div>
   <p class="nav-link-groups">
     {
       groups.map((group) => (
@@ -59,6 +64,9 @@ const groups = [
       ))
     }
   </p>
+	<div class="mobile-buttons">
+		<HeaderButtons />
+	</div>
 </nav-collabsible>
 
 <style>
@@ -76,13 +84,13 @@ const groups = [
 		min-height: 4.5rem;
 		max-width: 19.8rem;
 	}
-  p {
+  .nav-link-groups {
     display: flex;
     flex-direction: row;
     column-gap: 2rem;
     padding: 0.5rem 0;
   }
-  p span {
+  .nav-link-group {
     display: flex;
     flex-direction: column;
     row-gap: 0.25rem;
@@ -90,9 +98,54 @@ const groups = [
 	.nav-link.selected {
 		text-decoration: underline;
 	}
+	.mobile-buttons {
+		display: none;
+	}
 	@media (max-width: 742px) {
 		nav-collabsible {
+			position: absolute;
+			flex-direction: column;
+			z-index: 5;
+			top: 0;
+			left 0;
+			right: 0;
+			bottom: 0;
+			width: 100vw;
+			height: 100vh;
+			background-color: var(--color-secondary);
+			justify-content: center;
+			padding: 3rem var(--gutter-width);
+		}
+		.nav-link {
+			font-size: 1.875rem;
+			font-weight: 300;
+		}
+		.nav-subtitle {
 			display: none;
+		}
+		.nav-link-groups {
+			flex-grow: 1;
+		}
+		.nav-link-groups, .nav-link-group {
+			flex-direction: column;
+			row-gap: 3rem;
+			column-gap: 0;
+		}
+		.mobile-buttons:first-of-type {
+			flex-direction: row-reverse;
+			align-items: flex-start;
+			max-height: none;
+		}
+		.mobile-buttons {
+			display: flex;
+			width: 100%;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			row-gap: 2rem;
+			flex-grow: 1;
+			align-items: flex-end;
+			max-height: fit-content;
 		}
 	}
 </style>
@@ -164,7 +217,7 @@ const groups = [
 		}
 
 		toggleListenersOnDisplay = () => {
-			if (getComputedStyle(this).display === "none") {
+			if (getComputedStyle(this.subtitle).display === "none") {
 				this.removeListeners();
 			} else {
 				this.addListeners();
