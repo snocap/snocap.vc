@@ -1,7 +1,7 @@
 ---
 import Button from 'components/button/Button.astro';
-import { t } from 'src/lib/i18n';
-import { properties, SocialNetworkName } from 'static/data/socials';
+import { t } from 'utils/i18n';
+import { properties, SocialNetworkName } from 'data/socials';
 
 const { class: className = '' } = Astro.props;
 const classes = Array.from(new Set(['logo-bar', className].filter(Boolean)));

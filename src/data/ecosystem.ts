@@ -1,3 +1,5 @@
+import { strings } from "./strings";
+
 export type EcosystemPartnerKey = 'snocap' | 'sweetfarm' | '9zero' | 'wocl' | 'cff' 
 
 export interface EcosystemPartner {
@@ -16,7 +18,7 @@ export const partners: EcosystemPartner[] = [
 		name: "SNØCAP",
 		tabImage: "/assets/branding/logo-snocap-text.svg",
 		previewImage: "/assets/ecosystem/preview-snocap.png",
-		link: "https://snocap.vc",
+		link: strings.canonicalUrl,
 		tags: ["Finance", "Venture Capital"],
 		description: `
 			SNØCAP is a venture fund focused on deep, scientific innovations reduce costs and pollution at the same time. The firm is managed by engineers and General Partners Shrina Kurani, Nate Salpeter, and Jonathan Azoff.The management team has a uniquely deep operational, technical and investing background that they use to determine the winning business models of the future.

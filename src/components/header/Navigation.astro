@@ -1,39 +1,40 @@
 ---
-import { t } from "src/lib/i18n";
+import { strings } from "data/strings";
+import { t } from "src/utils/i18n";
 
 const groups = [
   [
     {
-      title: t("Apply for funding and build with us"),
+      title: t("Apply for funding and build with us."),
       text: t("Founders"),
       href: "#founders",
     },
     {
-      title: t("Explore our ecosystem programs and partners"),
+      title: t("World-class partners and programs."),
       text: t("Ecosystem"),
       href: "#ecosystem",
     },
   ],
   [
     {
-      title: t("An investment team that gets deeptech"),
+      title: t("An investment team that gets deeptech."),
       text: t("Team"),
       href: "#team",
     },
     {
-      title: t("Learn about our portfolio companies"),
+      title: t("Learn about our portfolio companies."),
       text: t("Portfolio"),
       href: "#portfolio",
     },
   ],
   [
     {
-      title: t("Read our latest articles and news"),
+      title: t("Read our latest articles and news."),
       text: t("News"),
       href: "#news",
     },
     {
-      title: t("Join us for live, in-person events"),
+      title: t("Join us for live, in-person events."),
       text: t("Events"),
       href: "#events",
     },
@@ -42,8 +43,8 @@ const groups = [
 ---
 
 <nav-collabsible {...Astro.props}>
-  <h3 class="nav-subtitle" title={t("Backing deep science for a better future.")}>
-    {t("Backing deep science for a better future.")}
+  <h3 class="nav-subtitle" title={t(strings.oneLiner)}>
+    {t(strings.oneLiner)}
   </h3>
   <p class="nav-link-groups">
     {
@@ -71,9 +72,10 @@ const groups = [
     z-index: 1;
     width: 100%;
   }
-  h3 {
-    max-width: 19.2rem;
-  }
+	.nav-subtitle {
+		min-height: 4.5rem;
+		max-width: 19.8rem;
+	}
   p {
     display: flex;
     flex-direction: row;
@@ -89,7 +91,18 @@ const groups = [
 		text-decoration: underline;
 	}
 </style>
+
 <script>
+
+	import { TypewriterClass } from "typewriter-effect";
+
+	declare global {
+		class Typewriter extends TypewriterClass {}
+	}
+
+	// @ts-ignore
+	import Typewriter from "typewriter-effect/dist/core";
+
 	const sections: NodeListOf<HTMLElement> = document.querySelectorAll("section");
 	class CollapsibleNav extends HTMLElement {
 		private isDragging: boolean;
@@ -97,12 +110,17 @@ const groups = [
 		private startMarginTop: number; 
 		private links: NodeListOf<HTMLAnchorElement> = document.querySelectorAll("nav-collabsible a.nav-link");
 		private subtitle: HTMLHeadingElement = document.querySelector("nav-collabsible h3")!;
+		private typewriter: TypewriterClass;
+		private lastLink?: HTMLAnchorElement | null;
+		private debounceTimeout?: NodeJS.Timeout
 
 		constructor() {
 			super();
 			this.isDragging = false;
 			this.startY = 0;
 			this.startMarginTop = 0;
+			this.typewriter = new Typewriter(this.subtitle, { delay: 60 })
+			this.determineSelectedSection()
 		}
 
 		connectedCallback() {
@@ -132,18 +150,26 @@ const groups = [
 		}
 
 		updateSubtitle(link: HTMLAnchorElement | null) {
-			if (link) {
-				this.subtitle.textContent = link.title;
-			} else {
-				this.subtitle.textContent = this.subtitle.title;
-			}
+			if (link === this.lastLink) return;
+			const text = link ? link.title : this.subtitle.title;
+			this.typewriter.stop().deleteAll('natural').typeString(text).start()
+			this.lastLink = link;
+		}
+
+		debouncedUpdateSubtitle = (link: HTMLAnchorElement | null) => {
+			if (this.debounceTimeout) clearTimeout(this.debounceTimeout)
+			this.debounceTimeout = setTimeout(() => this.updateSubtitle(link), 350)
 		}
 
 		determineSelectedSection = () => {
 			let selectedSection = null;
 			for (const section of sections) {
 				const rect = section.getBoundingClientRect();
-				if (rect.top + rect.height / 2 >= 0 && rect.top + rect.height / 2 < window.innerHeight) {
+				if (
+					(rect.top >= 0 && rect.top <= window.innerHeight / 2) ||
+					(rect.bottom >= window.innerHeight / 2 && rect.bottom <= window.innerHeight) ||
+					(rect.top < 0 && rect.bottom > window.innerHeight)
+				) {
 					selectedSection = section;
 					break;
 				}
@@ -157,12 +183,12 @@ const groups = [
 				const selected = link.getAttribute("href") === `#${selectedSection.id}`;
 				link.classList.toggle("selected", selected);
 				if (selected && !previously) {
-					this.updateSubtitle(link);
+					this.debouncedUpdateSubtitle(link);
 					fallbackToDefault = false;
 				}
 			});
 			if (fallbackToDefault) {
-				this.updateSubtitle(null);
+				this.debouncedUpdateSubtitle(null);
 			}
 		}
 

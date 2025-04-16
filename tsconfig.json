@@ -8,8 +8,10 @@
       "components/*": ["src/components/*"],
       "layouts/*": ["src/layouts/*"],
       "pages/*": ["src/pages/*"],
-      "static/*": ["src/lib/*"],
-      "api/*": ["src/api/*"]
+      "styles/*": ["src/styles/*"],
+      "api/*": ["src/api/*"],
+      "data/*": ["src/data/*"],
+      "utils/*": ["src/utils/*"]
     }
   }
 }
