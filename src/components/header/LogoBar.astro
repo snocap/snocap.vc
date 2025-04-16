@@ -34,6 +34,7 @@ const classes = Array.from(new Set(["logo-bar", className].filter(Boolean)));
     padding: var(--row-gap) var(--gutter-width);
     z-index: 2;
     background-color: var(--color-secondary);
+    justify-content: space-between;
   }
   .link {
     height: 1.625rem;
@@ -45,7 +46,7 @@ const classes = Array.from(new Set(["logo-bar", className].filter(Boolean)));
   }
   .link-logo {
     padding: 1px 0;
-    flex-grow: 2;
+    width: 8rem;
     transition: opacity 0.3s;
     opacity: 1;
     text-align: left;
