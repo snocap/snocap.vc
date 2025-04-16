@@ -182,12 +182,10 @@ const groups = [
 
 		connectedCallback() {
 			this.addListeners();
-			window.addEventListener("scroll", this.toggleListenersOnDisplay);
 		}
 
 		disconnectedCallback() {
 			this.removeListeners();
-			window.removeEventListener("scroll", this.toggleListenersOnDisplay);
 		}
 
 		addListeners() {
@@ -216,17 +214,12 @@ const groups = [
 			window.removeEventListener("scroll", this.determineSelectedSection);
 		}
 
-		toggleListenersOnDisplay = () => {
-			if (getComputedStyle(this.subtitle).display === "none") {
-				this.removeListeners();
-			} else {
-				this.addListeners();
-			}
-			this.updateBorderOpacity();
+		isMobile = () => {
+			return getComputedStyle(this.subtitle).display === "none";
 		}
 
 		updateSubtitle(link: HTMLAnchorElement | null) {
-			if (link === this.lastLink) return;
+			if (link === this.lastLink || this.isMobile()) return;
 			const text = link ? link.title : this.subtitle.title;
 			this.typewriter.stop().deleteAll('natural').typeString(text).start();
 			this.lastLink = link;
@@ -322,6 +315,7 @@ const groups = [
 			const elementHeight = this.offsetHeight;
 			const marginTop = Math.max(-elementHeight, Math.min(0, newMarginTop));
 			this.style.marginTop = `${marginTop}px`;
+			this.updateBorderOpacity();
 		}
 
 		updateBorderOpacity() {
