@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - next
+env:
+  HUSKY: 0
 
 permissions:
   contents: write
