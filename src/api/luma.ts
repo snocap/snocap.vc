@@ -165,7 +165,7 @@ export interface SimpleLumaEvent {
   start: Date;
   title: string;
   org: string;
-  url: string;
+  slug: string;
 }
 
 export async function fetchUpcomingEvents(
@@ -193,6 +193,6 @@ export async function fetchUpcomingEvents(
     start: new Date(entry.start_at),
     title: entry.event.name,
     org: entry.calendar.name,
-    url: entry.event.url,
+    slug: entry.event.url,
   }));
 }

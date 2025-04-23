@@ -18,7 +18,7 @@ const upcomingEvents = upcomingEventGroups
 
 <div class="event-feed">
   {
-    upcomingEvents.map(({ title, start, url, org }) => (
+    upcomingEvents.map(({ title, start, slug, org }) => (
       <div class="event-item">
         <div class="event-datetime">
           <Button disabled class="start-date">
@@ -38,7 +38,7 @@ const upcomingEvents = upcomingEventGroups
         <h3>{title}</h3>
         <small class="event-org">{org}</small>
         <Button
-          href={url}
+          href={`https://lu.ma/${slug}`}
           target="_blank"
           rel="noopener noreferrer"
           class="event-link"
@@ -94,6 +94,9 @@ const upcomingEvents = upcomingEventGroups
     font-size: 1rem;
   }
   @media (max-width: 742px) {
+    h3 {
+      font-size: 1.1rem;
+    }
     .event-feed {
       flex-direction: column;
       row-gap: 1.5rem;
