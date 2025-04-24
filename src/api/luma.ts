@@ -17,6 +17,7 @@ export interface LumaEvent {
     hide_rsvp: boolean;
     location_type: string;
     name: string;
+    host?: string;
     one_to_one: boolean;
     recurrence_id: string | null;
     show_guest_list: boolean;
@@ -165,7 +166,7 @@ export interface SimpleLumaEvent {
   start: Date;
   title: string;
   org: string;
-  slug: string;
+  url: string;
 }
 
 export async function fetchUpcomingEvents(
@@ -190,9 +191,11 @@ export async function fetchUpcomingEvents(
     throw new Error(`Error fetching Luma events: ${body}`);
   }
   return body.entries.map((entry) => ({
-    start: new Date(entry.start_at),
+    start: new Date(entry.start_at ?? entry.event.start_at),
     title: entry.event.name,
-    org: entry.calendar.name,
-    slug: entry.event.url,
+    org: entry.calendar?.name ?? entry.event.host,
+    url: entry.event.url.startsWith("http")
+      ? entry.event.url
+      : `https://lu.ma/${entry.event.url}`,
   }));
 }
