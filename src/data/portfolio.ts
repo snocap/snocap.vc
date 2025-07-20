@@ -58,4 +58,11 @@ export const portfolio: PortfolioItem[] = [
     sectors: ["Finance", "Logistics", "Manufacturing"],
     website: "https://togetherwebloom.us/",
   },
+  {
+    id: "trimagnetix",
+    name: "TriMagnetix",
+    logo: "/assets/portfolio/logo-trimagnetix.png",
+    sectors: ["Compute", "Energy", "Datacenters"],
+    website: "https://trimagnetix.com/",
+  },
 ];
