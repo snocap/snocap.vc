@@ -1,4 +1,4 @@
 export const strings = {
-  oneLiner: `Today's Deep Science, Tomorrow's Unicorns.`,
+  oneLiner: `We invest where industry begins.`,
   canonicalUrl: "https://snocap.vc",
 };
