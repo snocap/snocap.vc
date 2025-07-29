@@ -68,6 +68,6 @@ jobs:
       - name: Keep workflow alive using GitHub API
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TIME_ELAPSED: 0
+          TIME_ELAPSED: 45
         run: |
           bash .github/scripts/keepalive.sh
