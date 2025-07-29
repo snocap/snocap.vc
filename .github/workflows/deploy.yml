@@ -58,7 +58,6 @@ jobs:
         uses: actions/deploy-pages@v4
 
   keepalive:
-    name: Keepalive Workflow
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -69,6 +68,6 @@ jobs:
       - name: Keep workflow alive using GitHub API
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TIME_ELAPSED: 45
+          TIME_ELAPSED: 0
         run: |
           bash .github/scripts/keepalive.sh
