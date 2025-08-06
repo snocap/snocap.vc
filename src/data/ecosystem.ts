@@ -5,7 +5,8 @@ export type EcosystemPartnerKey =
   | "sweetfarm"
   | "9zero"
   | "wocl"
-  | "cff";
+  | "cff"
+  | "envest";
 
 export interface EcosystemPartner {
   id: EcosystemPartnerKey;
@@ -26,9 +27,14 @@ export const partners: EcosystemPartner[] = [
     link: strings.canonicalUrl,
     tags: ["Finance", "Venture Capital"],
     description: `
-			SNØCAP is a venture fund focused on deep, scientific innovations reduce costs and pollution at the same time. The firm is managed by engineers and General Partners Shrina Kurani, Nate Salpeter, and Jonathan Azoff.The management team has a uniquely deep operational, technical and investing background that they use to determine the winning business models of the future.
-			
-			The team has been working together since 2015, co-investing and incubating frontier technologies for over a decade. SNØCAP's unique value-add comes from its engineering experience and expert relationships across energy, food, agriculture, waste, and material sciences. Just about half of funding introductions come from direct application!
+			SNØCAP is a deeptech venture capital firm founded in 2023 by engineers Shrina Kurani, Nate Salpeter, and Jonathan Azoff. 
+      The founding partners met back in 2015 as individual co-investors in climate tech startups, and have been working 
+      together ever since. They bring a mix of engineering, investment, entrepreneurial and policy experience to the firm.
+
+      The firm also works closely with several major universities, research institutions, and non-profits to source and 
+      support the best founders in the world. SNØCAP is headquartered in Seattle, with partners in Los Angeles and 
+      New York. Their yearly fellowship program started with Yale University in 2023, and has since expanded to Stanford, 
+      Skidmore, the University of Michigan, and the University of Washington, with many more to come.
 		`,
   },
   {
@@ -58,6 +64,23 @@ export const partners: EcosystemPartner[] = [
 			development of hardtech and deeptech businesses, using a first-of-its-kind private funding program.
 
 			GP Jonathan Azoff is one of the initial investors in 9Zero, and is proud to call Seattle's 9Zero location the home of SNØCAP's first office.
+		`,
+  },
+  {
+    id: "envest",
+    name: "Envest",
+    tabImage: "/assets/branding/logo-envest.png",
+    previewImage: "/assets/ecosystem/preview-envest.png",
+    link: "https://envest.earth",
+    tags: ["Venture Capital", "Trade Group"],
+    description: `
+			Envest is a global coalition of climate-focused venture capital funds and investors. The group is dedicated to 
+      accelerating the transition to a net-zero economy by pooling resources, sharing insights, and co-investing in 
+      transformative technologies. Envest members collaborate to identify high-impact opportunities and support 
+      innovative startups that are driving climate solutions.
+
+      VP Kelci Zile and operations lead Jackie Moe run the day-to-day operations of Envest, and SNØCAP is proud to
+      be a member in good standing of this important coalition. 
 		`,
   },
   {
