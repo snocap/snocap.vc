@@ -26,7 +26,7 @@ export const team: TeamMember[] = [
     title: "General Partner",
     bio: "Software engineering leader with twenty years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past ten years (Zillow, Disney). He’s the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M+ XRP raise). He managed several teams at Carta (7B valuation), where he led tool development for the VC back office.",
     linkedinUrl: "https://www.linkedin.com/in/jazoff/",
-    image: "/assets/team/headshot-jon.png",
+    image: "/assets/team/headshot-jon.jpeg",
   },
   {
     name: "Abigail Albright",
@@ -42,11 +42,11 @@ export const team: TeamMember[] = [
     linkedinUrl: "https://www.linkedin.com/in/katekingen/",
     image: "/assets/team/headshot-kate.jpeg",
   },
-  {
-    name: "Kelci Zile",
-    title: "Venture Partner",
-    bio: "Kelci Zile is the Director of Venture Community for EnVest and sits on the University of Washington Buerk Center for Entrepreneurship board. She previously led sustainability investments for Madrona Venture Labs and, before that, led sustainability for AWS Marketplace while serving on the Amazon Sustainability Ambassadors Global Board. Her expertise includes the circular economy, supply chain emissions reduction, net-zero planning, and nature-based solutions.",
-    linkedinUrl: "https://www.linkedin.com/in/kzile/",
-    image: "/assets/team/headshot-kelci.png",
-  },
+  // {
+  //   name: "Kelci Zile",
+  //   title: "Venture Partner",
+  //   bio: "Kelci Zile is the Director of Venture Community for EnVest and sits on the University of Washington Buerk Center for Entrepreneurship board. She previously led sustainability investments for Madrona Venture Labs and, before that, led sustainability for AWS Marketplace while serving on the Amazon Sustainability Ambassadors Global Board. Her expertise includes the circular economy, supply chain emissions reduction, net-zero planning, and nature-based solutions.",
+  //   linkedinUrl: "https://www.linkedin.com/in/kzile/",
+  //   image: "/assets/team/headshot-kelci.png",
+  // },
 ];

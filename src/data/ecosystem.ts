@@ -23,7 +23,7 @@ export const partners: EcosystemPartner[] = [
     id: "snocap",
     name: "SNØCAP",
     tabImage: "/assets/branding/logo-snocap-text.svg",
-    previewImage: "/assets/ecosystem/preview-snocap.png",
+    previewImage: "/assets/ecosystem/preview-snocap.jpg",
     link: strings.canonicalUrl,
     tags: ["Finance", "Venture Capital"],
     description: `
