@@ -27,21 +27,16 @@ export const partners: EcosystemPartner[] = [
     link: strings.canonicalUrl,
     tags: ["Finance", "Venture Capital"],
     description: `
-			SNØCAP is a deeptech venture capital firm founded in 2023 by engineers Shrina Kurani, Nate Salpeter, and Jonathan Azoff. 
-      The founding partners met back in 2015 as individual co-investors in climate tech startups, and have been working 
-      together ever since. They bring a mix of engineering, investment, entrepreneurial and policy experience to the firm.
+			SNØCAP is a deeptech venture capital firm founded in 2023 by engineers Shrina Kurani, Nate Salpeter, and Jonathan Azoff. The founding partners met back in 2015 as individual co-investors in climate tech startups, and have been working together ever since. They bring a mix of engineering, investment, entrepreneurial and policy experience to the firm.
 
-      The firm also works closely with several major universities, research institutions, and non-profits to source and 
-      support the best founders in the world. SNØCAP is headquartered in Seattle, with partners in Los Angeles and 
-      New York. Their yearly fellowship program started with Yale University in 2023, and has since expanded to Stanford, 
-      Skidmore, the University of Michigan, and the University of Washington, with many more to come.
+      The firm also works closely with several major universities, research institutions, and non-profits to source and support the best founders in the world. Their yearly fellowship program started with Yale University in 2023, and has since expanded to Stanford, Skidmore, the University of Michigan, and the University of Washington, with many more to come.
 		`,
   },
   {
     id: "sweetfarm",
     name: "Sweet Farm",
     tabImage: "/assets/branding/logo-sweetfarm.png",
-    previewImage: "/assets/ecosystem/preview-sweetfarm.png",
+    previewImage: "/assets/ecosystem/preview-sweetfarm.jpg",
     link: "https://sweetfarm.org",
     tags: ["Research", "Incubator"],
     description: `
@@ -58,12 +53,9 @@ export const partners: EcosystemPartner[] = [
     link: "https://9zero.com",
     tags: ["Club", "Development Programs"],
     description: `
-			9Zero is a community of founders, investors, scientists, and innovators who drive climate action together. 
-			Through their club, events, and connections, they build relationships and accelerate solutions.
-			SNØCAP and 9Zero are major partners in launching the global LAV investment marketplace, backing the
-			development of hardtech and deeptech businesses, using a first-of-its-kind private funding program.
+			9Zero is a community of founders, investors, scientists, and innovators who drive climate action together. Through their club, events, and connections, they build relationships and accelerate solutions. SNØCAP and 9Zero are major partners in launching the global Lab Access Marketplace, backing the development of hardtech and deeptech businesses, using a first-of-its-kind private funding program.
 
-			GP Jonathan Azoff is one of the initial investors in 9Zero, and is proud to call Seattle's 9Zero location the home of SNØCAP's first office.
+      GP Jonathan Azoff is one of the initial investors in 9Zero, and is proud to call Seattle's 9Zero location the home of SNØCAP's first office.
 		`,
   },
   {
@@ -74,13 +66,9 @@ export const partners: EcosystemPartner[] = [
     link: "https://envest.earth",
     tags: ["Venture Capital", "Trade Group"],
     description: `
-			Envest is a global coalition of climate-focused venture capital funds and investors. The group is dedicated to 
-      accelerating the transition to a net-zero economy by pooling resources, sharing insights, and co-investing in 
-      transformative technologies. Envest members collaborate to identify high-impact opportunities and support 
-      innovative startups that are driving climate solutions.
+			Envest is a global coalition of climate-focused venture capital funds and investors. The group is dedicated to accelerating the transition to a net-zero economy by pooling resources, sharing insights, and co-investing in transformative technologies. Envest members collaborate to identify high-impact opportunities and support innovative startups that are driving climate solutions.
 
-      VP Kelci Zile and operations lead Jackie Moe run the day-to-day operations of Envest, and SNØCAP is proud to
-      be a member in good standing of this important coalition. 
+      VP Kelci Zile and operations lead Jackie Moe run the day-to-day operations of Envest, and SNØCAP is proud to be a member in good standing of this important coalition.
 		`,
   },
   {
