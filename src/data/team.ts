@@ -42,11 +42,11 @@ export const team: TeamMember[] = [
     linkedinUrl: "https://www.linkedin.com/in/katekingen/",
     image: "/assets/team/headshot-kate.jpeg",
   },
-  // {
-  //   name: "Kelci Zile",
-  //   title: "Venture Partner",
-  //   bio: "Kelci Zile is the Director of Venture Community for EnVest and sits on the University of Washington Buerk Center for Entrepreneurship board. She previously led sustainability investments for Madrona Venture Labs and, before that, led sustainability for AWS Marketplace while serving on the Amazon Sustainability Ambassadors Global Board. Her expertise includes the circular economy, supply chain emissions reduction, net-zero planning, and nature-based solutions.",
-  //   linkedinUrl: "https://www.linkedin.com/in/kzile/",
-  //   image: "/assets/team/headshot-kelci.png",
-  // },
+  {
+    name: "Kelci Zile",
+    title: "Venture Partner",
+    bio: "Kelci Zile is the Director of Venture Community for EnVest and sits on the University of Washington Buerk Center for Entrepreneurship board. She previously led sustainability investments for Madrona Venture Labs and, before that, led sustainability for AWS Marketplace while serving on the Amazon Sustainability Ambassadors Global Board. Her expertise includes the circular economy, supply chain emissions reduction, net-zero planning, and nature-based solutions.",
+    linkedinUrl: "https://www.linkedin.com/in/kzile/",
+    image: "/assets/team/headshot-kelci.png",
+  },
 ];
