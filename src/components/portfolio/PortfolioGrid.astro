@@ -8,11 +8,18 @@ import Button from "components/button/Button.astro";
   {
     portfolio.map(({ id, name, logo, website, sectors, blog }) => (
       <div class="portfolio-item">
-        <img
-          class="portfolio-logo"
-          alt={t("{name} Preview Image", { name })}
-          src={logo}
-        />
+        <a
+          title={t("Visit {name}", { name })}
+          target="_blank"
+          class="portfolio-img-link"
+          href={website}
+        >
+          <img
+            class="portfolio-logo"
+            alt={t("{name} Preview Image", { name })}
+            src={logo}
+          />
+        </a>
         <h5>{name}</h5>
         <a
           title={t("Visit {name}", { name })}
