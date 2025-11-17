@@ -17,14 +17,14 @@ export const team: TeamMember[] = [
   {
     name: "Nate Salpeter",
     title: "General Partner",
-    bio: "Ph.D. Mechanical Engineer with 13 years experience in the climate tech space, including 5 years at Bill Gates’ TerraPower. He is the co-founder of Sweet Farm, a New York based non-profit incubating food, agriculture, and climate tech startups. He invests and personally advises in emerging sectors, including being the first investor in and an advisor to TurtleTree Labs.",
+    bio: "Ph.D. Mechanical Engineer with 18 years experience in the climate tech space, including at TerraPower and Kairos Power. He is the co-founder of Sweet Farm, a New York based non-profit incubating food, agriculture, waste, energy, and advanced materials startups through pilots and mentorship support.",
     linkedinUrl: "https://www.linkedin.com/in/nate-salpeter-77145712/",
     image: "/assets/team/headshot-nate.jpeg",
   },
   {
     name: "Jonathan Azoff",
     title: "General Partner",
-    bio: "Software engineering leader with twenty years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past ten years (Zillow, Disney). He’s the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M+ XRP raise). He managed several teams at Carta (7B valuation), where he led tool development for the VC back office.",
+    bio: "Software engineering leader with over twenty years of experience across social, gaming, real estate, fitness, logistics, and fintech, having built several venture-backed startups and achieved two notable exits to Zillow and Disney. He is the inventor of Goat-2-Meeting (2M+ ARR), the primary architect behind Omni (25M in XRP raised), and formerly led multiple engineering teams at Carta (7B valuation) focused on VC back-office tooling. He brought The 9Zero Climate Innovation Hub to Seattle, and serves as board member and major sponsor across impact organizations like Sweet Farm, Work on Climate and The Climate Film Festival.",
     linkedinUrl: "https://www.linkedin.com/in/jazoff/",
     image: "/assets/team/headshot-jon.jpeg",
   },
