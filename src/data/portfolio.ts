@@ -69,7 +69,14 @@ export const portfolio: PortfolioItem[] = [
     id: "mothership",
     name: "Mothership Materials",
     logo: "/assets/portfolio/logo-mothership-materials.svg",
-    sectors: ["Waste", "Chemicals", "Recycling"],
+    sectors: ["Waste", "Food", "Recycling"],
     website: "https://mothershipmaterials.com/",
+  },
+  {
+    id: "nanomox",
+    name: "Nanomox",
+    logo: "/assets/portfolio/logo-nanomox.png",
+    sectors: ["Waste", "Materials", "Recycling"],
+    website: "https://nanomox.com/",
   },
 ].sort((a, b) => a.name.localeCompare(b.name));
