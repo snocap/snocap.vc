@@ -2,7 +2,7 @@ export enum LumaCalendarId {
   NineZeroSF = "cal-Wqq3vYSYpKhg3ek",
   NineZeroSeattle = "cal-by6t1yIfVGAyqRH",
   Snocap = "cal-mJqWook0FdRrCQv",
-  Envest = "cal-Hw3Hn1kmTxjcsSW",
+  // Envest = "cal-Hw3Hn1kmTxjcsSW", // they went private
   SweetFarm = "cal-WLUvftlYSglZU5J",
 }
 
@@ -184,11 +184,13 @@ export async function fetchUpcomingEvents(
     },
   );
   if (response.status !== 200) {
-    throw new Error(`Error fetching Luma events: ${response.status}`);
+    throw new Error(
+      `Error fetching Luma events for calendar ${id}: ${response.status}`,
+    );
   }
   const body = (await response.json()) as LumaResponse;
   if (!body.entries) {
-    throw new Error(`Error fetching Luma events: ${body}`);
+    throw new Error(`Error fetching Luma events for calendar ${id}: ${body}`);
   }
   return body.entries.map((entry) => ({
     start: new Date(entry.start_at ?? entry.event.start_at),
