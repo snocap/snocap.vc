@@ -79,4 +79,11 @@ export const portfolio: PortfolioItem[] = [
     sectors: ["Waste", "Materials", "Recycling"],
     website: "https://nanomox.com/",
   },
+  {
+    id: "appliedbio",
+    name: "Applied Bioplastics",
+    logo: "/assets/portfolio/logo-appliedbio.png",
+    sectors: ["Waste", "Plastics", "Recycling"],
+    website: "https://appliedbioplastics.com/",
+  },
 ].sort((a, b) => a.name.localeCompare(b.name));
