@@ -7,14 +7,13 @@
  * can't launch (e.g. local dev without system deps).
  */
 import { createServer } from "node:http";
-import { readFile, copyFile, mkdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join, extname } from "node:path";
 
 const DIST = new URL("../dist", import.meta.url).pathname;
 const PORT = 4321;
 const DECK_URL = `http://localhost:${PORT}/deck/`;
 const PDF_OUT = join(DIST, "deck.pdf");
-const DOWNLOAD_OUT = join(DIST, "deck", "download");
 
 const MIME = {
   ".html": "text/html",
@@ -83,10 +82,6 @@ try {
   console.log(
     `PDF generated: ${PDF_OUT} (${(pdf.byteLength / 1048576).toFixed(1)}MB)`,
   );
-
-  await mkdir(join(DIST, "deck"), { recursive: true });
-  await copyFile(PDF_OUT, DOWNLOAD_OUT);
-  console.log(`copied to: ${DOWNLOAD_OUT}`);
 } catch (err) {
   if (
     err.message?.includes("Failed to launch") ||
