@@ -27,3 +27,7 @@ runs:
     - name: Run build
       shell: bash
       run: npm run build
+
+    - name: Generate deck PDF
+      shell: bash
+      run: npm run pdf

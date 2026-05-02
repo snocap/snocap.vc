@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "pdf": "node scripts/generate-pdf.mjs",
     "format": "prettier --write .",
     "prepare": "husky"
   },
@@ -16,7 +17,8 @@
   "devDependencies": {
     "husky": "^9.0.0",
     "prettier": "^3.5.3",
-    "prettier-plugin-astro": "^0.14.1"
+    "prettier-plugin-astro": "^0.14.1",
+    "puppeteer": "^24.0.0"
   },
   "lint-staged": {
     "*.{astro,mjs,ts,json,css,yml}": "prettier --write"
