@@ -131,13 +131,21 @@ export default {
     // POST: email form submission
     if (request.method === "POST" && url.pathname === "/deck") {
       const formData = await request.formData();
-      const email = (formData.get("email") as string || "").trim().toLowerCase();
+      const email = ((formData.get("email") as string) || "")
+        .trim()
+        .toLowerCase();
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return new Response(renderGatePage("Please enter a valid email address."), {
-          status: 400,
-          headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
-        });
+        return new Response(
+          renderGatePage("Please enter a valid email address."),
+          {
+            status: 400,
+            headers: {
+              "Content-Type": "text/html",
+              "Cache-Control": "no-store",
+            },
+          },
+        );
       }
 
       const hmac = await hmacSign(email, env.HMAC_SECRET);
@@ -170,7 +178,10 @@ export default {
     const cookieRaw = getCookie(request, COOKIE_NAME);
     if (cookieRaw) {
       const parsed = parseCookieValue(cookieRaw);
-      if (parsed && (await hmacVerify(parsed.email, parsed.hmac, env.HMAC_SECRET))) {
+      if (
+        parsed &&
+        (await hmacVerify(parsed.email, parsed.hmac, env.HMAC_SECRET))
+      ) {
         return fetch(request);
       }
     }
