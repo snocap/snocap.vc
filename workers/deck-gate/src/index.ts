@@ -122,10 +122,11 @@ export default {
       const email = ((formData.get("email") as string) || "")
         .trim()
         .toLowerCase();
+      const returnTo = (formData.get("return_to") as string) || "/deck";
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return new Response(
-          renderGatePage("Please enter a valid email address."),
+          renderGatePage("Please enter a valid email address.", returnTo),
           {
             status: 400,
             headers: {
@@ -153,10 +154,12 @@ export default {
         // non-fatal: don't block access if D1 write fails
       }
 
+      const safeReturn = returnTo.startsWith("/deck") ? returnTo : "/deck";
+
       return new Response(null, {
         status: 302,
         headers: {
-          Location: "/deck",
+          Location: safeReturn,
           "Set-Cookie": `${COOKIE_NAME}=${encodeURIComponent(cookieValue)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; Secure; SameSite=Lax`,
         },
       });
@@ -175,7 +178,7 @@ export default {
     }
 
     // No valid cookie: show gate
-    return new Response(renderGatePage(), {
+    return new Response(renderGatePage(undefined, url.pathname), {
       status: 200,
       headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
     });

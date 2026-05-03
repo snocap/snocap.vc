@@ -1,4 +1,4 @@
-export function renderGatePage(error?: string): string {
+export function renderGatePage(error?: string, returnTo?: string): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -139,6 +139,7 @@ export function renderGatePage(error?: string): string {
     ${error ? `<div class="error">${error}</div>` : ""}
     <div class="prompt">Enter your email to view the deck.</div>
     <form method="POST" action="/deck">
+      ${returnTo ? `<input type="hidden" name="return_to" value="${returnTo}" />` : ""}
       <input type="email" name="email" placeholder="you@company.com" required autofocus />
       <button type="submit">View Deck</button>
     </form>
