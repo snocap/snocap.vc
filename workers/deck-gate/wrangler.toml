@@ -1,0 +1,12 @@
+name = "deck-gate"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+routes = [
+  { pattern = "snocap.vc/deck*", zone_name = "snocap.vc" }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "deck-viewers"
+database_id = "" # set after running: wrangler d1 create deck-viewers
