@@ -8,6 +8,14 @@
   link.setAttribute("aria-label", "Download deck as PDF");
   link.setAttribute("data-noncommentable", "");
   link.className = "deck-pdf-btn export-hidden";
+  link.addEventListener("click", () => {
+    if (window.posthog && typeof window.posthog.capture === "function") {
+      window.posthog.capture("pdf_download_clicked", {
+        deck_id: "snocap-us-ii-pitch",
+        href: link.href,
+      });
+    }
+  });
   link.innerHTML = `
     <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor"
          stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
