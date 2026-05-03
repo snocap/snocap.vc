@@ -15,7 +15,7 @@ function SlideFrame({
   showFooter = true,
   showCorners = true,
   bg,
-  pageLabel,           // override page mono label e.g. "FUND II"
+  pageLabel, // override page mono label e.g. "FUND II"
   yearLabel = currentQuarterLabel(),
   showLeftCaption = true,
 }) {
@@ -42,20 +42,23 @@ function SlideFrame({
 
       {/* vertical-rl caption on the very left */}
       {showLeftCaption && (
-        <div style={{
-          position: "absolute",
-          left: 24,
-          top: 80,
-          fontFamily: "'Fira Mono', monospace",
-          fontSize: 12,
-          letterSpacing: "-0.04em",
-          color: subInk,
-          writingMode: "vertical-rl",
-          transform: "rotate(180deg)",
-          textTransform: "uppercase",
-          lineHeight: 1.4,
-        }}>
-          HIGHLY PRIVATE & CONFIDENTIAL<br />
+        <div
+          style={{
+            position: "absolute",
+            left: 24,
+            top: 80,
+            fontFamily: "'Fira Mono', monospace",
+            fontSize: 12,
+            letterSpacing: "-0.04em",
+            color: subInk,
+            writingMode: "vertical-rl",
+            transform: "rotate(180deg)",
+            textTransform: "uppercase",
+            lineHeight: 1.4,
+          }}
+        >
+          HIGHLY PRIVATE & CONFIDENTIAL
+          <br />
           NOT FOR FURTHER DISTRIBUTION
         </div>
       )}
@@ -63,20 +66,23 @@ function SlideFrame({
       {/* bottom-left page label — bottom inset matches top caption's offset
           so the two captions are equidistant from their respective bracket corners */}
       {showFooter && (
-        <div style={{
-          position: "absolute",
-          left: 24,
-          bottom: 80,
-          fontFamily: "'Fira Mono', monospace",
-          fontSize: 12,
-          letterSpacing: "-0.04em",
-          color: subInk,
-          textTransform: "uppercase",
-          writingMode: "vertical-rl",
-          transform: "rotate(180deg)",
-          lineHeight: 1.4,
-        }}>
-          {pageLabel || "SNOCAP US II, LP"}<br />
+        <div
+          style={{
+            position: "absolute",
+            left: 24,
+            bottom: 80,
+            fontFamily: "'Fira Mono', monospace",
+            fontSize: 12,
+            letterSpacing: "-0.04em",
+            color: subInk,
+            textTransform: "uppercase",
+            writingMode: "vertical-rl",
+            transform: "rotate(180deg)",
+            lineHeight: 1.4,
+          }}
+        >
+          {pageLabel || "SNOCAP US II, LP"}
+          <br />
           {yearLabel}
         </div>
       )}
@@ -95,17 +101,45 @@ function BracketCorners({ color = "#181818" }) {
   return (
     <React.Fragment>
       {/* top-left */}
-      <div style={{ ...c, left: inset, top: inset, width: len, height: stroke }} />
-      <div style={{ ...c, left: inset, top: inset, width: stroke, height: len }} />
+      <div
+        style={{ ...c, left: inset, top: inset, width: len, height: stroke }}
+      />
+      <div
+        style={{ ...c, left: inset, top: inset, width: stroke, height: len }}
+      />
       {/* top-right */}
-      <div style={{ ...c, right: inset, top: inset, width: len, height: stroke }} />
-      <div style={{ ...c, right: inset, top: inset, width: stroke, height: len }} />
+      <div
+        style={{ ...c, right: inset, top: inset, width: len, height: stroke }}
+      />
+      <div
+        style={{ ...c, right: inset, top: inset, width: stroke, height: len }}
+      />
       {/* bottom-left */}
-      <div style={{ ...c, left: inset, bottom: inset, width: len, height: stroke }} />
-      <div style={{ ...c, left: inset, bottom: inset, width: stroke, height: len }} />
+      <div
+        style={{ ...c, left: inset, bottom: inset, width: len, height: stroke }}
+      />
+      <div
+        style={{ ...c, left: inset, bottom: inset, width: stroke, height: len }}
+      />
       {/* bottom-right */}
-      <div style={{ ...c, right: inset, bottom: inset, width: len, height: stroke }} />
-      <div style={{ ...c, right: inset, bottom: inset, width: stroke, height: len }} />
+      <div
+        style={{
+          ...c,
+          right: inset,
+          bottom: inset,
+          width: len,
+          height: stroke,
+        }}
+      />
+      <div
+        style={{
+          ...c,
+          right: inset,
+          bottom: inset,
+          width: stroke,
+          height: len,
+        }}
+      />
     </React.Fragment>
   );
 }
@@ -113,9 +147,9 @@ function BracketCorners({ color = "#181818" }) {
 // ------------- Shared atoms -------------
 const SLIDE_TYPE = {
   // Sizes are in PX, working at 1920×1080
-  title: 64,        // section/slide titles (Fira Mono)
-  titleLg: 72,      // large case-study brand title
-  titleXL: 96,      // hero
+  title: 64, // section/slide titles (Fira Mono)
+  titleLg: 72, // large case-study brand title
+  titleXL: 96, // hero
   h2: 48,
   h3: 36,
   h4: 30,
@@ -147,38 +181,46 @@ const COLORS = {
 // SlideTitle — the big mono headline used at top-left of every content slide
 function SlideTitle({ children, dark = false, style }) {
   return (
-    <h1 style={{
-      position: "absolute",
-      left: 96,
-      top: 96,
-      fontFamily: FONT.mono,
-      fontSize: SLIDE_TYPE.title,
-      fontWeight: 400,
-      letterSpacing: "-0.04em",
-      lineHeight: 1.0,
-      color: dark ? COLORS.white : COLORS.ink,
-      margin: 0,
-      textTransform: "uppercase",
-      ...style,
-    }}>{children}</h1>
+    <h1
+      style={{
+        position: "absolute",
+        left: 96,
+        top: 96,
+        fontFamily: FONT.mono,
+        fontSize: SLIDE_TYPE.title,
+        fontWeight: 400,
+        letterSpacing: "-0.04em",
+        lineHeight: 1.0,
+        color: dark ? COLORS.white : COLORS.ink,
+        margin: 0,
+        textTransform: "uppercase",
+        ...style,
+      }}
+    >
+      {children}
+    </h1>
   );
 }
 
 // MonoLabel — small uppercase mono caption (chip / subtitle)
 function MonoLabel({ children, color, bg, style, padding = "8px 16px" }) {
   return (
-    <span style={{
-      display: "inline-block",
-      fontFamily: FONT.mono,
-      fontSize: SLIDE_TYPE.mono,
-      letterSpacing: "-0.04em",
-      lineHeight: 1.2,
-      textTransform: "none",
-      color: color || COLORS.white,
-      background: bg,
-      padding: bg ? padding : 0,
-      ...style,
-    }}>{children}</span>
+    <span
+      style={{
+        display: "inline-block",
+        fontFamily: FONT.mono,
+        fontSize: SLIDE_TYPE.mono,
+        letterSpacing: "-0.04em",
+        lineHeight: 1.2,
+        textTransform: "none",
+        color: color || COLORS.white,
+        background: bg,
+        padding: bg ? padding : 0,
+        ...style,
+      }}
+    >
+      {children}
+    </span>
   );
 }
 
@@ -187,14 +229,18 @@ function MonoLabel({ children, color, bg, style, padding = "8px 16px" }) {
 // reads as a highlight bar rather than a button.
 function Highlight({ children, dark = false, style }) {
   return (
-    <span style={{
-      background: COLORS.orange,
-      color: COLORS.white,
-      padding: "0.05em 0.2em",
-      boxDecorationBreak: "clone",
-      WebkitBoxDecorationBreak: "clone",
-      ...style,
-    }}>{children}</span>
+    <span
+      style={{
+        background: COLORS.orange,
+        color: COLORS.white,
+        padding: "0.05em 0.2em",
+        boxDecorationBreak: "clone",
+        WebkitBoxDecorationBreak: "clone",
+        ...style,
+      }}
+    >
+      {children}
+    </span>
   );
 }
 

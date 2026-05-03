@@ -35,11 +35,9 @@
   var totalSlides = 0;
   var dwellByIndex = {};
 
-  var viewerCookie = document.cookie
-    .split("; ")
-    .find(function (c) {
-      return c.startsWith("snocap_viewer=");
-    });
+  var viewerCookie = document.cookie.split("; ").find(function (c) {
+    return c.startsWith("snocap_viewer=");
+  });
   if (viewerCookie) {
     try {
       var val = decodeURIComponent(viewerCookie.split("=")[1]);
@@ -137,7 +135,7 @@
       total_slides: totalSlides,
       furthest_slide: Math.max.apply(
         null,
-        Object.keys(dwellByIndex).map(Number).concat([-1])
+        Object.keys(dwellByIndex).map(Number).concat([-1]),
       ),
     });
   });
