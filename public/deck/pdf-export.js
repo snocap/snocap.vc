@@ -4,7 +4,7 @@
 
 (() => {
   const link = document.createElement("a");
-  link.href = "./deck.pdf";
+  link.href = "/deck.pdf";
   link.setAttribute("aria-label", "Download deck as PDF");
   link.setAttribute("data-noncommentable", "");
   link.className = "deck-pdf-btn export-hidden";
