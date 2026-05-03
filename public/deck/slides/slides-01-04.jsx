@@ -3,32 +3,20 @@
 // ============= SLIDE 1: Cover =============
 function Slide01_Cover() {
   return (
-    <SlideFrame
-      page={1}
-      totalPages={16}
-      bg={COLORS.snow}
-      showLeftCaption={false}
-      showFooter={false}
-      showCorners={false}
-    >
+    <SlideFrame page={1} totalPages={16} bg={COLORS.snow} showLeftCaption={false} showFooter={false} showCorners={false}>
       {/* mountain bg */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "url('assets/hero-mountains.jpg') center/cover no-repeat",
-          filter: "grayscale(1)",
-          opacity: 1,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(180deg, rgba(249,249,249,0.0) 0%, rgba(249,249,249,0.85) 70%, rgba(249,249,249,1) 100%)",
-        }}
-      />
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "url('assets/hero-mountains.jpg') center/cover no-repeat",
+        filter: "grayscale(1)",
+        opacity: 1
+      }} />
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "linear-gradient(180deg, rgba(249,249,249,0.0) 0%, rgba(249,249,249,0.85) 70%, rgba(249,249,249,1) 100%)"
+      }} />
 
       {/* big SNOCAP wordmark */}
       <img
@@ -40,81 +28,65 @@ function Slide01_Cover() {
           bottom: 220,
           width: 1100,
           height: "auto",
-          zIndex: 2,
-        }}
-      />
+          zIndex: 2
+        }} />
+      
 
       {/* fund tag */}
-      <div
-        style={{
-          position: "absolute",
-          left: 100,
-          bottom: 160,
-          fontFamily: FONT.mono,
-          fontSize: 30,
-          letterSpacing: "-0.04em",
-          color: COLORS.ink,
-          textTransform: "uppercase",
-        }}
-      >
-        Fund II · {currentQuarterLabel()}
-      </div>
+      <div style={{
+        position: "absolute",
+        left: 100,
+        bottom: 160,
+        fontFamily: FONT.mono,
+        fontSize: 30,
+        letterSpacing: "-0.04em",
+        color: COLORS.ink,
+        textTransform: "uppercase"
+      }}>Fund II  ·  {currentQuarterLabel()}</div>
 
       {/* top-right caption */}
-      <div
-        style={{
-          position: "absolute",
-          right: 96,
-          top: 96,
-          fontFamily: FONT.mono,
-          fontSize: 16,
-          letterSpacing: "-0.04em",
-          color: COLORS.ink,
-          textTransform: "uppercase",
-          textAlign: "right",
-        }}
-      >
-        SNOCAP US II, LP
-        <br />
-        Highly private &amp; confidential
-      </div>
+      <div style={{
+        position: "absolute",
+        right: 96,
+        top: 96,
+        fontFamily: FONT.mono,
+        fontSize: 16,
+        letterSpacing: "-0.04em",
+        color: COLORS.ink,
+        textTransform: "uppercase",
+        textAlign: "right"
+      }}>SNOCAP US II, LP<br />Highly private &amp; confidential</div>
 
       {/* bottom-right tagline */}
-      <div
-        style={{
-          position: "absolute",
-          right: 96,
-          bottom: 160,
-          fontFamily: FONT.sans,
-          fontWeight: 300,
-          fontSize: 26,
-          letterSpacing: "-0.01em",
-          lineHeight: 1.3,
-          color: COLORS.graphite,
-          textAlign: "right",
-          maxWidth: 540,
-        }}
-      >
+      <div style={{
+        position: "absolute",
+        right: 96,
+        bottom: 160,
+        fontFamily: FONT.sans,
+        fontWeight: 300,
+        fontSize: 26,
+        letterSpacing: "-0.01em",
+        lineHeight: 1.3,
+        color: COLORS.graphite,
+        textAlign: "right",
+        maxWidth: 540
+      }}>
         <br />
         <br />
+        
       </div>
 
       {/* small horizontal rule */}
-      {false && (
-        <div
-          style={{
-            position: "absolute",
-            left: 96,
-            right: 96,
-            bottom: 100,
-            height: 1,
-            background: COLORS.ink,
-            opacity: 0.3,
-          }}
-        />
-      )}
-    </SlideFrame>
-  );
+      {false && <div style={{
+        position: "absolute",
+        left: 96, right: 96,
+        bottom: 100,
+        height: 1,
+        background: COLORS.ink,
+        opacity: 0.3
+      }} />}
+    </SlideFrame>);
+
 }
 
 // ============= SLIDE 2: Disclaimer =============
@@ -126,146 +98,107 @@ function Slide02_Disclaimer() {
   return (
     <SlideFrame page={2} bg={COLORS.snow}>
       {/* faint cloud bg */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
-          opacity: 0.5,
-        }}
-      />
-      <SlideTitle style={{ left: 168, top: 108 }}>
-        General Disclaimers and Confidentiality
-      </SlideTitle>
-      <div
-        style={{
-          position: "absolute",
-          left: 168,
-          top: 216,
-          width: 1584,
-          height: 820,
-          fontFamily: FONT.sans,
-          fontSize: 14,
-          lineHeight: "19px",
-          color: COLORS.graphite,
-          fontWeight: 400,
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {DISCLAIMER_TEXT}
-      </div>
-    </SlideFrame>
-  );
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
+        opacity: 0.5
+      }} />
+      <SlideTitle style={{ left: 168, top: 108 }}>General Disclaimers and Confidentiality</SlideTitle>
+      <div style={{
+        position: "absolute",
+        left: 168,
+        top: 216,
+        width: 1584,
+        height: 820,
+        fontFamily: FONT.sans,
+        fontSize: 14,
+        lineHeight: "19px",
+        color: COLORS.graphite,
+        fontWeight: 400,
+        whiteSpace: "pre-wrap"
+      }}>{DISCLAIMER_TEXT}</div>
+    </SlideFrame>);
+
 }
 
 // ============= SLIDE 3: Our Unique Advantages =============
 function Slide03_Manifesto() {
   const photos = [
-    { src: "assets/slide3-field.png", alt: "On-site at a portfolio company" },
-    { src: "assets/slide3-beaker.png", alt: "Lab work — beaker" },
-    { src: "assets/slide3-team.png", alt: "Mars Materials team" },
-  ];
+  { src: "assets/slide3-field.png", alt: "On-site at a portfolio company" },
+  { src: "assets/slide3-beaker.png", alt: "Lab work — beaker" },
+  { src: "assets/slide3-team.png", alt: "Mars Materials team" }];
 
   return (
     <SlideFrame page={3} dark={true} bg={COLORS.black}>
       {/* full-bleed dark contour */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "url('assets/contour-appalachia.png') center/cover no-repeat",
-          opacity: 0.55,
-        }}
-      />
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "url('assets/contour-appalachia.png') center/cover no-repeat",
+        opacity: 0.55
+      }} />
       {/* small label top-right */}
-      <div
-        style={{
-          position: "absolute",
-          right: 96,
-          top: 108,
-          fontFamily: FONT.mono,
-          fontSize: 22,
-          letterSpacing: "-0.04em",
-          color: "rgba(255,255,255,0.55)",
-          textTransform: "uppercase",
-        }}
-      >
-        our unique advantage
-      </div>
+      <div style={{
+        position: "absolute",
+        right: 96,
+        top: 108,
+        fontFamily: FONT.mono,
+        fontSize: 22,
+        letterSpacing: "-0.04em",
+        color: "rgba(255,255,255,0.55)",
+        textTransform: "uppercase"
+      }}>our unique advantage</div>
 
       {/* Big manifesto sentence — top right, leaves room for photos below */}
-      <div
-        style={{
-          position: "absolute",
-          right: 96,
-          left: 96,
-          top: 220,
-          textAlign: "right",
-          fontFamily: FONT.mono,
-          fontSize: 50,
-          fontWeight: 400,
-          lineHeight: 1.35,
-          letterSpacing: "-0.04em",
-          color: COLORS.snow,
-          textTransform: "uppercase",
-        }}
-      >
-        <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 40 }}>
-          <Highlight>Less than 1%</Highlight> of academic breakthroughs make it
-          out of the lab
-          <sup
-            style={{
-              fontSize: "0.5em",
-              marginLeft: 2,
-              color: "rgba(255,255,255,0.55)",
-            }}
-          >
-            1
-          </sup>
-        </div>
-        <div style={{ marginTop: 28, color: COLORS.snow }}>
-          We've <Highlight>filtered out</Highlight> the science projects
-          <br />
-          and invested <Highlight>before the market</Highlight> saw potential
-        </div>
+      <div style={{
+        position: "absolute",
+        right: 96,
+        left: 96,
+        top: 220,
+        textAlign: "right",
+        fontFamily: FONT.mono,
+        fontSize: 50,
+        fontWeight: 400,
+        lineHeight: 1.35,
+        letterSpacing: "-0.04em",
+        color: COLORS.snow,
+        textTransform: "uppercase"
+      }}>
+        <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 40 }}><Highlight>Less than 1%</Highlight> of academic breakthroughs make it out of the lab<sup style={{ fontSize: "0.5em", marginLeft: 2, color: "rgba(255,255,255,0.55)" }}>1</sup></div>
+        <div style={{ marginTop: 28, color: COLORS.snow }}>We've <Highlight>filtered out</Highlight> the science projects<br />and invested <Highlight>before the market</Highlight> saw potential</div>
       </div>
 
       {/* Footnote */}
-      <div
-        style={{
-          position: "absolute",
-          right: 96,
-          bottom: 64,
-          fontFamily: FONT.mono,
-          fontSize: 13,
-          letterSpacing: "-0.02em",
-          color: "rgba(255,255,255,0.45)",
-          textTransform: "none",
-        }}
-      >
-        <sup style={{ fontSize: "0.85em", marginRight: 4 }}>1</sup>AUAUTM FY2022
-        Licensing Activity Survey
+      <div style={{
+        position: "absolute",
+        right: 96,
+        bottom: 64,
+        fontFamily: FONT.mono,
+        fontSize: 13,
+        letterSpacing: "-0.02em",
+        color: "rgba(255,255,255,0.45)",
+        textTransform: "none"
+      }}>
+        <sup style={{ fontSize: "0.85em", marginRight: 4 }}>1</sup>AUAUTM FY2022 Licensing Activity Survey
       </div>
 
       {/* Photo strip — bottom, three cards with bracket corners */}
-      <div
-        style={{
-          position: "absolute",
-          left: 96,
-          right: 96,
-          bottom: 120,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: 28,
-        }}
-      >
-        {photos.map((p) => (
-          <PhotoCorners key={p.src} src={p.src} alt={p.alt} height={345} />
-        ))}
+      <div style={{
+        position: "absolute",
+        left: 96,
+        right: 96,
+        bottom: 120,
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gap: 28
+      }}>
+        {photos.map((p) =>
+        <PhotoCorners key={p.src} src={p.src} alt={p.alt} height={345} />
+        )}
       </div>
-    </SlideFrame>
-  );
+    </SlideFrame>);
+
 }
 
 // PhotoCorners — image card with bracket corners hugging the photo
@@ -281,10 +214,9 @@ function PhotoCorners({ src, alt, height = 280, color = COLORS.snow }) {
         style={{
           position: "absolute",
           inset: 0,
-          background: `url('${src}') center/cover no-repeat`,
-        }}
-      />
-
+          background: `url('${src}') center/cover no-repeat`
+        }} />
+      
       {/* corner brackets — flush to the photo edges */}
       <div style={{ ...c, left: 0, top: 0, width: len, height: stroke }} />
       <div style={{ ...c, left: 0, top: 0, width: stroke, height: len }} />
@@ -294,165 +226,103 @@ function PhotoCorners({ src, alt, height = 280, color = COLORS.snow }) {
       <div style={{ ...c, left: 0, bottom: 0, width: stroke, height: len }} />
       <div style={{ ...c, right: 0, bottom: 0, width: len, height: stroke }} />
       <div style={{ ...c, right: 0, bottom: 0, width: stroke, height: len }} />
-    </div>
-  );
+    </div>);
+
 }
 
 // ============= SLIDE 4: Our Homegrown Advantages =============
 const ADVANTAGES = [
-  {
-    n: "1",
-    title: "Over $700M in\nvalue creation",
-    img: "assets/result-1-incubator.jpg",
-    objectPosition: "center 18%",
-    objectFit: "cover",
-  },
-  {
-    n: "2",
-    title: "Hundreds of deals,\none third by direct application",
-    img: "assets/result-2-deals.png",
-    objectPosition: "center top",
-    objectFit: "cover",
-  },
-  {
-    n: "3",
-    title: "Direct political\nexperience and connections",
-    img: "assets/result-3-political-crop.jpg",
-    objectPosition: "center 27%",
-    objectFit: "cover",
-  },
-  {
-    n: "4",
-    title: "50K+ professionals\nacross private networks",
-    img: "assets/result-4-talent-crop.png",
-    objectPosition: "center",
-    objectFit: "cover",
-  },
-  {
-    n: "5",
-    title: "GP track venture program,\nmultiple fellowship cohorts",
-    img: "assets/result-5-bench.jpg",
-    objectPosition: "center",
-    objectFit: "cover",
-  },
-  {
-    n: "6",
-    title: "A platform for founder\nstorytelling and mass media",
-    img: "assets/result-6-storytelling.jpg",
-    objectPosition: "center 45%",
-    objectFit: "cover",
-  },
-];
+{ n: "1", title: "Over $700M in\nvalue creation", img: "assets/result-1-incubator.jpg", objectPosition: "center 18%", objectFit: "cover" },
+{ n: "2", title: "Hundreds of deals,\none third by direct application", img: "assets/result-2-deals.png", objectPosition: "center top", objectFit: "cover" },
+{ n: "3", title: "Direct political\nexperience and connections", img: "assets/result-3-political-crop.jpg", objectPosition: "center 27%", objectFit: "cover" },
+{ n: "4", title: "50K+ professionals\nacross private networks", img: "assets/result-4-talent-crop.png", objectPosition: "center", objectFit: "cover" },
+{ n: "5", title: "GP track venture program,\nmultiple fellowship cohorts", img: "assets/result-5-bench.jpg", objectPosition: "center", objectFit: "cover" },
+{ n: "6", title: "A platform for founder\nstorytelling and mass media", img: "assets/result-6-storytelling.jpg", objectPosition: "center 45%", objectFit: "cover" }];
+
 
 function Slide04_HomegrownAdvantages() {
   return (
     <SlideFrame page={4} dark={true} bg={COLORS.black}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "url('assets/contour-appalachia.png') center/cover no-repeat",
-          opacity: 0.45,
-        }}
-      />
-      <SlideTitle style={{ color: COLORS.snow }}>
-        Over a decade of results
-      </SlideTitle>
-      <div
-        style={{
-          position: "absolute",
-          left: 72,
-          right: 72,
-          top: 220,
-          bottom: 68,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gridTemplateRows: "1fr 1fr",
-          gap: "32px 24px",
-        }}
-      >
-        {ADVANTAGES.map((a) => (
-          <div
-            key={a.n}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "url('assets/contour-appalachia.png') center/cover no-repeat",
+        opacity: 0.45
+      }} />
+      <SlideTitle style={{ color: COLORS.snow }}>Over a decade of results</SlideTitle>
+      <div style={{
+        position: "absolute",
+        left: 72,
+        right: 72,
+        top: 220,
+        bottom: 68,
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gridTemplateRows: "1fr 1fr",
+        gap: "32px 24px"
+      }}>
+        {ADVANTAGES.map((a) =>
+        <div key={a.n} style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          color: COLORS.snow,
+          height: "100%",
+          minHeight: 0
+        }}>
+            <div style={{
+            border: `1px solid ${COLORS.mist}`,
+            padding: "20px 24px",
+            display: "grid",
+            gridTemplateColumns: "48px 1fr",
+            alignItems: "center",
+            gap: 16,
+            minHeight: 88
+          }}>
+              <span style={{
+              fontFamily: FONT.mono,
+              fontSize: 42,
+              lineHeight: 1,
+              fontWeight: 400,
+              color: COLORS.snow
+            }}>{a.n}</span>
+              <span style={{
+              fontFamily: FONT.mono,
+              fontSize: 24,
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
               color: COLORS.snow,
-              height: "100%",
-              minHeight: 0,
-            }}
-          >
-            <div
-              style={{
-                border: `1px solid ${COLORS.mist}`,
-                padding: "20px 24px",
-                display: "grid",
-                gridTemplateColumns: "48px 1fr",
-                alignItems: "center",
-                gap: 16,
-                minHeight: 88,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: FONT.mono,
-                  fontSize: 42,
-                  lineHeight: 1,
-                  fontWeight: 400,
-                  color: COLORS.snow,
-                }}
-              >
-                {a.n}
-              </span>
-              <span
-                style={{
-                  fontFamily: FONT.mono,
-                  fontSize: 24,
-                  lineHeight: 1.1,
-                  letterSpacing: "-0.02em",
-                  color: COLORS.snow,
-                  whiteSpace: "pre-line",
-                  textTransform: "uppercase",
-                  borderLeft: `1px solid ${COLORS.mist}`,
-                  paddingLeft: 14,
-                }}
-              >
-                {a.title}
-              </span>
+              whiteSpace: "pre-line",
+              textTransform: "uppercase",
+              borderLeft: `1px solid ${COLORS.mist}`,
+              paddingLeft: 14
+            }}>{a.title}</span>
             </div>
-            <div
-              style={{
-                flex: 1,
-                minHeight: 0,
-                overflow: "hidden",
-                border: `1px solid ${COLORS.mist}`,
-              }}
-            >
+            <div style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: "hidden",
+            border: `1px solid ${COLORS.mist}`
+          }}>
               <img
-                src={a.img}
-                alt=""
-                style={{
-                  ...{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: a.objectFit,
-                    objectPosition: a.objectPosition,
-                    display: "block",
-                    filter: "grayscale(0.15)",
-                    background:
-                      a.objectFit === "contain" ? COLORS.black : "transparent",
-                  },
-                  objectFit: "cover",
-                }}
-              />
+              src={a.img}
+              alt=""
+              style={{ ...{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: a.objectFit,
+                  objectPosition: a.objectPosition,
+                  display: "block",
+                  filter: "grayscale(0.15)",
+                  background: a.objectFit === "contain" ? COLORS.black : "transparent"
+                }, objectFit: "cover" }} />
+            
             </div>
           </div>
-        ))}
+        )}
       </div>
-    </SlideFrame>
-  );
+    </SlideFrame>);
+
 }
 
 window.Slide01_Cover = Slide01_Cover;

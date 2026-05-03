@@ -35,6 +35,22 @@
   var totalSlides = 0;
   var dwellByIndex = {};
 
+  var viewerCookie = document.cookie
+    .split("; ")
+    .find(function (c) {
+      return c.startsWith("snocap_viewer=");
+    });
+  if (viewerCookie) {
+    try {
+      var val = decodeURIComponent(viewerCookie.split("=")[1]);
+      var dot = val.indexOf(".");
+      if (dot > 0) {
+        var email = atob(val.slice(0, dot));
+        if (email) posthog.identify(email);
+      }
+    } catch (e) {}
+  }
+
   posthog.register({ deck_id: deckId });
   posthog.capture("deck_loaded", { deck_id: deckId });
 
@@ -121,7 +137,7 @@
       total_slides: totalSlides,
       furthest_slide: Math.max.apply(
         null,
-        Object.keys(dwellByIndex).map(Number).concat([-1]),
+        Object.keys(dwellByIndex).map(Number).concat([-1])
       ),
     });
   });

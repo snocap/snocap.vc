@@ -4,9 +4,8 @@
 
 @font-face {
   font-family: "NB Akademie Std";
-  src:
-    url("./fonts/NB Akademie Std/NB Akademie Std.woff2") format("woff2"),
-    url("./fonts/NB Akademie Std/NB Akademie Std.woff") format("woff");
+  src: url("./fonts/NB Akademie Std/NB Akademie Std.woff2") format("woff2"),
+       url("./fonts/NB Akademie Std/NB Akademie Std.woff") format("woff");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -14,10 +13,8 @@
 
 @font-face {
   font-family: "NB Akademie Mono Std";
-  src:
-    url("./fonts/NB Akademie Mono Std/NB Akademie Mono Std.woff2")
-      format("woff2"),
-    url("./fonts/NB Akademie Mono Std/NB Akademie Mono Std.woff") format("woff");
+  src: url("./fonts/NB Akademie Mono Std/NB Akademie Mono Std.woff2") format("woff2"),
+       url("./fonts/NB Akademie Mono Std/NB Akademie Mono Std.woff") format("woff");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -27,73 +24,71 @@
 
 :root {
   /* ---------- Color: Core ---------- */
-  --snocap-black: #000000; /* logo / dark slide bg */
-  --snocap-ink: #181818; /* primary text on light */
-  --snocap-graphite: #434343; /* secondary text, fine print */
-  --snocap-stone: #9f9f9f; /* tertiary text (h2 in marketing) */
-  --snocap-mist: #bdbdbd; /* disabled, captions on dark */
-  --snocap-fog: #d9d9d9; /* hairlines, subtle dividers */
-  --snocap-cloud: #e0e1eb; /* card surfaces (faint blue tint) */
-  --snocap-snow-2: #f1f1f1;
-  --snocap-snow: #f9f9f9; /* page bg, light slide bg */
-  --snocap-paper: #f6f6f6;
-  --snocap-white: #ffffff;
+  --snocap-black:        #000000;   /* logo / dark slide bg */
+  --snocap-ink:          #181818;   /* primary text on light */
+  --snocap-graphite:     #434343;   /* secondary text, fine print */
+  --snocap-stone:        #9F9F9F;   /* tertiary text (h2 in marketing) */
+  --snocap-mist:         #BDBDBD;   /* disabled, captions on dark */
+  --snocap-fog:          #D9D9D9;   /* hairlines, subtle dividers */
+  --snocap-cloud:        #E0E1EB;   /* card surfaces (faint blue tint) */
+  --snocap-snow-2:       #F1F1F1;
+  --snocap-snow:         #F9F9F9;   /* page bg, light slide bg */
+  --snocap-paper:        #F6F6F6;
+  --snocap-white:        #FFFFFF;
 
   /* ---------- Color: Accent ---------- */
-  --snocap-orange: #f15800; /* sole brand accent: highlight, link, CTA */
-  --snocap-orange-ink: #c24600; /* hover/press */
-  --snocap-gold: #cfb51d; /* used very sparingly in deck */
+  --snocap-orange:       #F15800;   /* sole brand accent: highlight, link, CTA */
+  --snocap-orange-ink:   #C24600;   /* hover/press */
+  --snocap-gold:         #CFB51D;   /* used very sparingly in deck */
 
   /* ---------- Color: Glass / shadow tints ---------- */
-  --snocap-tint-cool-70: rgba(204, 206, 217, 0.7);
-  --snocap-tint-cool-50: rgba(204, 206, 217, 0.5);
-  --snocap-shadow-10: rgba(0, 0, 0, 0.1);
-  --snocap-shadow-30: rgba(0, 0, 0, 0.3);
-  --snocap-shadow-35: rgba(0, 0, 0, 0.35);
-  --snocap-shadow-45: rgba(0, 0, 0, 0.45);
+  --snocap-tint-cool-70: rgba(204, 206, 217, 0.70);
+  --snocap-tint-cool-50: rgba(204, 206, 217, 0.50);
+  --snocap-shadow-10:    rgba(0, 0, 0, 0.10);
+  --snocap-shadow-30:    rgba(0, 0, 0, 0.30);
+  --snocap-shadow-35:    rgba(0, 0, 0, 0.35);
+  --snocap-shadow-45:    rgba(0, 0, 0, 0.45);
 
   /* ---------- Semantic: Light surface ---------- */
-  --bg: var(--snocap-snow);
-  --bg-elevated: var(--snocap-white);
-  --bg-subtle: var(--snocap-paper);
-  --fg: var(--snocap-ink);
-  --fg-secondary: var(--snocap-stone); /* matches site h2 color */
-  --fg-tertiary: var(--snocap-graphite); /* matches deck body */
-  --fg-quiet: var(--snocap-mist);
-  --hairline: var(--snocap-fog);
-  --accent: var(--snocap-orange);
-  --accent-press: var(--snocap-orange-ink);
-  --link: var(--snocap-ink);
+  --bg:                  var(--snocap-snow);
+  --bg-elevated:         var(--snocap-white);
+  --bg-subtle:           var(--snocap-paper);
+  --fg:                  var(--snocap-ink);
+  --fg-secondary:        var(--snocap-stone);     /* matches site h2 color */
+  --fg-tertiary:         var(--snocap-graphite);  /* matches deck body */
+  --fg-quiet:            var(--snocap-mist);
+  --hairline:            var(--snocap-fog);
+  --accent:              var(--snocap-orange);
+  --accent-press:        var(--snocap-orange-ink);
+  --link:                var(--snocap-ink);
 
   /* ---------- Semantic: Dark surface (deck dark slides) ---------- */
-  --on-dark-bg: var(--snocap-black);
-  --on-dark-fg: var(--snocap-white);
-  --on-dark-fg-secondary: var(--snocap-mist);
-  --on-dark-hairline: rgba(255, 255, 255, 0.18);
+  --on-dark-bg:          var(--snocap-black);
+  --on-dark-fg:          var(--snocap-white);
+  --on-dark-fg-secondary:var(--snocap-mist);
+  --on-dark-hairline:    rgba(255,255,255,0.18);
 
   /* ---------- Type: families ---------- */
-  --font-sans: "NB Akademie Std", "Helvetica Neue", Arial, sans-serif;
-  --font-mono:
-    "NB Akademie Mono Std", "Fira Mono", "Andale Mono", ui-monospace, monospace;
-  --font-deck-body: "Inter", "NB Akademie Std", Arial, sans-serif;
-  --font-deck-mono:
-    "Fira Mono", "NB Akademie Mono Std", "Andale Mono", monospace;
+  --font-sans:  "NB Akademie Std", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:  "NB Akademie Mono Std", "Fira Mono", "Andale Mono", ui-monospace, monospace;
+  --font-deck-body:  "Inter", "NB Akademie Std", Arial, sans-serif;
+  --font-deck-mono:  "Fira Mono", "NB Akademie Mono Std", "Andale Mono", monospace;
 
   /* ---------- Type: scale (rem; root is 16px) ---------- */
-  --fz-eyebrow: 0.875rem; /* 14 — small / mono captions */
-  --fz-body: 1.125rem; /* 18 — paragraphs */
-  --fz-em: 1rem; /* 16 */
-  --fz-h5: 1.625rem; /* 26 */
-  --fz-h4: 1.875rem; /* 30 */
-  --fz-h3: 1.875rem; /* 30 */
-  --fz-h2: 2.25rem; /* 36 */
-  --fz-h1: 2.625rem; /* 42 */
-  --fz-display: 4rem; /* 64 — slide titles */
-  --fz-display-xl: 7rem; /* 112 — hero metrics */
+  --fz-eyebrow: 0.875rem;     /* 14 — small / mono captions */
+  --fz-body:    1.125rem;     /* 18 — paragraphs */
+  --fz-em:      1rem;         /* 16 */
+  --fz-h5:      1.625rem;     /* 26 */
+  --fz-h4:      1.875rem;     /* 30 */
+  --fz-h3:      1.875rem;     /* 30 */
+  --fz-h2:      2.25rem;      /* 36 */
+  --fz-h1:      2.625rem;     /* 42 */
+  --fz-display: 4rem;         /* 64 — slide titles */
+  --fz-display-xl: 7rem;      /* 112 — hero metrics */
 
-  --fw-light: 300;
-  --fw-regular: 400;
-  --fw-medium: 500;
+  --fw-light:    300;
+  --fw-regular:  400;
+  --fw-medium:   500;
 
   /* ---------- Spacing & radii ---------- */
   --r-0: 0;
@@ -113,16 +108,13 @@
   --s-9: 96px;
 
   /* ---------- Elevation ---------- */
-  --elev-card:
-    0 5px 20px var(--snocap-shadow-10), 0 0 3px var(--snocap-shadow-30);
-  --elev-pop:
-    0 12px 36px var(--snocap-shadow-30), 0 0 3px var(--snocap-shadow-30);
-  --elev-flat: 0 0 0 1px var(--hairline);
+  --elev-card:   0 5px 20px var(--snocap-shadow-10), 0 0 3px var(--snocap-shadow-30);
+  --elev-pop:    0 12px 36px var(--snocap-shadow-30), 0 0 3px var(--snocap-shadow-30);
+  --elev-flat:   0 0 0 1px var(--hairline);
 }
 
 /* ---------- Base / semantic element styles ---------- */
-html,
-body {
+html, body {
   font-family: var(--font-sans);
   font-size: 16px;
   font-weight: var(--fw-light);
@@ -132,43 +124,16 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  margin: 0;
-  padding: 0;
-  font-weight: var(--fw-light);
-  line-height: 1;
-}
+h1, h2, h3, h4, h5, h6 { margin: 0; padding: 0; font-weight: var(--fw-light); line-height: 1; }
 
-h1 {
-  font-size: var(--fz-h1);
-}
-h2 {
-  font-size: var(--fz-h2);
-  color: var(--fg-secondary);
-  line-height: 1.114;
-}
-h3 {
-  font-size: var(--fz-h3);
-  font-weight: var(--fw-medium);
-  line-height: 1.2;
-}
-h4 {
-  font-size: var(--fz-h4);
-  font-weight: var(--fw-regular);
-}
-h5 {
-  font-size: var(--fz-h5);
-  line-height: 1.231;
-}
+h1 { font-size: var(--fz-h1); }
+h2 { font-size: var(--fz-h2); color: var(--fg-secondary); line-height: 1.114; }
+h3 { font-size: var(--fz-h3); font-weight: var(--fw-medium); line-height: 1.2; }
+h4 { font-size: var(--fz-h4); font-weight: var(--fw-regular); }
+h5 { font-size: var(--fz-h5); line-height: 1.231; }
 
 p {
-  margin: 0;
-  padding: 0;
+  margin: 0; padding: 0;
   font-size: var(--fz-body);
   letter-spacing: 0.01125rem;
 }
@@ -196,22 +161,11 @@ small.vertical-rl {
   transform: rotateZ(180deg);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-h5 a {
-  text-decoration: underline;
-}
-h5 a:hover {
-  text-decoration: underline dotted;
-}
-p a {
-  font-weight: var(--fw-regular);
-}
-p a:hover {
-  text-decoration: underline;
-}
+a { color: inherit; text-decoration: none; }
+h5 a { text-decoration: underline; }
+h5 a:hover { text-decoration: underline dotted; }
+p a { font-weight: var(--fw-regular); }
+p a:hover { text-decoration: underline; }
 
 /* ---------- Mono caption used heavily in deck ---------- */
 .mono-caption {
@@ -224,9 +178,7 @@ p a:hover {
 
 /* ---------- Buttons ---------- */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
+  display: inline-flex; align-items: center; gap: var(--s-2);
   padding: 12px 20px;
   font-family: var(--font-mono);
   font-size: 14px;
@@ -235,31 +187,11 @@ p a:hover {
   border-radius: var(--r-0);
   border: 1px solid transparent;
   cursor: pointer;
-  transition:
-    background 120ms ease,
-    color 120ms ease,
-    border-color 120ms ease;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
-.btn-primary {
-  background: var(--snocap-ink);
-  color: var(--snocap-white);
-}
-.btn-primary:hover {
-  background: var(--snocap-black);
-}
-.btn-accent {
-  background: var(--accent);
-  color: var(--snocap-white);
-}
-.btn-accent:hover {
-  background: var(--accent-press);
-}
-.btn-ghost {
-  background: transparent;
-  color: var(--fg);
-  border-color: var(--snocap-ink);
-}
-.btn-ghost:hover {
-  background: var(--snocap-ink);
-  color: var(--snocap-white);
-}
+.btn-primary { background: var(--snocap-ink); color: var(--snocap-white); }
+.btn-primary:hover { background: var(--snocap-black); }
+.btn-accent { background: var(--accent); color: var(--snocap-white); }
+.btn-accent:hover { background: var(--accent-press); }
+.btn-ghost { background: transparent; color: var(--fg); border-color: var(--snocap-ink); }
+.btn-ghost:hover { background: var(--snocap-ink); color: var(--snocap-white); }
