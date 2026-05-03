@@ -64,14 +64,6 @@ function getCookie(request: Request, name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function isUngatedPath(path: string): boolean {
-  return (
-    path === "/deck.pdf" ||
-    path === "/deck/deck.pdf" ||
-    path === "/deck/download"
-  );
-}
-
 async function handleAdmin(
   request: Request,
   env: Env,
@@ -116,10 +108,6 @@ async function handleAdmin(
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-
-    if (isUngatedPath(url.pathname)) {
-      return fetch(request);
-    }
 
     const adminResponse = await handleAdmin(request, env);
     if (adminResponse) return adminResponse;
@@ -169,7 +157,7 @@ export default {
         status: 302,
         headers: {
           Location: "/deck",
-          "Set-Cookie": `${COOKIE_NAME}=${encodeURIComponent(cookieValue)}; Path=/deck; Max-Age=${COOKIE_MAX_AGE}; Secure; SameSite=Lax`,
+          "Set-Cookie": `${COOKIE_NAME}=${encodeURIComponent(cookieValue)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; Secure; SameSite=Lax`,
         },
       });
     }
