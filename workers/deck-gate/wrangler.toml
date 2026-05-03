@@ -9,4 +9,4 @@ routes = [
 [[d1_databases]]
 binding = "DB"
 database_name = "deck-viewers"
-database_id = "" # set after running: wrangler d1 create deck-viewers
+database_id = "8a93ec28-acf4-434d-9b4c-33c2b44ba7bd"
