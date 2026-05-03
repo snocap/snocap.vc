@@ -28,6 +28,10 @@ runs:
       shell: bash
       run: npm run build
 
+    - name: Optimize deck images
+      shell: bash
+      run: npm run optimize-deck
+
     - name: Generate deck PDF
       shell: bash
       run: npm run pdf

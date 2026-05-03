@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "optimize-deck": "node scripts/optimize-deck-images.mjs",
     "pdf": "node scripts/generate-pdf.mjs",
     "format": "prettier --write .",
     "prepare": "husky"
