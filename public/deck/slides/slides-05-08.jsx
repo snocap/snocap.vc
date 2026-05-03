@@ -568,7 +568,8 @@ function FundITable({ rows }) {
             borderBottom: `1px solid ${COLORS.fog}`,
             padding: "10px 18px",
             alignItems: "center",
-            background: idx % 2 ? "transparent" : "rgba(255,255,255,0.5)",
+            background:
+              idx % 2 ? "rgba(224,225,235,0.5)" : "rgba(255,255,255,0.5)",
             columnGap: 12,
           }}
         >

@@ -355,7 +355,6 @@ function Slide15_AtAGlance() {
               <Field label="Fund Administrator" value="Carta" mono={true} />
               <Field label="Banking Partner" value="Stifel Bank" mono={true} />
               <Field label="Legal Counsel" value="Perkins Coie" mono={true} />
-              <Field label="Independent Auditor" value="Sensiba" mono={true} />
               <Field label="Tax Advisor" value="Sensiba" mono={true} />
             </div>
           </Card>
@@ -472,14 +471,12 @@ function Slide16_ThankYou() {
             color: "rgba(255,255,255,0.9)",
           }}
         >
-          Access to disclosures, data room and more by emailing{" "}
           <a
             href="mailto:gps@snocap.vc"
             style={{ color: "inherit", textDecoration: "none" }}
           >
-            <Highlight>gps@snocap.vc</Highlight>
+            Find us at <Highlight>gps@snocap.vc</Highlight>
           </a>
-          .
         </div>
       </div>
 

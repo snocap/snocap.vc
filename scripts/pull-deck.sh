@@ -77,7 +77,7 @@ FILE_SIZE=$(stat -c%s "$BUNDLE" 2>/dev/null || stat -f%z "$BUNDLE" 2>/dev/null)
 echo "Downloaded $FILE_SIZE bytes"
 
 # Detect file type by magic bytes
-MAGIC=$(xxd -l 4 -p "$BUNDLE")
+MAGIC=$(od -A n -t x1 -N 2 "$BUNDLE" | tr -d ' ')
 EXTRACT_DIR="$WORK_DIR/extracted"
 mkdir -p "$EXTRACT_DIR"
 
@@ -91,7 +91,7 @@ if [[ "$MAGIC" == "1f8b"* ]]; then
     cp "$BUNDLE" "$WORK_DIR/bundle.gz"
     gunzip "$WORK_DIR/bundle.gz"
     # Check if the decompressed file is a tar
-    INNER_MAGIC=$(xxd -l 4 -p "$WORK_DIR/bundle")
+    INNER_MAGIC=$(od -A n -t x1 -N 2 "$WORK_DIR/bundle" | tr -d ' ')
     if file "$WORK_DIR/bundle" | grep -q "tar"; then
       tar xf "$WORK_DIR/bundle" -C "$EXTRACT_DIR"
       echo "Extracted inner tar archive"
@@ -100,7 +100,7 @@ if [[ "$MAGIC" == "1f8b"* ]]; then
       echo "Extracted single file"
     fi
   fi
-elif [[ "$MAGIC" == "75737461" ]] || file "$BUNDLE" | grep -q "tar"; then
+elif file "$BUNDLE" 2>/dev/null | grep -q "tar"; then
   echo "Detected: tar archive (uncompressed)"
   tar xf "$BUNDLE" -C "$EXTRACT_DIR"
   echo "Extracted tar archive"

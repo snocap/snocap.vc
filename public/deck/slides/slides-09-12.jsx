@@ -4,8 +4,8 @@
 const TEAM = [
   {
     name: "Shrina Kurani",
-    role: "Portfolio and Middle Office",
-    tagline: "Built companies, funds, and political campaigns",
+    role: "Portfolio and Ecosystem",
+    tagline: "Over $1B facilitated into companies and funds",
     photo: "assets/team/headshot-shrina.jpeg",
     linkedin: "https://www.linkedin.com/in/shrina-kurani-94a88b56",
     bio: "Mechanical engineer and sustainability scientist with a decade of experience building, investing in, and advocating for frontier climate tech. Invested in early-stage, mission-driven companies on a $9B portfolio at Republic, and across the entire $135B in assets under management at the State of California. She has overseen approximately $1B in cumulative direct and fund investments.",
@@ -734,6 +734,7 @@ function CaseStudyGrid({
           fontSize: 16,
           lineHeight: 1.45,
           color: COLORS.ink,
+          flex: "1 1 auto",
         }}
       >
         {s.body}
@@ -763,14 +764,22 @@ function CaseStudyGrid({
   );
 
   return (
-    <>
-      {/* Stages row with arrows */}
+    <div
+      style={{
+        position: "absolute",
+        left: 96,
+        right: 96,
+        top: 320,
+        bottom: 140,
+        display: "flex",
+        flexDirection: "column",
+        gap: 40,
+      }}
+    >
+      {/* Stages row with arrows — height driven by tallest cell */}
       <div
         style={{
-          position: "absolute",
-          left: 96,
-          right: 96,
-          top: 320,
+          flex: "0 0 auto",
           display: "flex",
           flexDirection: "row",
           alignItems: "stretch",
@@ -782,18 +791,14 @@ function CaseStudyGrid({
         )}
       </div>
 
-      {/* Photo strip below — sits close to stage cards above; widths align with
-          stage cards (left photo spans stages 1-2 + arrow, right spans 3-5 + 2 arrows). */}
+      {/* Photo strip — fills remaining vertical space */}
       <div
         style={{
-          position: "absolute",
-          left: 96,
-          right: 96,
-          top: 640,
+          flex: "1 1 auto",
+          minHeight: 240,
           display: "flex",
           flexDirection: "row",
           gap: 48,
-          height: 300,
         }}
       >
         <div style={{ flex: "0 0 662px", display: "flex" }}>
@@ -803,7 +808,7 @@ function CaseStudyGrid({
           {photo(photoTopRight, placeholder)}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
