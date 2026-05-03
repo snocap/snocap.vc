@@ -1,0 +1,7 @@
+name = "posthog-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+routes = [
+  { pattern = "snocap.vc/track/*", zone_name = "snocap.vc" }
+]

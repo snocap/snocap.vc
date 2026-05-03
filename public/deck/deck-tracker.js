@@ -14,7 +14,7 @@
   if (!window.posthog || !window.__POSTHOG_KEY) return;
 
   posthog.init(window.__POSTHOG_KEY, {
-    api_host: "https://us.i.posthog.com",
+    api_host: "/track",
     person_profiles: "identified_only",
     capture_pageview: true,
     capture_pageleave: true,
