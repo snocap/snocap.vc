@@ -13,7 +13,8 @@ import { join, extname } from "node:path";
 const DIST = new URL("../dist", import.meta.url).pathname;
 const PORT = 4321;
 const DECK_URL = `http://localhost:${PORT}/deck/`;
-const PDF_OUT = join(DIST, "deck.pdf");
+const PDF_OUT = join(DIST, "deck", "deck.pdf");
+const PDF_OUT_ALT = join(DIST, "deck.pdf");
 
 const MIME = {
   ".html": "text/html",
@@ -79,9 +80,13 @@ try {
     preferCSSPageSize: false,
   });
 
+  const { copyFile } = await import("node:fs/promises");
+  await copyFile(PDF_OUT, PDF_OUT_ALT);
+
   console.log(
     `PDF generated: ${PDF_OUT} (${(pdf.byteLength / 1048576).toFixed(1)}MB)`,
   );
+  console.log(`PDF copied to: ${PDF_OUT_ALT}`);
 } catch (err) {
   if (
     err.message?.includes("Failed to launch") ||
