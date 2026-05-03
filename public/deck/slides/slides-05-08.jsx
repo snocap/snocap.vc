@@ -4,7 +4,7 @@
 const SCIENTIFIC_CARDS = [
   {
     badge: "Creates the best viable fix",
-    logo: "assets/portfolio/logo-sofab.svg",
+    logo: "assets/portfolio/logo-sofab.png",
     logoH: 56,
     date: "Oct '24 Pre-Seed",
     body: (
@@ -20,7 +20,7 @@ const SCIENTIFIC_CARDS = [
   },
   {
     badge: "Fundamentally resets pricing",
-    logo: "assets/portfolio/logo-revivbio.svg",
+    logo: "assets/portfolio/logo-revivbio.png",
     logoH: 64,
     date: "Oct '23 Seed",
     body: (
@@ -752,7 +752,7 @@ function Slide08_FundI_Page2() {
 const SCIENTIFIC_POINTS_V2 = [
   {
     point: "Creates the best viable fix",
-    logo: "assets/portfolio/logo-sofab.svg",
+    logo: "assets/portfolio/logo-sofab.png",
     logoH: 40,
     name: "SoFab Inks",
     blurb:
@@ -760,7 +760,7 @@ const SCIENTIFIC_POINTS_V2 = [
   },
   {
     point: "Fundamentally resets pricing",
-    logo: "assets/portfolio/logo-revivbio.svg",
+    logo: "assets/portfolio/logo-revivbio.png",
     logoH: 44,
     name: "RevivBio",
     blurb:
