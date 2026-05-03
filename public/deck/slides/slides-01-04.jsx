@@ -95,11 +95,8 @@ function Slide01_Cover() {
           maxWidth: 540,
         }}
       >
-        Engineering-first venture capital,
         <br />
-        backing the next century of
         <br />
-        molecules, materials and machines.
       </div>
 
       {/* small horizontal rule */}
@@ -165,9 +162,10 @@ function Slide02_Disclaimer() {
 function Slide03_Manifesto() {
   const photos = [
     { src: "assets/slide3-field.png", alt: "On-site at a portfolio company" },
-    { src: "assets/slide3-group.jpg", alt: "Sweet Farm community gathering" },
-    { src: "assets/slide3-mars.jpg", alt: "Lab visit — Mars Materials" },
+    { src: "assets/slide3-beaker.png", alt: "Lab work — beaker" },
+    { src: "assets/slide3-team.png", alt: "Mars Materials team" },
   ];
+
   return (
     <SlideFrame page={3} dark={true} bg={COLORS.black}>
       {/* full-bleed dark contour */}
@@ -205,20 +203,49 @@ function Slide03_Manifesto() {
           top: 220,
           textAlign: "right",
           fontFamily: FONT.mono,
-          fontSize: 58,
+          fontSize: 50,
           fontWeight: 400,
-          lineHeight: 1.5,
-          letterSpacing: "-0.05em",
+          lineHeight: 1.35,
+          letterSpacing: "-0.04em",
           color: COLORS.snow,
           textTransform: "uppercase",
         }}
       >
-        We built three programs, an incubator and a pilot fund
-        <br />
-        that unlocked early access to{" "}
-        <Highlight>the best scientific IP</Highlight>
-        <br />
-        and leverage to <Highlight>own more equity</Highlight>, for less capital
+        <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 40 }}>
+          <Highlight>Less than 1%</Highlight> of academic breakthroughs make it
+          out of the lab
+          <sup
+            style={{
+              fontSize: "0.5em",
+              marginLeft: 2,
+              color: "rgba(255,255,255,0.55)",
+            }}
+          >
+            1
+          </sup>
+        </div>
+        <div style={{ marginTop: 28, color: COLORS.snow }}>
+          We've <Highlight>filtered out</Highlight> the science projects
+          <br />
+          and invested <Highlight>before the market</Highlight> saw potential
+        </div>
+      </div>
+
+      {/* Footnote */}
+      <div
+        style={{
+          position: "absolute",
+          right: 96,
+          bottom: 64,
+          fontFamily: FONT.mono,
+          fontSize: 13,
+          letterSpacing: "-0.02em",
+          color: "rgba(255,255,255,0.45)",
+          textTransform: "none",
+        }}
+      >
+        <sup style={{ fontSize: "0.85em", marginRight: 4 }}>1</sup>AUAUTM FY2022
+        Licensing Activity Survey
       </div>
 
       {/* Photo strip — bottom, three cards with bracket corners */}
@@ -234,7 +261,7 @@ function Slide03_Manifesto() {
         }}
       >
         {photos.map((p) => (
-          <PhotoCorners key={p.src} src={p.src} alt={p.alt} height={300} />
+          <PhotoCorners key={p.src} src={p.src} alt={p.alt} height={345} />
         ))}
       </div>
     </SlideFrame>
@@ -257,6 +284,7 @@ function PhotoCorners({ src, alt, height = 280, color = COLORS.snow }) {
           background: `url('${src}') center/cover no-repeat`,
         }}
       />
+
       {/* corner brackets — flush to the photo edges */}
       <div style={{ ...c, left: 0, top: 0, width: len, height: stroke }} />
       <div style={{ ...c, left: 0, top: 0, width: stroke, height: len }} />
@@ -283,14 +311,14 @@ const ADVANTAGES = [
     n: "2",
     title: "Hundreds of deals,\none third by direct application",
     img: "assets/result-2-deals.png",
-    objectPosition: "center",
+    objectPosition: "center top",
     objectFit: "cover",
   },
   {
     n: "3",
     title: "Direct political\nexperience and connections",
     img: "assets/result-3-political-crop.jpg",
-    objectPosition: "center",
+    objectPosition: "center 27%",
     objectFit: "cover",
   },
   {
@@ -334,14 +362,14 @@ function Slide04_HomegrownAdvantages() {
       <div
         style={{
           position: "absolute",
-          left: 96,
-          right: 96,
-          top: 180,
-          bottom: 56,
+          left: 72,
+          right: 72,
+          top: 220,
+          bottom: 68,
           display: "grid",
           gridTemplateColumns: "1fr 1fr 1fr",
           gridTemplateRows: "1fr 1fr",
-          gap: 20,
+          gap: "32px 24px",
         }}
       >
         {ADVANTAGES.map((a) => (
@@ -359,12 +387,12 @@ function Slide04_HomegrownAdvantages() {
             <div
               style={{
                 border: `1px solid ${COLORS.mist}`,
-                padding: "10px 16px",
+                padding: "20px 24px",
                 display: "grid",
                 gridTemplateColumns: "48px 1fr",
                 alignItems: "center",
                 gap: 16,
-                minHeight: 72,
+                minHeight: 88,
               }}
             >
               <span
@@ -406,14 +434,17 @@ function Slide04_HomegrownAdvantages() {
                 src={a.img}
                 alt=""
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: a.objectFit,
-                  objectPosition: a.objectPosition,
-                  display: "block",
-                  filter: "grayscale(0.15)",
-                  background:
-                    a.objectFit === "contain" ? COLORS.black : "transparent",
+                  ...{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: a.objectFit,
+                    objectPosition: a.objectPosition,
+                    display: "block",
+                    filter: "grayscale(0.15)",
+                    background:
+                      a.objectFit === "contain" ? COLORS.black : "transparent",
+                  },
+                  objectFit: "cover",
                 }}
               />
             </div>

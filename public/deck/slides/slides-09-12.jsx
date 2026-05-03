@@ -5,7 +5,7 @@ const TEAM = [
   {
     name: "Shrina Kurani",
     role: "Portfolio and Middle Office",
-    tagline: "Built satellites, funds, and political campaigns",
+    tagline: "Built companies, funds, and political campaigns",
     photo: "assets/team/headshot-shrina.jpeg",
     linkedin: "https://www.linkedin.com/in/shrina-kurani-94a88b56",
     bio: "Mechanical engineer and sustainability scientist with a decade of experience building, investing in, and advocating for frontier climate tech. Invested in early-stage, mission-driven companies on a $9B portfolio at Republic, and across the entire $135B in assets under management at the State of California. She has overseen approximately $1B in cumulative direct and fund investments.",

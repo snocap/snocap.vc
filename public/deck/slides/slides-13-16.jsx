@@ -80,7 +80,7 @@ function Slide13_CaseStudy_TriMagnetix() {
           },
         ]}
         photoTopRight="assets/case/trimag-right.png"
-        photoBottomLeft="assets/case/trimag-bottom.jpg"
+        photoBottomLeft="assets/case/trimag-bottom.png"
         placeholder="chip"
       />
 
@@ -190,7 +190,7 @@ function Slide14_CaseStudy_Sparxell() {
             body: "We brought in Future Communities Capital for the round, supplementing existing strategic investors with patient growth capital.",
           },
         ]}
-        photoTopRight="assets/case/sparxell-rainbow.jpg"
+        photoTopRight="assets/case/sparxell-rainbow.png"
         photoBottomLeft="assets/case/sparxell-tile.png"
         placeholder="iridescence"
       />
@@ -235,7 +235,7 @@ const KEY_TERMS = [
   ["LP Minimum", "$500K (subject to GP discretion)"],
   ["Investment Period", "5 years"],
   ["Fund Term", "10 years (+2-year extension at GP option)"],
-  ["Fund Counsel", "Perkins Coie"],
+  ["Fund Counsel", "Perkins Coie, LLP"],
 ];
 
 function Slide15_AtAGlance() {
@@ -352,9 +352,11 @@ function Slide15_AtAGlance() {
                 rowGap: 28,
               }}
             >
-              <Field label="Legal" value="Perkins Coie" mono={true} />
-              <Field label="Tax & Audit" value="Sensiba" mono={true} />
-              <Field label="Banking" value="Stifel Bank" mono={true} />
+              <Field label="Fund Administrator" value="Carta" mono={true} />
+              <Field label="Banking Partner" value="Stifel Bank" mono={true} />
+              <Field label="Legal Counsel" value="Perkins Coie" mono={true} />
+              <Field label="Independent Auditor" value="Sensiba" mono={true} />
+              <Field label="Tax Advisor" value="Sensiba" mono={true} />
             </div>
           </Card>
         </div>

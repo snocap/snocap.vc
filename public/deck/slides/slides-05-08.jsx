@@ -105,12 +105,13 @@ function ScientificCard({ badge, logo, logoH, date, body }) {
       <div
         style={{
           border: `1px solid ${COLORS.ink}`,
-          background: "rgba(255,255,255,0.72)",
+
           height: 100,
           padding: "0 36px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          background: "rgba(255, 255, 255, 0.4)",
         }}
       >
         <img
@@ -134,7 +135,7 @@ function ScientificCard({ badge, logo, logoH, date, body }) {
         style={{
           border: `1px solid ${COLORS.ink}`,
           borderTop: "none",
-          background: "rgba(255,255,255,0.72)",
+
           marginTop: -19,
           padding: "20px 36px",
           minHeight: 170,
@@ -142,6 +143,8 @@ function ScientificCard({ badge, logo, logoH, date, body }) {
           fontSize: 22,
           lineHeight: 1.45,
           color: COLORS.ink,
+          opacity: "1",
+          background: "rgba(255, 255, 255, 0.4)",
         }}
       >
         {body}
@@ -161,16 +164,16 @@ function Slide05_ScientificIP() {
           opacity: 0.55,
         }}
       />
-      <SlideTitle>The best IP does four things well</SlideTitle>
+      <SlideTitle>What makes scientific IP great</SlideTitle>
       <div
         style={{
           position: "absolute",
           left: 96,
-          top: 230,
+          top: 200,
           right: 96,
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "60px 60px",
+          gap: "44px 60px",
         }}
       >
         {SCIENTIFIC_CARDS.map((c, i) => (
@@ -406,7 +409,7 @@ const FUND_I_HEADERS = [
   "Company",
   "Investment\nDate",
   "Investment\nAmount",
-  "Post-Money\nValuation",
+  "Entry Post-Money\nValuation",
   "MOIC",
   "Co-investors",
 ];
@@ -417,7 +420,7 @@ const FUND_I_ROWS = [
     "Oct '23",
     "$135K",
     "$13.3M",
-    "1.2†",
+    "1.2x†",
     "Intel, US NSF, Alumni Ventures, BioGenerator Ventures",
   ],
   [
@@ -426,7 +429,7 @@ const FUND_I_ROWS = [
     "Nov '23",
     "$240K",
     "$15.0M",
-    "1.25",
+    "1.25x",
     "Circular Innovation Fund (L'Oréal), Katapult, Future Communities Capital",
   ],
   [
@@ -435,7 +438,7 @@ const FUND_I_ROWS = [
     "Oct '24",
     "$200K",
     "$9.65M",
-    "1",
+    "1x",
     "Arosa Ventures, Oval Park Capital, EGB Capital",
   ],
   [
@@ -444,7 +447,7 @@ const FUND_I_ROWS = [
     "Oct '24",
     "$200K",
     "$6.0M",
-    "3.0",
+    "1x†",
     "Keyhorse Capital, EGB Capital",
   ],
   [
@@ -453,7 +456,7 @@ const FUND_I_ROWS = [
     "Feb '25",
     "$150K",
     "$7.0M",
-    "1",
+    "1x",
     "SOSV HAX",
   ],
   [
@@ -471,7 +474,7 @@ const FUND_I_ROWS = [
     "Apr '25",
     "$150K",
     "$12.0M",
-    "1†",
+    "1x†",
     "Detroit Venture Partners, Newlab",
   ],
   [
@@ -480,7 +483,7 @@ const FUND_I_ROWS = [
     "Jun '25",
     "$150K",
     "$1.5M",
-    "1†",
+    "1x†",
     "Actuate Ventures",
   ],
   [
@@ -489,7 +492,7 @@ const FUND_I_ROWS = [
     "Sep '25",
     "$250K",
     "$10.0M",
-    "1",
+    "1x",
     "SOSV/IndieBio, Mass Challenge, NewLab",
   ],
   [
@@ -498,7 +501,7 @@ const FUND_I_ROWS = [
     "Nov '25",
     "$250K",
     "$6.6M",
-    "1.31",
+    "1.31x",
     "Intel, US NSF, Alumni Ventures, BioGenerator Ventures",
   ],
   [
@@ -507,7 +510,7 @@ const FUND_I_ROWS = [
     "Feb '26",
     "$250K",
     "$7.0M",
-    "1",
+    "1x",
     "Circular Innovation Fund (L'Oréal), Katapult, Future Communities Capital",
   ],
   [
@@ -516,7 +519,7 @@ const FUND_I_ROWS = [
     "Mar '26",
     "$200K",
     "$4M",
-    "1†",
+    "1x†",
     "Valinor AB, Esmar AB, GU Ventures, Eight Plus Ventures, Anchorage Capital",
   ],
 ];
@@ -744,6 +747,182 @@ function Slide08_FundI_Page2() {
 }
 */
 
+// ============= SLIDE 5b: Variant — focus on the 4 points =============
+const SCIENTIFIC_POINTS_V2 = [
+  {
+    point: "Creates the best viable fix",
+    logo: "assets/portfolio/logo-sofab.svg",
+    logoH: 40,
+    name: "SoFab Inks",
+    blurb:
+      "IP-protected chemistries. $30M+ in POs from the world's largest perovskite manufacturer.",
+  },
+  {
+    point: "Fundamentally resets pricing",
+    logo: "assets/portfolio/logo-revivbio.svg",
+    logoH: 44,
+    name: "RevivBio",
+    blurb:
+      "Order-of-magnitude reduction in enzyme dev cost. $10M+ contracts with Bayer, Syngenta, Corteva.",
+  },
+  {
+    point: "Generates revenue from day one",
+    logo: "assets/logo-sparxell.png",
+    logoH: 40,
+    name: "Sparxell",
+    blurb:
+      "Drop-in colorant IP. 24 paid pilots — LVMH, Hugo Boss, H&M — and $1M+ in revenue.",
+  },
+  {
+    point: "Solves using first principles",
+    logo: "assets/portfolio/logo-trimagnetix.png",
+    logoH: 38,
+    name: "TriMagnetix",
+    blurb:
+      "Nanomagnetic chip architecture. 40× energy reduction proven, 500× path validated.",
+  },
+];
+
+function PointCard({ point, logo, logoH, name, blurb }) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        height: "100%",
+      }}
+    >
+      {/* The point — hero */}
+      <div
+        style={{
+          fontFamily: FONT.mono,
+          fontSize: 56,
+          lineHeight: 1.02,
+          letterSpacing: "-0.05em",
+          color: COLORS.ink,
+          textTransform: "none",
+        }}
+      >
+        <span
+          style={{
+            background: COLORS.orange,
+            color: COLORS.white,
+            padding: "0.04em 0.18em",
+            boxDecorationBreak: "clone",
+            WebkitBoxDecorationBreak: "clone",
+          }}
+        >
+          {point}
+        </span>
+      </div>
+
+      {/* Compact callout — logo + 1-liner */}
+      <div
+        style={{
+          marginTop: 28,
+          border: `1px solid ${COLORS.ink}`,
+          background: "rgba(255,255,255,0.7)",
+          padding: "16px 20px",
+          display: "grid",
+          gridTemplateColumns: "auto 1fr",
+          gap: 18,
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            height: logoH,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: 110,
+          }}
+        >
+          <img
+            src={logo}
+            alt={name}
+            style={{ height: logoH, maxWidth: 150, objectFit: "contain" }}
+          />
+        </div>
+        <div
+          style={{
+            fontFamily: FONT.sans,
+            fontSize: 16,
+            lineHeight: 1.35,
+            color: COLORS.ink,
+            borderLeft: `1px solid ${COLORS.ink}33`,
+            paddingLeft: 18,
+          }}
+        >
+          {blurb}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Slide05b_ScientificIP_FourPoints() {
+  return (
+    <SlideFrame page={5} bg={COLORS.snow}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
+          opacity: 0.55,
+        }}
+      />
+      <SlideTitle>The best IP does four things well</SlideTitle>
+
+      <div
+        style={{
+          position: "absolute",
+          left: 96,
+          right: 96,
+          top: 240,
+          bottom: 140,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gridTemplateRows: "1fr 1fr",
+          columnGap: 80,
+          rowGap: 56,
+        }}
+      >
+        {SCIENTIFIC_POINTS_V2.map((p, i) => (
+          <PointCard key={i} {...p} />
+        ))}
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          left: 96,
+          right: 96,
+          bottom: 40,
+          textAlign: "center",
+          fontFamily: FONT.sans,
+          fontSize: 11,
+          lineHeight: 1.4,
+          color: COLORS.graphite,
+        }}
+      >
+        The case studies presented herein relate solely to investments made by
+        Fund I and are included for illustrative purposes only. These
+        investments may not be representative of the investments of Fund II, and
+        no assurance can be given that Fund II will identify, access, or achieve
+        investments or results comparable to those described herein. A complete
+        list of all portfolio companies of Fund I, together with information
+        similar to the information provided on this slide, will be made
+        available upon request. Past performance is not indicative of future
+        results.
+      </div>
+    </SlideFrame>
+  );
+}
+
+window.Slide05b_ScientificIP_FourPoints = Slide05b_ScientificIP_FourPoints;
 window.Slide05_ScientificIP = Slide05_ScientificIP;
 window.Slide06_DesignedForOwnership = Slide06_DesignedForOwnership;
 window.Slide07_FundI = Slide07_FundI;
