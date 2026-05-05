@@ -1,0 +1,180 @@
+---
+import Layout from "layouts/Layout.astro";
+
+const diagram = `flowchart TD
+    Start["🌲 Getting Into Climate Investing in Seattle"] --> Q1{"Want to invest\\nin climate companies?"}
+
+    Q1 -->|"Not directly"| LP["Invest as a Limited Partner (LP)\\nin a climate-focused fund"]
+    Q1 -->|"Yes, directly"| Q2{"Have you made angel\\ninvestments before?"}
+
+    Q2 -->|"No, I'm new"| SAC["Seattle Angel Conference (SAC)\\nLearn the ropes with a cohort"]
+    Q2 -->|"Yes"| Q3{"What draws you\\nto climate?"}
+
+    SAC --> Q3
+
+    Q3 -->|"Environmental\\nimpact"| E8["E8 Angels\\nEnvironmental angel group"]
+    Q3 -->|"Deep tech\\n& hard science"| VL["Virtualab\\nRegional deep tech accelerator"]
+    Q3 -->|"Software &\\nclimate SaaS"| SW["Software-focused\\nclimate investing"]
+    Q3 -->|"Broad / still\\nexploring"| SNOCAP["SNOCAP\\nClimate venture fund"]
+
+    E8 --> Q4{"Want to go deeper?"}
+    VL --> Q4
+    SW --> Q4
+    SNOCAP --> Q4
+
+    Q4 -->|"Back specific\\nfund managers"| FM{"What stage\\n& style?"}
+    Q4 -->|"Keep doing\\ndirect deals"| SYNDICATE["Join syndicates &\\nco-invest networks"]
+
+    FM -->|"Emerging managers\\n(higher risk, closer access)"| EM["Emerging Manager Funds\\ne.g. SNOCAP, Step Change Ventures"]
+    FM -->|"Established funds\\n(track record, larger checks)"| EST["Established Climate VCs\\ne.g. Clean Energy Ventures,\\nBreakthrough Energy"]
+
+    LP --> FM`;
+---
+
+<Layout>
+  <section class="tool-page">
+    <div class="tool-header">
+      <small class="breadcrumb">SNØCAP / TOOLS</small>
+      <h1>Getting Into Climate Investing in Seattle</h1>
+      <h5>
+        An interactive guide to the Seattle climate investment ecosystem. Follow
+        the decision tree to find the organizations, funds, and communities that
+        match your interests and experience.
+      </h5>
+    </div>
+
+    <div class="diagram-container">
+      <pre class="mermaid" set:text={diagram} />
+    </div>
+
+    <div class="tool-footer">
+      <p>
+        Built for <a
+          href="https://www.seattletechweek.com/"
+          target="_blank"
+          rel="noopener">Seattle Tech Week</a
+        >. Interested in climate venture capital? <a href="/apply"
+          >Apply for funding</a
+        > or <a href="mailto:hello@snocap.vc">get in touch</a>.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<script
+  is:inline
+  src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script is:inline>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: {
+      fontFamily: '"NB Akademie Std", Arial, sans-serif',
+      fontSize: "14px",
+      primaryColor: "#f5f5f5",
+      primaryBorderColor: "#9f9f9f",
+      primaryTextColor: "#000000",
+      secondaryColor: "#ffffff",
+      tertiaryColor: "#f0f0f0",
+      lineColor: "#9f9f9f",
+      nodeTextColor: "#000000",
+      mainBkg: "#f5f5f5",
+      nodeBorder: "#9f9f9f",
+      clusterBkg: "#ffffff",
+      edgeLabelBackground: "#ffffff",
+    },
+    flowchart: {
+      htmlLabels: true,
+      curve: "basis",
+      padding: 16,
+      nodeSpacing: 40,
+      rankSpacing: 60,
+    },
+  });
+</script>
+
+<style>
+  .tool-page {
+    display: flex;
+    flex-direction: column;
+    padding: 8rem var(--gutter-width) 6rem;
+    row-gap: 3rem;
+    min-height: 80vh;
+  }
+
+  .tool-header {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1.25rem;
+    max-width: 55rem;
+  }
+
+  .breadcrumb {
+    color: var(--color-tertiary);
+    letter-spacing: 0.1rem;
+  }
+
+  h1 {
+    font-size: 2.625rem;
+    font-weight: 300;
+    line-height: 1.1;
+  }
+
+  h5 {
+    max-width: 45rem;
+    color: var(--color-tertiary);
+  }
+
+  .diagram-container {
+    width: 100%;
+    overflow-x: auto;
+    padding: 2rem 0;
+  }
+
+  .mermaid {
+    display: flex;
+    justify-content: center;
+    font-family: var(--font-family);
+    background: none;
+    border: none;
+  }
+
+  .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .tool-footer {
+    border-top: 1px solid var(--color-tertiary);
+    padding-top: 2rem;
+    max-width: 55rem;
+  }
+
+  .tool-footer p {
+    color: var(--color-tertiary);
+  }
+
+  .tool-footer a {
+    color: var(--color-primary);
+    font-weight: 400;
+  }
+
+  .tool-footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 742px) {
+    .tool-page {
+      padding-top: 4rem;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+    }
+
+    .diagram-container {
+      margin: 0 calc(-1 * var(--gutter-width));
+      padding: 1rem var(--gutter-width);
+    }
+  }
+</style>
