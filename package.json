@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "astro": "^5.7.2",
+    "mermaid": "^11.14.0",
     "modern-normalize": "^3.0.1",
     "sharp": "^0.34.5",
     "typewriter-effect": "^2.21.0"

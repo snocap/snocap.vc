@@ -7,7 +7,11 @@ import Footer from "components/footer/Footer.astro";
 import { t, defaultOptions } from "utils/i18n";
 import { strings } from "data/strings";
 
-const { maxWidth = "90.0rem", minWidth = "24.5rem" } = Astro.props;
+const {
+  maxWidth = "90.0rem",
+  minWidth = "24.5rem",
+  slim = false,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -39,11 +43,11 @@ const { maxWidth = "90.0rem", minWidth = "24.5rem" } = Astro.props;
     <title>SNØCAP | {t(strings.oneLiner)}</title>
   </head>
   <body>
-    <Header />
+    <Header slim={slim} />
     <main>
       <div id="content">
         <slot />
-        <Footer />
+        {!slim && <Footer />}
       </div>
     </main>
   </body>

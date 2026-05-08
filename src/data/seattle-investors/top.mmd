@@ -1,0 +1,17 @@
+flowchart TD
+    Start["🏔️ Navigating Seattle's<br/>Investing Landscape"] --> Q1{"How do you want<br/>to deploy capital?"}
+
+    Q1 -->|"I know the space<br/>and have my own dealflow"| DIRECT["✊ Directs<br/>━━━━━━<br/>Solo SPVs · operator syndicates"]
+    Q1 -->|"I want a community<br/>and shared diligence"| ANGEL["🤝 Angel groups<br/>━━━━━━<br/>Members write checks together"]
+    Q1 -->|"I want a portfolio<br/>with close GP access"| SMALL["🌱 Small / emerging VCs<br/>━━━━━━<br/>Fund I–II · first checks"]
+    Q1 -->|"I want institutional process<br/>and lower variance"| BIG["🏛️ Big / established VCs<br/>━━━━━━<br/>Multi-fund · $200M+ AUM"]
+    Q1 -->|"Impact is the goal,<br/>tax efficiency matters"| PHIL["💚 Philanthropy<br/>━━━━━━<br/>Foundations · 501(c)(3) accelerators"]
+
+    click DIRECT call expandPath("direct") "Click to expand directs"
+    click ANGEL call expandPath("angel") "Click to expand angel groups"
+    click SMALL call expandPath("small") "Click to expand small VCs"
+    click BIG call expandPath("big") "Click to expand big VCs"
+    click PHIL call expandPath("phil") "Click to expand philanthropy"
+
+    classDef interactive fill:#fafafa,stroke:#0d9488,stroke-width:2px,color:#0d9488
+    class DIRECT,ANGEL,SMALL,BIG,PHIL interactive

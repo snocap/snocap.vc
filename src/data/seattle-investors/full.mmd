@@ -1,0 +1,43 @@
+flowchart TD
+    Start["🏔️ Navigating Seattle's<br/>Investing Landscape"] --> Q1{"How do you want<br/>to deploy capital?"}
+
+    Q1 -->|"Have own dealflow"| DIRECT["✊ Directs"]
+    Q1 -->|"Want a community"| ANGEL["🤝 Angel groups"]
+    Q1 -->|"Want close GP access"| SMALL["🌱 Small / emerging VCs"]
+    Q1 -->|"Want lower variance"| BIG["🏛️ Big / established VCs"]
+    Q1 -->|"Impact is the goal"| PHIL["💚 Philanthropy"]
+
+    DIRECT --> DQ{"What kind of dealflow?"}
+    DQ -->|"Curated PNW SPVs"| D_SPV["AngelList syndicates<br/>(operator-led)"]
+    DQ -->|"One-off vehicles"| D_CARTA["Carta · Sydecar SPVs"]
+    DQ -->|"Local events"| D_9Z["9Zero · GeekWire<br/>Climate Innovation Hub"]
+
+    ANGEL --> AQ{"Which community?"}
+    AQ -->|"Climate-only"| A_E8["E8 Angels (Decarbon8-US)"]
+    AQ -->|"PNW generalist"| A_AOA["Alliance of Angels"]
+    AQ -->|"Multi-state PNW"| A_VU["VentureUs"]
+    AQ -->|"Cohort education"| A_SAC["Seattle Angel Conference"]
+
+    SMALL --> SQ{"What specialty?"}
+    SQ -->|"Software / B2B SaaS"| S_SW["Founders' Co-op · Pack VC<br/>Ascend · Breakwater · Aviso<br/>Fortson · Incisive · Two Ravens<br/>Sourdough · Graham & Walker<br/>Breakers · Kin · Tapas · Clear Fir<br/>Portland Seed Fund"]
+    SQ -->|"AI-native / infra"| S_AI["AI2 Incubator · Flying Fish<br/>Essence · Data Tech Fund<br/>The Founder VC"]
+    SQ -->|"Climate software"| S_CSW["Stepchange"]
+    SQ -->|"Hard tech / physical IP"| S_HT["SNØCAP · Acequia<br/>Conduit Venture Labs<br/>Pangaea (BC) · EVOK (BC)"]
+    SQ -->|"Deep tech / spinouts"| S_DT["Gliding Ant · Actuate<br/>RPV Global · Mana<br/>Pioneer Square Labs<br/>Massive Tech"]
+    SQ -->|"Consumer / creator"| S_CON["Klein VP · First Row Partners"]
+    SQ -->|"Sector specialist"| S_SP["Pier 70 · SpringRock (health)<br/>Swizzle (women) · WXR (XR)<br/>REI Path Ahead · Tacoma VF<br/>Altelan (food)"]
+
+    BIG --> BQ{"What mandate?"}
+    BQ -->|"LP-able generalist"| B_GEN["Madrona · Maveron<br/>Voyager · Tola · Trilogy · Fuse"]
+    BQ -->|"LP-able climate"| B_CL["Breakthrough Energy<br/>WestRiver Group · Bison<br/>Gigascale (Seattle partner)"]
+    BQ -->|"Strategic / corporate"| B_ST["Microsoft Climate Fund<br/>Amazon Alexa Fund"]
+
+    PHIL --> PQ{"What kind of impact?"}
+    PQ -->|"501(c)(3) accelerator"| P_VL["VertueLab"]
+    PQ -->|"501(c)(6) angel philanthropy"| P_E8D["E8 Decarbon8-US"]
+    PQ -->|"Research foundation"| P_WRF["WRF Capital"]
+
+    classDef climate fill:#d1fae5,stroke:#0d9488,stroke-width:2px,color:#0f3a36
+    class S_CSW,S_HT,B_CL,B_ST,P_VL,P_E8D climate
+    classDef interactive fill:#fafafa,stroke:#0d9488,stroke-width:2px,color:#0d9488
+    class DIRECT,ANGEL,SMALL,BIG,PHIL interactive

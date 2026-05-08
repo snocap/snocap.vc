@@ -1,72 +1,1133 @@
 ---
 import Layout from "layouts/Layout.astro";
+import topDiagram from "data/seattle-investors/top.mmd?raw";
+import directDiagram from "data/seattle-investors/direct.mmd?raw";
+import angelDiagram from "data/seattle-investors/angel.mmd?raw";
+import smallDiagram from "data/seattle-investors/small.mmd?raw";
+import bigDiagram from "data/seattle-investors/big.mmd?raw";
+import philDiagram from "data/seattle-investors/phil.mmd?raw";
+import fullDiagram from "data/seattle-investors/full.mmd?raw";
 
-const diagram = `flowchart TD
-    Start["🌲 Getting Into Climate Investing in Seattle"] --> Q1{"Want to invest\\nin climate companies?"}
+const paths = [
+  {
+    key: "direct",
+    icon: "✊",
+    label: "Direct deals",
+    summary:
+      "You'd pick this if you've already been an LP or angel-group member long enough to trust your own diligence, or you know an industry well enough to have a real sourcing edge. Highest control, highest research load. The work scales with the portfolio.",
+    diagram: directDiagram,
+    pnwFirms: [
+      {
+        name: "9Zero · Climate Innovation Hub",
+        location: "Seattle, WA",
+        stage: "Sourcing venue",
+        access: "Direct",
+        climate: true,
+        thesis:
+          "Climate-tech coworking and event space anchored with UW CoMotion and VertueLab.",
+        diff: "Most efficient single venue in Seattle to source PNW climate deals informally; recurring events bring founders, angels, and operators together weekly.",
+        website: "9zero.com",
+        websiteHref: "https://9zero.com/",
+      },
+      {
+        name: "PNW operator SPVs",
+        location: "AngelList · Sydecar · Carta",
+        stage: "Pre-seed · Seed",
+        access: "Direct",
+        thesis: "Many Seattle operators run personal SPVs for selected deals.",
+        diff: "Surface them by attending GeekWire events, Founders' Co-op office hours, and local pitch nights; quality follows the operator's own deal access, not a fund mandate.",
+        website: "angellist.com",
+        websiteHref: "https://www.angellist.com/",
+      },
+    ],
+    honorable: [],
+  },
+  {
+    key: "angel",
+    icon: "🤝",
+    label: "Angel groups & syndicates",
+    summary:
+      "You'd pick this if you like the idea of doing directs but want a portfolio approach without doing all the diligence yourself. Members pool dealflow and write checks together. Lower research load than going solo, faster ramp than LP'ing a fund, and a built-in network of co-investors.",
+    diagram: angelDiagram,
+    pnwFirms: [
+      {
+        name: "E8 Angels",
+        location: "Seattle, WA",
+        stage: "Pre-seed · Series A",
+        access: "Angel network",
+        climate: true,
+        thesis: "Largest dedicated cleantech angel network in the U.S.",
+        diff: "140+ accredited members, $75M+ deployed since 2006; runs the annual Decarbon8-US philanthropic fund (2025 theme: Software & AI for Climate) with an open application process.",
+        website: "e8angels.com",
+        websiteHref: "https://www.e8angels.com/",
+      },
+      {
+        name: "Alliance of Angels",
+        location: "Seattle, WA",
+        stage: "Seed · Early-stage",
+        access: "Angel network",
+        thesis: "Largest angel group in the PNW.",
+        diff: "180+ accredited members across tech, hardware, consumer goods, life sciences; the broadest sector exposure of any Seattle angel group.",
+        website: "allianceofangels.com",
+        websiteHref: "https://www.allianceofangels.com/",
+      },
+      {
+        name: "VentureUs",
+        location: "Seattle, WA",
+        stage: "Pre-seed · Seed",
+        access: "Angel network",
+        thesis: "Successor to Seattle Angel Fund / SeaChange.",
+        diff: "Expert-guided angel network across WA, OR, ID, AK, BC; the only group with multi-state PNW reach beyond Washington.",
+        website: "ventureus.org",
+        websiteHref: "https://ventureus.org",
+      },
+      {
+        name: "Seattle Angel Conference",
+        location: "Seattle, WA",
+        stage: "Pre-seed",
+        access: "Angel network",
+        thesis: '"Learning by doing" angel cohort program.',
+        diff: "Each cycle pools an investment fund and selects a winner — best path for first-time angels who want a structured education before going solo or joining E8/AoA.",
+        website: "seattleangelconference.com",
+        websiteHref: "https://seattleangelconference.com/",
+      },
+    ],
+    honorable: [],
+  },
+  {
+    key: "small",
+    icon: "🌱",
+    label: "Small / emerging VCs",
+    summary:
+      "You'd pick this if you want professional capital deployment but with close GP access and the asymmetric upside of backing a manager early. LP into a Fund I–II where the GPs personally know every founder. Higher variance than established managers, much closer access.",
+    diagram: smallDiagram,
+    pnwGroups: [
+      {
+        label: "Software / B2B SaaS (general)",
+        firms: [
+          {
+            name: "Founders' Co-op",
+            location: "Seattle, WA",
+            stage: "Seed",
+            access: "LP",
+            thesis:
+              "First-check investor for PNW founders across software and tech.",
+            diff: "Longest-tenured PNW seed fund (founded 2008); $50M Fund VI closed Nov 2025; the most general first-check option in Seattle.",
+            website: "founderscoop.com",
+            websiteHref: "https://founderscoop.com",
+          },
+          {
+            name: "Pack VC",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed",
+            access: "LP",
+            thesis:
+              "UW-affiliated founders: spinouts, faculty ventures, alumni-led across AI, life sciences, deep tech.",
+            diff: "Only fund explicitly partnered with the University of Washington for spinouts and faculty ventures; Fund II $30M target; 29 portfolio companies.",
+            website: "packvc.com",
+            websiteHref: "https://www.packvc.com",
+          },
+          {
+            name: "Ascend VC",
+            location: "Seattle, WA",
+            stage: "Pre-seed (lead $250K–$750K)",
+            access: "LP",
+            thesis: "Pre-seed AI/ML and enterprise SaaS in the PNW.",
+            diff: "Most active PNW pre-seed fund; Fund II $25M (2023); thesis that 1-in-4 US AI engineers lives in Seattle, paired with a content/community engine for sourcing.",
+            website: "ascend.vc",
+            websiteHref: "https://www.ascend.vc",
+          },
+          {
+            name: "Breakwater Ventures",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed (lead/co-lead)",
+            access: "LP",
+            thesis:
+              "PNW + Western Canada teams in data/AI, enterprise, fintech, marketplaces.",
+            diff: '2023-vintage Fund I emerging manager backed by Meta/Microsoft/Oracle execs; explicit four-vertical mandate (vs "we do everything" peers).',
+            website: "breakwater.vc",
+            websiteHref: "https://www.breakwater.vc",
+          },
+          {
+            name: "Aviso Ventures",
+            location: "Seattle, WA",
+            stage: "Seed",
+            access: "LP",
+            thesis:
+              "Enterprise infrastructure and security companies built by deeply technical operators.",
+            diff: "Operator-investor team with multiple cyber/infra exits and IPOs (incl. Signal Sciences); Fund II $12.2M first close (2023); tightly focused on cyber/DevOps where peers are generalist.",
+            website: "avisoventures.com",
+            websiteHref: "https://avisoventures.com",
+          },
+          {
+            name: "Fortson VC",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Series A ($500K–$1M)",
+            access: "LP",
+            thesis:
+              "B2B software with AI-native intelligence; non-linear founders building category-defining products.",
+            diff: '$50M Fund I (2025) spun out of Arnold Venture Group\'s family-office seed arm; "new" emerging manager with a multi-year invested track record before Fund I closed.',
+            website: "fortsonvc.com",
+            websiteHref: "https://www.fortsonvc.com",
+          },
+          {
+            name: "Incisive VC",
+            location: "Seattle, WA",
+            stage: "Pre-seed (avg $250K)",
+            access: "LP",
+            thesis:
+              'Pre-MVP-plus B2B software companies that "reduce friction at scale."',
+            diff: "Solo-GP $10.5M Fund I (May 2025); 76% institutional follow-on rate (~2.5× industry average); explicitly excludes hardware, life sciences, crypto, cleantech, gaming.",
+            website: "incisive.vc",
+            websiteHref: "https://incisive.vc",
+          },
+          {
+            name: "Two Ravens",
+            location: "Bellevue, WA",
+            stage: "Pre-seed · Early seed ($250K–$500K)",
+            access: "LP",
+            thesis:
+              "Tech generalist; extraordinary founders from non-obvious backgrounds, outside major venture metros.",
+            diff: '$20M Fund I (2023) by the former managing director of Techstars Seattle; explicit "non-obvious founders" sourcing thesis with global reach.',
+            website: "tworavens.vc",
+            websiteHref: "https://www.tworavens.vc",
+          },
+          {
+            name: "Sourdough Ventures",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed",
+            access: "LP",
+            thesis: "Curated Founder-in-Residence program for PNW founders.",
+            diff: "Only Seattle fund built around a structured FIR cohort; 2025 cohort raised ~$50M collectively.",
+            website: "sourdoughvc.com",
+            websiteHref: "https://sourdoughvc.com",
+          },
+          {
+            name: "Graham & Walker",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed",
+            access: "LP",
+            climate: true,
+            thesis:
+              "Software companies in venture's biggest blindspots: care economy, health equity, circular economy.",
+            diff: "Backs underrepresented founders; climate-adjacent portfolio (Planette, it's electric); Fund II SEC filing Mar 2025, $15M target.",
+            website: "grahamwalker.com",
+            websiteHref: "https://grahamwalker.com",
+          },
+          {
+            name: "Breakers",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed (~$250K, non-lead)",
+            access: "LP",
+            thesis:
+              "Generalist non-coastal pre-seed/seed: software, AI, consumer, fintech, health, hardware.",
+            diff: 'Solo-GP Fund I (2023); explicit non-coastal/PNW + Texas geographic angle; "first/friendliest/fastest non-lead check" positioning.',
+            website: "breakers.vc",
+            websiteHref: "https://www.breakers.vc",
+          },
+          {
+            name: "Kin Ventures",
+            location: "Kirkland, WA",
+            stage: "Seed · Series B",
+            access: "LP",
+            thesis:
+              "Enterprise software, supply chain/logistics, digital health, e-commerce, marketplaces, sustainability.",
+            diff: "In-house technical-recruiting bench (30+ combined years) — a tangible operating service most seed funds don't offer.",
+            website: "kinvc.com",
+            websiteHref: "https://kinvc.com",
+          },
+          {
+            name: "Tapas Capital",
+            location: "Bellevue, WA",
+            stage: "Pre-seed · Seed · Series A ($25K–$200K)",
+            access: "LP",
+            thesis:
+              "Disruptive technology with strong scalability and market disruption.",
+            diff: "Bellevue-based emerging manager (founded 2017); small-check follow-on style, useful as friendly co-investor in early Seattle/Bellevue rounds rather than as a lead.",
+            website: "tapas.capital",
+            websiteHref: "https://www.tapas.capital",
+          },
+          {
+            name: "Clear Fir Partners",
+            location: "Seattle, WA",
+            stage: "Early to growth",
+            access: "LP",
+            thesis:
+              "Long-tenured Seattle technology and life-sciences investor.",
+            diff: 'Founded 1998; one of the oldest continuously operating Seattle GPs with multi-cycle track record across telecom, SaaS, healthcare. Not climate-focused despite the "fir" naming.',
+            website: "clearfir.com",
+            websiteHref: "https://www.clearfir.com",
+          },
+          {
+            name: "Portland Seed Fund",
+            location: "Portland, OR",
+            stage: "Pre-seed · Seed",
+            access: "LP",
+            thesis:
+              "PNW early-stage generalist; Intrepid Oregon Fund vehicle leans deep tech, climate, advanced manufacturing.",
+            diff: "$40M AUM; ESS Inc. (iron-flow battery) is a notable cleantech exit; the most active institutional VC headquartered in Oregon.",
+            website: "portlandseedfund.com",
+            websiteHref: "https://www.portlandseedfund.com",
+          },
+        ],
+      },
+      {
+        label: "AI-native / infrastructure / dev tools",
+        firms: [
+          {
+            name: "AI2 Incubator",
+            location: "Seattle, WA",
+            stage: "Pre-seed (incubation)",
+            access: "Studio",
+            thesis:
+              "Builds applied-AI startups solving real-world problems with embedded technical experts.",
+            diff: "Allen Institute for AI spinout running a hands-on EIR studio; $80M Fund III (2025), $200M in compute credits, ~15 startups/year, 24% acquisition rate.",
+            website: "ai2incubator.com",
+            websiteHref: "https://www.ai2incubator.com",
+          },
+          {
+            name: "Flying Fish",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed",
+            access: "LP",
+            thesis:
+              "Applied AI across enterprise, security, hard sciences, gaming.",
+            diff: "Seattle's longest-running pure-play AI fund (founded 2016); Fund II $70M, Fund III in market — pre-dates the GenAI hype cycle, deeper AI-native portfolio history than newer entrants.",
+            website: "flyingfish.vc",
+            websiteHref: "https://www.flyingfish.vc",
+          },
+          {
+            name: "Essence VC",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed",
+            access: "LP",
+            thesis:
+              "Deeply technical first-time founders building infrastructure software, dev tools, and open-source.",
+            diff: "Solo-GP Seattle fund (Fund IV $41M); strongest open-source/dev-tools brand engine of any seed fund — Open Source Startup podcast, infra conferences, and a 50-company eng job board.",
+            website: "essencevc.fund",
+            websiteHref: "https://www.essencevc.fund",
+          },
+          {
+            name: "Data Tech Fund",
+            location: "Seattle, WA",
+            stage: "Early ($500K–$2M)",
+            access: "LP",
+            thesis:
+              "Data-native and AI startups with proprietary data and network effects.",
+            diff: '2021-vintage Fund I run by former data operators; sharper "data + network effects" thesis vs the horizontal "AI everywhere" framing.',
+            website: "datatech.fund",
+            websiteHref: "https://www.datatech.fund",
+          },
+          {
+            name: "The Founder VC",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed ($100K–$250K)",
+            access: "LP",
+            thesis:
+              "Vertical AI applications across consumer and professional markets.",
+            diff: '$5M debut fund publicly launched Mar 2026; designed as a "first yes" non-lead check behind tier-1 leads (Audacious, GV, NEA).',
+            website: "thefounder.vc",
+            websiteHref: "https://www.thefounder.vc",
+          },
+        ],
+      },
+      {
+        label: "Climate software",
+        firms: [
+          {
+            name: "Stepchange",
+            location: "Seattle, WA",
+            stage: "Seed · Series A",
+            access: "LP",
+            climate: true,
+            thesis:
+              "Asset-light software accelerating energy abundance. No hardware, no green premium.",
+            diff: "Only PNW VC explicitly focused on asset-light climate software with no green premium requirement; $7M Fund I closed Apr 2025; led the Aarden AI seed (Oct 2025).",
+            website: "stepchange.vc",
+            websiteHref: "https://stepchange.vc",
+          },
+        ],
+      },
+      {
+        label: "Hard tech / physical IP",
+        firms: [
+          {
+            name: "SNØCAP",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed",
+            access: "LP",
+            climate: true,
+            thesis:
+              "First institutional check for IP-backed deeptech building materials, molecules, and machines.",
+            diff: "Only Seattle VC dedicated to deeptech-meets-physical (materials, molecules, machines) at first-check; 2025 portfolio includes Sironix Renewables.",
+            website: "snocap.vc",
+            websiteHref: "https://snocap.vc/",
+          },
+          {
+            name: "Acequia Capital",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed (multi-stage)",
+            access: "LP",
+            thesis:
+              "Technical-founder risk capital across AI, industrials, infrastructure.",
+            diff: 'Most active multi-stage Seattle GP (7 funds, 600+ investments); "New Industrials" framework includes nuclear (Applied Atomics) and EVs (Harbinger Motors).',
+            website: "acecap.com",
+            websiteHref: "https://www.acecap.com",
+          },
+          {
+            name: "Conduit Venture Labs",
+            location: "Seattle, WA",
+            stage: "Pre-seed studio + outside investments",
+            access: "Studio",
+            thesis:
+              "Incubates hardware-enabled AI/ML companies as professional co-founders.",
+            diff: "Only Seattle-area studio focused on hardware/Physical AI (vs software studios); ex-Microsoft Xbox/Kinect/Band operators with 200+ hard-tech mentors.",
+            website: "conduitventurelabs.com",
+            websiteHref: "https://www.conduitventurelabs.com",
+          },
+          {
+            name: "Pangaea Ventures",
+            location: "Vancouver, BC",
+            stage: "Pre-seed · Series A",
+            access: "LP",
+            climate: true,
+            thesis:
+              "Advanced materials, water, ag-science, industrial biotech.",
+            diff: '25-year track record across cleantech; closest "old-guard" cleantech specialist on the BC/PNW border. Anchored Membrion\'s $20M Series B1 (Seattle, Oct 2025).',
+            website: "pangaeaventures.com",
+            websiteHref: "https://www.pangaeaventures.com",
+          },
+          {
+            name: "EVOK Innovations",
+            location: "Vancouver, BC",
+            stage: "Series A · Series B",
+            access: "LP",
+            climate: true,
+            thesis: "Hard-tech for heavy-industry decarbonization.",
+            diff: "$300M Vancouver-based fund explicitly built to decarbonize heavy industry; backed by Suncor, Cenovus, Rio Tinto, Mitsubishi. Active WA portfolio (Ebb Carbon at Port Angeles).",
+            website: "evokinnovations.com",
+            websiteHref: "https://www.evokinnovations.com",
+          },
+        ],
+      },
+      {
+        label: "Deep tech / research spinouts",
+        firms: [
+          {
+            name: "Gliding Ant Ventures",
+            location: "Seattle, WA",
+            stage: "Pre-seed (studio)",
+            access: "Studio",
+            climate: true,
+            thesis:
+              "Deep-tech venture studio for first-time founders, PhDs, and solo founders solving climate problems.",
+            diff: "Only Seattle deep-tech studio with explicit climate mandate, building from PhDs and solo scientists across biotech, marine energy, photovoltaics, agtech, novel materials.",
+            website: "glidingant.com",
+            websiteHref: "https://www.glidingant.com",
+          },
+          {
+            name: "Actuate Ventures",
+            location: "Redmond, WA",
+            stage: "Pre-seed · Series A",
+            access: "LP",
+            thesis:
+              "Deep-tech and space-tech studio across energy, materials science, food, biotech.",
+            diff: "Founded by ex-Blue Origin operators; only Eastside fund focused on space + adjacent deep tech. First $25M venture fund raising.",
+            website: "actuateventures.co",
+            websiteHref: "https://actuateventures.co",
+          },
+          {
+            name: "RPV Global",
+            location: "Seattle, WA",
+            stage: "Early-stage deep tech ($250K–$1.5M)",
+            access: "LP",
+            thesis:
+              "Commercializes breakthrough scientific research grounded in rigorous method.",
+            diff: "2021-vintage fund (~$50M deployed) advised by Edward Jung (Intellectual Ventures co-founder) and Dave McClure; heavier IP/scientist orientation than other Seattle GPs.",
+            website: "rpv.global",
+            websiteHref: "https://rpv.global",
+          },
+          {
+            name: "Mana",
+            location: "Seattle, WA",
+            stage: "Early-stage",
+            access: "LP",
+            thesis:
+              "Web3/decentralized infrastructure, HPC, cognitive tooling, longevity.",
+            diff: "Seattle Fund I (2022) led by GPs from Protocol Labs (the IPFS/Filecoin founding team); most crypto/decentralized-systems credibility of any Seattle fund. Portfolio includes Bluesky.",
+            website: "mana.inc",
+            websiteHref: "https://mana.inc",
+          },
+          {
+            name: "Pioneer Square Labs (PSL)",
+            location: "Seattle, WA",
+            stage: "Studio + Seed/Series A",
+            access: "Studio",
+            thesis:
+              "Twin-engine: studio that builds companies from internal ideas + venture fund that backs studio spinouts and outside founders.",
+            diff: 'Unique twin-engine model in Seattle — Studio III $20M plus PSL Ventures $180M; recently shipped its own AI co-founder tool ("Lev") and an AI-driven idea-generation engine.',
+            website: "psl.com",
+            websiteHref: "https://www.psl.com",
+          },
+          {
+            name: "Massive Tech Ventures",
+            location: "Bainbridge Island, WA",
+            stage: "Early-stage",
+            access: "LP",
+            thesis:
+              "PNW technology — productivity software, robotics, applied AI.",
+            diff: "Bainbridge Island emerging manager co-founded by Stefan Kalb (founder of Shelf Engine); operator-LP angle from a Seattle food-tech founder, with portfolio in robotics and AI.",
+            website: "mtv.vc",
+            websiteHref: "https://www.mtv.vc",
+          },
+        ],
+      },
+      {
+        label: "Consumer / creator economy",
+        firms: [
+          {
+            name: "Klein Venture Partners",
+            location: "Mercer Island, WA",
+            stage: "Angel · Pre-seed",
+            access: "Direct",
+            thesis:
+              "Consumer, media, entertainment, internet (incl. select hardware/deep tech).",
+            diff: "Mercer Island angel-style firm (founded 2008); GP with product/exec history at Apple, Palm, Sun, Bungie/Halo — uniquely tilted toward gaming, entertainment, and consumer hardware among Seattle funds.",
+            website: "kleinvp.com",
+            websiteHref: "https://www.kleinvp.com",
+          },
+          {
+            name: "First Row Partners",
+            location: "Seattle, WA",
+            stage: "Pre-seed",
+            access: "LP",
+            thesis:
+              'Pre-seed tech "elevating human expression" — creator economy, media + commerce, AI for brand-builders.',
+            diff: "Women-led PNW Fund I (founded 2019) with creator-economy/media thesis distinct from the AI/B2B-SaaS lane other Seattle seed funds occupy.",
+            website: "firstrowpartners.vc",
+            websiteHref: "https://www.firstrowpartners.vc",
+          },
+        ],
+      },
+      {
+        label: "Sector specialist",
+        firms: [
+          {
+            name: "Pier 70 Ventures",
+            location: "Seattle, WA",
+            stage: "Seed · Series B ($250K–$2M)",
+            access: "LP",
+            thesis:
+              "Healthcare-impact VC: digital health, diagnostics, life sciences, medtech, health equity.",
+            diff: "Only Seattle pure-play healthcare-impact VC; founded by former Boeing venture executives.",
+            website: "pier70ventures.com",
+            websiteHref: "https://www.pier70ventures.com",
+          },
+          {
+            name: "SpringRock Ventures",
+            location: "Seattle, WA",
+            stage: "Early-stage",
+            access: "LP",
+            thesis:
+              "Healthcare/IT convergence — digital health, devices, services, oral health, wellness.",
+            diff: "Seattle's most established pure-play healthcare-tech specialist (founded 2015); stated oral-health niche no other Seattle fund covers.",
+            website: "springrockventures.com",
+            websiteHref: "https://springrockventures.com",
+          },
+          {
+            name: "Swizzle Ventures",
+            location: "Seattle, WA",
+            stage: "Pre-seed · Seed ($100K–$200K)",
+            access: "LP",
+            thesis:
+              "Women's health and wealth: healthcare, caregiving, fintech for women.",
+            diff: "Only Seattle fund dedicated to women's health and wealth; $6.6M Fund I closed Feb 2025; 4 investments deployed in 2025.",
+            website: "swizzle.vc",
+            websiteHref: "https://www.swizzle.vc",
+          },
+          {
+            name: "WXR Fund",
+            location: "Seattle · SF · LA",
+            stage: "Seed",
+            access: "LP",
+            thesis: "Women founders pioneering spatial computing × AI.",
+            diff: "$5M inaugural fund (2021); only US venture fund exclusively for women founders building in spatial computing/XR; ties to UW and the WTIA XR Council.",
+            website: "wxrfund.com",
+            websiteHref: "https://www.wxrfund.com",
+          },
+          {
+            name: "REI Path Ahead Ventures",
+            location: "Sumner, WA",
+            stage: "Pre-seed · Seed",
+            access: "Institutional",
+            climate: true,
+            thesis:
+              "REI Co-op's venture arm. Founders of color in outdoor, fitness, wellness, and sustainability.",
+            diff: "$30M corporate fund; SAFE / convertible-note checks from $100K. The only outdoor-industry-anchored fund in Seattle, climate-adjacent via the outdoor lens.",
+            website: "rei.com",
+            websiteHref: "https://www.rei.com/path-ahead",
+          },
+          {
+            name: "Tacoma Venture Fund",
+            location: "Tacoma, WA",
+            stage: "Pre-seed · Seed · Seed-plus",
+            access: "LP",
+            thesis:
+              "Sector-agnostic PNW founders from all backgrounds, with sustainability and community-impact lenses.",
+            diff: "Only institutional VC explicitly headquartered in Tacoma (founded 2020); geographic-arbitrage thesis on South Sound founders ignored by Seattle-centric peers.",
+            website: "tacomaventurefund.com",
+            websiteHref: "https://tacomaventurefund.com",
+          },
+          {
+            name: "Altelan Capital",
+            location: "Seattle, WA",
+            stage: "Growth equity",
+            access: "LP",
+            thesis:
+              "Operator-led growth equity in food, beverage, ag, food supply chain.",
+            diff: "2025-vintage Seattle emerging manager dedicated specifically to growth-stage food and ag, run by an operator from a $1B+ founder-led-brands family office.",
+            website: "altelancapital.com",
+            websiteHref: "https://altelancapital.com",
+          },
+        ],
+      },
+    ],
+    honorable: [
+      {
+        name: "Burnt Island Ventures",
+        location: "New York · Seattle (partner)",
+        stage: "Pre-seed · Seed",
+        access: "LP",
+        climate: true,
+        thesis:
+          "Most active water-focused VC globally: access, treatment/reuse, efficiency, climate-via-water.",
+        diff: "$50M Fund II (Oct 2025); Partner Christine Boyle is Seattle-based; Xylem anchor LP. Closest non-PNW water-tech specialist with a real Seattle touchpoint.",
+        website: "burntislandventures.com",
+        websiteHref: "https://www.burntislandventures.com",
+      },
+      {
+        name: "Positive Sum",
+        location: "Greenwich, CT (Seattle partner)",
+        stage: "Seed · Series B",
+        access: "LP",
+        thesis:
+          "Patient long-term capital for FinTech, Enterprise SaaS, B2B software.",
+        diff: "Lists Seattle as an office; not climate-focused. Fits LPs who want a longer-duration enterprise-software vehicle with PNW presence.",
+        website: "positivesum.com",
+        websiteHref: "https://positivesum.com",
+      },
+    ],
+  },
+  {
+    key: "big",
+    icon: "🏛️",
+    label: "Big / established VCs",
+    summary:
+      "You'd pick this if you want lower variance, an institutional process, and a longer track record over personal access. The largest climate-mandated capital pools in the region sit here. Many of these vehicles are restricted to corporate, pension, or family-office capital. Read the access badges before assuming it's LP-able.",
+    diagram: bigDiagram,
+    pnwFirms: [
+      {
+        name: "Madrona",
+        location: "Seattle, WA",
+        stage: "Seed · Growth (Acceleration Fund for Series B/C)",
+        access: "LP",
+        thesis:
+          "Visionary founders building from Seattle and the PNW from day one through scale.",
+        diff: "PNW's flagship multi-stage firm. $770M raised in 2025 across Fund X ($489.6M) and Acceleration Fund IV ($269.4M); portfolio history includes Amazon, Snowflake, Smartsheet, Rover, Cohesity. Madrona Venture Labs studio activity now operates inside the firm (absorbed Jan 2025).",
+        website: "madrona.com",
+        websiteHref: "https://www.madrona.com",
+      },
+      {
+        name: "Maveron",
+        location: "Seattle, WA",
+        stage: "Seed · Series A ($3M–$10M)",
+        access: "LP",
+        thesis:
+          "Identify cultural/consumer-behavior shifts before they're obvious; back generational consumer brands.",
+        diff: "Co-founded by Howard Schultz; only top-tier consumer-exclusive fund headquartered in Seattle. $225M Fund 8 (2021); ~$800M–$1.3B cumulative AUM; B Corp certified. Portfolio includes Allbirds, eBay, Zulily, Trupanion.",
+        website: "maveron.com",
+        websiteHref: "https://www.maveron.com",
+      },
+      {
+        name: "Tola Capital",
+        location: "Seattle, WA",
+        stage: "Growth (early-growth enterprise software)",
+        access: "LP",
+        thesis:
+          "Hypothesis-driven, long-duration bets on enterprise AI category leaders — domain foundation models, AI/ML tooling, AI SaaS, AI compliance and security.",
+        diff: "Seattle's largest dedicated enterprise-AI software fund; $688M total AUM, $230M Fund III (2023). Positions as global, long-duration vs PNW-anchored seed peers.",
+        website: "tolacapital.com",
+        websiteHref: "https://tolacapital.com",
+      },
+      {
+        name: "Voyager Capital",
+        location: "Seattle, WA",
+        stage: "Early ($100K–$5M, sweet spot ~$1.5M)",
+        access: "LP",
+        thesis:
+          "Lead first venture rounds for PNW and Western Canada B2B founders.",
+        diff: "Founded 1997; $565M+ AUM across six funds (Fund VI targeting $100M, 2023). One of the longest-tenured B2B-only PNW firms with explicit Pacific Northwest + Western Canada lane.",
+        website: "voyagercapital.com",
+        websiteHref: "https://www.voyagercapital.com",
+      },
+      {
+        name: "Trilogy Equity Partners",
+        location: "Bellevue, WA",
+        stage: "Pre-seed · Seed (lead, $2M–$6M)",
+        access: "LP",
+        thesis:
+          "Lead pre-seed and seed rounds for PNW founders, drawing on US wireless/mobile carrier operating history.",
+        diff: "Founded 2006 in the John Stanton (T-Mobile / AT&T Wireless) lineage; Fund II $150M+ (2022). One of the few Seattle seed funds that consistently writes lead-sized $2M–$6M first checks. Portfolio includes Lookout, Remitly, Skilljar.",
+        website: "trilogyequity.com",
+        websiteHref: "https://trilogyequity.com",
+      },
+      {
+        name: "Fuse VC",
+        location: "Seattle, WA",
+        stage: "Seed · Series A (lead, $1M–$10M)",
+        access: "LP",
+        thesis:
+          "Lead PNW B2B software/AI seed and Series A rounds before the writeups arrive.",
+        diff: 'Largest dedicated PNW seed/Series A lead — $250M Fund II (2023), $420M+ AUM across funds; anchor differentiator is a 300+ "elite operator" LP/network from Auth0, Starbucks, Boeing, Microsoft, Amazon, Nike.',
+        website: "fuse.vc",
+        websiteHref: "https://fuse.vc",
+      },
+      {
+        name: "Breakthrough Energy Ventures",
+        location: "Kirkland, WA",
+        stage: "Series A · Growth",
+        access: "Institutional",
+        climate: true,
+        thesis:
+          "Deep decarbonization across electricity, transport, agriculture, manufacturing, buildings.",
+        diff: "Every investment must show ≥0.5Gt annual emissions reduction potential. Restricted to large institutional and family-office LPs. Existing co-investor in Group14's $463M Series D.",
+        website: "breakthroughenergy.org",
+        websiteHref:
+          "https://breakthroughenergy.org/our-work/breakthrough-energy-ventures",
+      },
+      {
+        name: "WestRiver Group (WRG)",
+        location: "Seattle, WA",
+        stage: "Multi-stage platform (venture · growth · debt)",
+        access: "LP",
+        climate: true,
+        thesis:
+          "Thematically driven investment platform across capital/innovation/purpose pillars — tech, experience/media, decarbonization, life sciences/biotech/digital health.",
+        diff: "Founded 2002; runs 17+ funds across stages and asset classes (incl. WRG Energy Innovation II). Closest thing to a multi-strategy Seattle platform with a real climate sleeve; GP launched a $200M decarbonization SPAC with Riverstone.",
+        website: "wrg.vc",
+        websiteHref: "https://www.wrg.vc",
+      },
+      {
+        name: "Bison Ventures",
+        location: "Seattle, WA",
+        stage: "Pre-seed · Series A (with growth follow-on)",
+        access: "LP",
+        climate: true,
+        thesis:
+          "Frontier deep tech: AI in physical world, climate, techbio, hardware, food/ag.",
+        diff: "$135M debut fund (2023) led by GPs from Bill Gates' Cascade Asset Management investment office; explicit climate mandate; >80% of CEOs backed are from underrepresented groups.",
+        website: "bison.vc",
+        websiteHref: "https://www.bison.vc",
+      },
+      {
+        name: "Microsoft Climate Innovation Fund",
+        location: "Redmond, WA",
+        stage: "Series B · Growth",
+        access: "Institutional",
+        climate: true,
+        thesis:
+          "Clean-energy companies bridging to mainstream markets via equity and debt.",
+        diff: "$1B corporate fund; strategic capital, not LP-able. Co-invested in Group14's $463M Series D (Aug 2025). Largest Seattle-area climate capital pool tied to a hyperscaler buyer.",
+        website: "microsoft.com",
+        websiteHref:
+          "https://www.microsoft.com/en-us/corporate-responsibility/sustainability/climate-innovation-fund",
+      },
+      {
+        name: "Amazon Alexa Fund",
+        location: "Seattle, WA",
+        stage: "Seed · Series B ($100K–$5M)",
+        access: "Institutional",
+        thesis:
+          "Missionary founders advancing consumer + AI/ML, ambient computing, generative media, robotics — strategically aligned to Amazon's ecosystem.",
+        diff: "Amazon's Seattle-based corporate venture arm; 60+ portfolio (exits incl. Ring, ecobee, Rachio). Only fund offering distribution, device, and Alexa/AWS go-to-market access at hyperscaler scale.",
+        website: "developer.amazon.com",
+        websiteHref:
+          "https://developer.amazon.com/en-US/alexa/alexa-fund-venture-capital/",
+      },
+    ],
+    honorable: [
+      {
+        name: "Gigascale Capital",
+        location: "Palo Alto, CA (Seattle partner)",
+        stage: "Pre-seed · Series A",
+        access: "LP",
+        climate: true,
+        thesis:
+          "Pre-seed to Series A climate deep tech founded by former Meta CTO Mike Schroepfer.",
+        diff: '"All Aboard Coalition" partner with BEV. Has a Seattle-based Venture Partner — the only big-fund climate vehicle with documented PNW personnel.',
+        website: "gigascale.com",
+        websiteHref: "https://gigascale.com",
+      },
+    ],
+  },
+  {
+    key: "phil",
+    icon: "💚",
+    label: "Philanthropy & nonprofit capital",
+    summary:
+      "You'd pick this if measurable impact is the primary return target and you want tax efficiency on the way in. These vehicles fund the part of the ecosystem that venture economics don't reach: frontline-community cleantech, first-of-a-kind projects, and the open application processes that surface tomorrow's startups.",
+    diagram: philDiagram,
+    pnwFirms: [
+      {
+        name: "VertueLab",
+        location: "Portland, OR (Seattle co-presence)",
+        stage: "Pre-seed · Seed",
+        access: "Donor",
+        climate: true,
+        thesis:
+          "501(c)(3) cleantech accelerator for frontline communities. Climate Impact Fund + SBIR/STTR grant assistance.",
+        diff: "Co-anchor of the Seattle Climate Innovation Hub (with UW CoMotion and 9Zero). Most active PNW philanthropy-to-startup pipeline.",
+        website: "vertuelab.org",
+        websiteHref: "https://www.vertuelab.org",
+      },
+      {
+        name: "E8 Angels Decarbon8-US",
+        location: "Seattle, WA",
+        stage: "Pre-seed",
+        access: "Donor",
+        climate: true,
+        thesis: "501(c)(6) annual philanthropic fund inside E8 Angels.",
+        diff: "Pools tax-deductible donations and deploys into a curated cohort of cleantech startups. 2025 theme: Software & AI for Climate.",
+        website: "e8angels.com",
+        websiteHref: "https://www.e8angels.com/decarbon8",
+      },
+      {
+        name: "WRF Capital",
+        location: "Seattle, WA",
+        stage: "Seed · Series A",
+        access: "Institutional",
+        thesis:
+          "Evergreen vehicle of the Washington Research Foundation; deploys into UW/WSU/Fred Hutch/ISB spinouts.",
+        diff: "~$5M/year deployed; donor/grant model rather than LP-able. The most reliable bridge between WA-state research IP and venture commercialization.",
+        website: "wrfseattle.org",
+        websiteHref: "https://www.wrfseattle.org",
+      },
+    ],
+    honorable: [],
+  },
+];
 
-    Q1 -->|"Not directly"| LP["Invest as a Limited Partner (LP)\\nin a climate-focused fund"]
-    Q1 -->|"Yes, directly"| Q2{"Have you made angel\\ninvestments before?"}
+const accessSlug = (access: string) =>
+  access
+    .toLowerCase()
+    .replace(/[^a-z]+/g, "-")
+    .replace(/^-|-$/g, "");
 
-    Q2 -->|"No, I'm new"| SAC["Seattle Angel Conference (SAC)\\nLearn the ropes with a cohort"]
-    Q2 -->|"Yes"| Q3{"What draws you\\nto climate?"}
+const introHref = (firmName: string) => {
+  const subject = `Intro request: ${firmName}`;
+  const body = `Hi SNØCAP team,\n\nI'd like to be opted in for an introduction to ${firmName}.\n\nA bit about me:\n- Background:\n- Investing experience:\n- What draws me to this fund:\n\nThanks!`;
+  return `mailto:hello@snocap.vc?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+};
 
-    SAC --> Q3
-
-    Q3 -->|"Environmental\\nimpact"| E8["E8 Angels\\nEnvironmental angel group"]
-    Q3 -->|"Deep tech\\n& hard science"| VL["Virtualab\\nRegional deep tech accelerator"]
-    Q3 -->|"Software &\\nclimate SaaS"| SW["Software-focused\\nclimate investing"]
-    Q3 -->|"Broad / still\\nexploring"| SNOCAP["SNOCAP\\nClimate venture fund"]
-
-    E8 --> Q4{"Want to go deeper?"}
-    VL --> Q4
-    SW --> Q4
-    SNOCAP --> Q4
-
-    Q4 -->|"Back specific\\nfund managers"| FM{"What stage\\n& style?"}
-    Q4 -->|"Keep doing\\ndirect deals"| SYNDICATE["Join syndicates &\\nco-invest networks"]
-
-    FM -->|"Emerging managers\\n(higher risk, closer access)"| EM["Emerging Manager Funds\\ne.g. SNOCAP, Step Change Ventures"]
-    FM -->|"Established funds\\n(track record, larger checks)"| EST["Established Climate VCs\\ne.g. Clean Energy Ventures,\\nBreakthrough Energy"]
-
-    LP --> FM`;
+const chartsDirUrl =
+  "https://github.com/snocap/snocap.vc/tree/main/src/data/seattle-investors";
+const fullChartEditUrl =
+  "https://github.com/snocap/snocap.vc/edit/main/src/data/seattle-investors/full.mmd";
 ---
 
-<Layout>
+<Layout slim={true}>
   <section class="tool-page">
     <div class="tool-header">
       <small class="breadcrumb">SNØCAP / TOOLS</small>
-      <h1>Getting Into Climate Investing in Seattle</h1>
+      <h1>Navigating Seattle's Investing Landscape</h1>
       <h5>
-        An interactive guide to the Seattle climate investment ecosystem. Follow
-        the decision tree to find the organizations, funds, and communities that
-        match your interests and experience.
+        An aspiring-investor's guide to Pacific Northwest venture capital. The
+        first question is about <em>how</em> you want to deploy: your appetite for
+        diligence, control, and access. The second is about <em>what</em>
+        you want exposure to: the specialty inside that path. <strong
+          >Click any branch to expand it.</strong
+        >
       </h5>
     </div>
 
     <div class="diagram-container">
-      <pre class="mermaid" set:text={diagram} />
+      <pre class="mermaid" set:text={topDiagram} />
     </div>
+
+    <div class="meta-links">
+      <a href="#full-chart">View the full chart →</a>
+      <a href={chartsDirUrl} target="_blank" rel="noopener">
+        Contribute to these charts →
+      </a>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item">
+        <span class="legend-swatch legend-swatch--climate"></span>
+        Climate-aligned
+      </span>
+      <span class="legend-item">
+        <span class="legend-badge access-lp">LP</span>
+        Limited partner in a fund
+      </span>
+      <span class="legend-item">
+        <span class="legend-badge access-angel-network">Angel</span>
+        Join an accredited group
+      </span>
+      <span class="legend-item">
+        <span class="legend-badge access-direct">Direct</span>
+        Solo or operator-led SPV
+      </span>
+      <span class="legend-item">
+        <span class="legend-badge access-studio">Studio</span>
+        Studio LP / co-build
+      </span>
+      <span class="legend-item">
+        <span class="legend-badge access-donor">Donor</span>
+        Tax-deductible / nonprofit
+      </span>
+      <span class="legend-item">
+        <span class="legend-badge access-institutional">Institutional</span>
+        Restricted to corporate / pension / family office
+      </span>
+    </div>
+
+    <p class="intro-callout">
+      Want a warm intro to any of the funds below? Use the <strong
+        >Request intro →</strong
+      > link on each card. We'll opt you in if it's a fit.
+    </p>
+
+    {
+      paths.map((path) => (
+        <details
+          class="path-section"
+          id={`path-${path.key}`}
+          data-path={path.key}
+        >
+          <summary class="path-summary">
+            <span class="path-icon">{path.icon}</span>
+            <span class="path-label">{path.label}</span>
+            <span class="path-toggle" aria-hidden="true" />
+          </summary>
+          <div class="path-body">
+            <p class="path-intro">{path.summary}</p>
+
+            <div class="diagram-container diagram-container--inner">
+              <pre class="mermaid" set:text={path.diagram} />
+            </div>
+
+            {path.pnwFirms && (
+              <div class="firm-grid">
+                {path.pnwFirms.map((firm) => (
+                  <article
+                    class="firm-card"
+                    data-climate={firm.climate ? "true" : "false"}
+                  >
+                    <header>
+                      <h3>{firm.name}</h3>
+                      <small>
+                        {firm.location} · {firm.stage}
+                      </small>
+                      <span
+                        class:list={[
+                          "access-badge",
+                          `access-${accessSlug(firm.access)}`,
+                        ]}
+                      >
+                        {firm.access}
+                      </span>
+                    </header>
+                    <p>{firm.thesis}</p>
+                    {firm.diff && (
+                      <p class="firm-diff">
+                        <strong>Why this fund: </strong>
+                        {firm.diff}
+                      </p>
+                    )}
+                    <div class="firm-actions">
+                      <a
+                        href={firm.websiteHref}
+                        class="firm-link"
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        {firm.website}
+                      </a>
+                      <a href={introHref(firm.name)} class="firm-intro">
+                        Request intro →
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {path.pnwGroups &&
+              path.pnwGroups.map((group) => (
+                <div class="firm-group">
+                  {group.label && (
+                    <h4 class="firm-group-label">{group.label}</h4>
+                  )}
+                  <div class="firm-grid">
+                    {group.firms.map((firm) => (
+                      <article
+                        class="firm-card"
+                        data-climate={firm.climate ? "true" : "false"}
+                      >
+                        <header>
+                          <h3>{firm.name}</h3>
+                          <small>
+                            {firm.location} · {firm.stage}
+                          </small>
+                          <span
+                            class:list={[
+                              "access-badge",
+                              `access-${accessSlug(firm.access)}`,
+                            ]}
+                          >
+                            {firm.access}
+                          </span>
+                        </header>
+                        <p>{firm.thesis}</p>
+                        {firm.diff && (
+                          <p class="firm-diff">
+                            <strong>Why this fund: </strong>
+                            {firm.diff}
+                          </p>
+                        )}
+                        <div class="firm-actions">
+                          <a
+                            href={firm.websiteHref}
+                            class="firm-link"
+                            target="_blank"
+                            rel="noopener"
+                          >
+                            {firm.website}
+                          </a>
+                          <a href={introHref(firm.name)} class="firm-intro">
+                            Request intro →
+                          </a>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+            {path.honorable.length > 0 && (
+              <div class="honorable">
+                <h4>
+                  Honorable mentions — outside the PNW (with PNW touchpoints)
+                </h4>
+                <div class="firm-grid firm-grid--compact">
+                  {path.honorable.map((firm) => (
+                    <article
+                      class="firm-card firm-card--honorable"
+                      data-climate={firm.climate ? "true" : "false"}
+                    >
+                      <header>
+                        <h3>{firm.name}</h3>
+                        <small>
+                          {firm.location} · {firm.stage}
+                        </small>
+                        <span
+                          class:list={[
+                            "access-badge",
+                            `access-${accessSlug(firm.access)}`,
+                          ]}
+                        >
+                          {firm.access}
+                        </span>
+                      </header>
+                      <p>{firm.thesis}</p>
+                      {firm.diff && (
+                        <p class="firm-diff">
+                          <strong>Why this fund: </strong>
+                          {firm.diff}
+                        </p>
+                      )}
+                      <div class="firm-actions">
+                        <a
+                          href={firm.websiteHref}
+                          class="firm-link"
+                          target="_blank"
+                          rel="noopener"
+                        >
+                          {firm.website}
+                        </a>
+                        <a href={introHref(firm.name)} class="firm-intro">
+                          Request intro →
+                        </a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
+      ))
+    }
+
+    <details class="path-section full-chart-section" id="full-chart" open>
+      <summary class="path-summary">
+        <span class="path-icon">🗺️</span>
+        <span class="path-label">Full chart (shareable)</span>
+        <span class="path-toggle" aria-hidden="true"></span>
+      </summary>
+      <div class="path-body">
+        <p class="path-intro">
+          The same map as a single chart for screenshots, decks, or sharing.
+          This chart lives at <code>src/data/seattle-investors/full.mmd</code>;
+          the per-section charts in this page are also standalone <code
+            >.mmd</code
+          >
+          files in the same directory. Spot something missing or out of date? <a
+            href={fullChartEditUrl}
+            target="_blank"
+            rel="noopener">Edit full.mmd on GitHub</a
+          > and submit a pull request.
+        </p>
+        <div class="diagram-container diagram-container--inner">
+          <pre class="mermaid" set:text={fullDiagram} />
+        </div>
+      </div>
+    </details>
 
     <div class="tool-footer">
       <p>
-        Built for <a
-          href="https://www.seattletechweek.com/"
-          target="_blank"
-          rel="noopener">Seattle Tech Week</a
-        >. Interested in climate venture capital? <a href="/apply"
-          >Apply for funding</a
-        > or <a href="mailto:hello@snocap.vc">get in touch</a>.
+        Want to back the next wave of physical-IP companies coming out of the
+        Pacific Northwest? <a
+          href="mailto:hello@snocap.vc?subject=LP%20interest"
+          >Get in touch about LP opportunities at SNØCAP</a
+        >.
       </p>
     </div>
   </section>
 </Layout>
 
-<script
-  is:inline
-  src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<script is:inline>
+<script>
+  import mermaid from "mermaid";
+
+  declare global {
+    interface Window {
+      expandPath: (key: string) => void;
+    }
+  }
+
+  window.expandPath = function (key: string) {
+    const target = document.getElementById("path-" + key);
+    if (!target) return;
+    (target as HTMLDetailsElement).open = true;
+    setTimeout(function () {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
+
   mermaid.initialize({
-    startOnLoad: true,
+    startOnLoad: false,
+    securityLevel: "loose",
     theme: "base",
     themeVariables: {
       fontFamily: '"NB Akademie Std", Arial, sans-serif',
@@ -91,14 +1152,22 @@ const diagram = `flowchart TD
       rankSpacing: 60,
     },
   });
+
+  const renderCharts = () => mermaid.run();
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", renderCharts);
+  } else {
+    renderCharts();
+  }
 </script>
 
 <style>
   .tool-page {
     display: flex;
     flex-direction: column;
-    padding: 8rem var(--gutter-width) 6rem;
-    row-gap: 3rem;
+    padding: 4rem var(--gutter-width) 6rem;
+    row-gap: 2.5rem;
     min-height: 80vh;
   }
 
@@ -123,12 +1192,62 @@ const diagram = `flowchart TD
   h5 {
     max-width: 45rem;
     color: var(--color-tertiary);
+    font-size: 1.0625rem;
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  h5 em {
+    color: var(--color-primary);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  h5 strong {
+    color: var(--color-primary);
+    font-weight: 400;
+  }
+
+  .meta-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .meta-links a {
+    color: #0d9488;
+    border-bottom: 1px solid rgba(13, 148, 136, 0.3);
+    padding-bottom: 1px;
+  }
+
+  .meta-links a:hover {
+    border-bottom-color: #0d9488;
+  }
+
+  .intro-callout {
+    margin: 0;
+    padding: 0.875rem 1.25rem;
+    background: rgba(13, 148, 136, 0.06);
+    border-left: 3px solid #0d9488;
+    color: var(--color-primary);
+    font-size: 0.9375rem;
+    max-width: 55rem;
+  }
+
+  .intro-callout strong {
+    font-weight: 500;
+    color: #0d9488;
   }
 
   .diagram-container {
     width: 100%;
     overflow-x: auto;
-    padding: 2rem 0;
+    padding: 1rem 0;
+  }
+
+  .diagram-container--inner {
+    padding: 0.5rem 0;
   }
 
   .mermaid {
@@ -142,6 +1261,279 @@ const diagram = `flowchart TD
   .mermaid svg {
     max-width: 100%;
     height: auto;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-tertiary);
+    padding: 1rem 1.25rem;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    column-gap: 0.5rem;
+  }
+
+  .legend-swatch {
+    display: inline-block;
+    width: 0.875rem;
+    height: 0.875rem;
+    border: 1px solid #9f9f9f;
+  }
+
+  .legend-swatch--climate {
+    background: #d1fae5;
+    border-color: #0d9488;
+  }
+
+  .legend-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem 0.18rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.04rem;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    color: var(--color-primary);
+  }
+
+  .path-section {
+    border: 1px solid #d9d9d9;
+    background: #fff;
+  }
+
+  .path-section[open] {
+    border-color: #0d9488;
+  }
+
+  .path-summary {
+    display: flex;
+    align-items: center;
+    column-gap: 0.875rem;
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .path-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .path-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .path-label {
+    font-size: 1.125rem;
+    font-weight: 500;
+    flex-grow: 1;
+  }
+
+  .path-toggle {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-right: 2px solid #6b7280;
+    border-bottom: 2px solid #6b7280;
+    transform: rotate(-45deg);
+    transition: transform 0.2s;
+  }
+
+  .path-section[open] .path-toggle {
+    transform: rotate(45deg);
+  }
+
+  .path-body {
+    padding: 0 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    row-gap: 1.5rem;
+  }
+
+  .path-intro {
+    color: var(--color-tertiary);
+    max-width: 50rem;
+    margin: 0;
+  }
+
+  .firm-group {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.875rem;
+  }
+
+  .firm-group-label {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.06rem;
+    text-transform: uppercase;
+    color: var(--color-tertiary);
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .firm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: 1.25rem;
+  }
+
+  .firm-grid--compact {
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  }
+
+  .firm-card {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.5rem;
+    padding: 1.25rem;
+    border: 1px solid #d9d9d9;
+    background: #fafafa;
+  }
+
+  .firm-card[data-climate="true"] {
+    background: linear-gradient(180deg, #ecfdf5 0%, #fafafa 70%);
+    border-color: #99f6e4;
+  }
+
+  .firm-card--honorable {
+    background: #f9f9f9;
+  }
+
+  .firm-card--honorable[data-climate="true"] {
+    background: linear-gradient(180deg, #f0fdf4 0%, #f9f9f9 70%);
+  }
+
+  .firm-card h3 {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .firm-card small {
+    display: block;
+    color: var(--color-tertiary);
+    font-size: 0.8125rem;
+    margin-top: 0.25rem;
+  }
+
+  .access-badge {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.2rem 0.6rem 0.18rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    color: var(--color-primary);
+  }
+
+  .access-lp,
+  .access-studio {
+    border-color: #0d9488;
+    color: #0d9488;
+  }
+
+  .access-angel-network {
+    border-color: #b45309;
+    color: #b45309;
+  }
+
+  .access-direct {
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+
+  .access-donor {
+    border-color: #15803d;
+    color: #15803d;
+  }
+
+  .access-institutional,
+  .access-institutional-donor {
+    border-color: #6b7280;
+    color: #6b7280;
+  }
+
+  .firm-card p {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .firm-diff {
+    color: var(--color-tertiary);
+    font-size: 0.875rem;
+  }
+
+  .firm-diff strong {
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  .firm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding-top: 0.5rem;
+    margin-top: auto;
+    border-top: 1px dashed #e5e5e5;
+  }
+
+  .firm-link {
+    font-size: 0.8125rem;
+    color: var(--color-tertiary);
+    word-break: break-word;
+  }
+
+  .firm-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .firm-intro {
+    font-size: 0.8125rem;
+    color: #0d9488;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .firm-intro:hover {
+    text-decoration: underline;
+  }
+
+  .honorable {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.875rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #d9d9d9;
+  }
+
+  .honorable h4 {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.06rem;
+    text-transform: uppercase;
+    color: var(--color-tertiary);
   }
 
   .tool-footer {
@@ -165,7 +1557,7 @@ const diagram = `flowchart TD
 
   @media (max-width: 742px) {
     .tool-page {
-      padding-top: 4rem;
+      padding-top: 2.5rem;
     }
 
     h1 {
@@ -175,6 +1567,14 @@ const diagram = `flowchart TD
     .diagram-container {
       margin: 0 calc(-1 * var(--gutter-width));
       padding: 1rem var(--gutter-width);
+    }
+
+    .path-summary {
+      padding: 1rem 1.25rem;
+    }
+
+    .path-body {
+      padding: 0 1.25rem 1.25rem;
     }
   }
 </style>

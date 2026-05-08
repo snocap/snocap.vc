@@ -3,8 +3,10 @@ import { t } from "utils/i18n";
 import HeaderButtons from "./HeaderButtons.astro";
 import Button from "components/button/Button.astro";
 
-const { class: className = "" } = Astro.props;
-const classes = Array.from(new Set(["logo-bar", className].filter(Boolean)));
+const { class: className = "", slim = false } = Astro.props;
+const classes = Array.from(
+  new Set(["logo-bar", className, slim ? "slim" : ""].filter(Boolean)),
+);
 ---
 
 <div class:list={classes}>
@@ -18,9 +20,13 @@ const classes = Array.from(new Set(["logo-bar", className].filter(Boolean)));
   <div class="desktop-buttons">
     <HeaderButtons class="link" orientation="horizontal" />
   </div>
-  <div class="mobile-buttons">
-    <Button class="opener">{t("Menu")}</Button>
-  </div>
+  {
+    !slim && (
+      <div class="mobile-buttons">
+        <Button class="opener">{t("Menu")}</Button>
+      </div>
+    )
+  }
 </div>
 
 <style>
@@ -66,6 +72,15 @@ const classes = Array.from(new Set(["logo-bar", className].filter(Boolean)));
     }
     .desktop-buttons {
       display: none;
+    }
+    .logo-bar.slim .button.link {
+      display: flex;
+    }
+    .logo-bar.slim .desktop-buttons {
+      display: flex;
+    }
+    .logo-bar.slim .link-apply.horizontal {
+      margin-right: 0;
     }
   }
 </style>
