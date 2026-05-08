@@ -11,7 +11,20 @@ const {
   maxWidth = "90.0rem",
   minWidth = "24.5rem",
   slim = false,
+  title,
+  description,
+  ogImage,
 } = Astro.props;
+
+const pageTitle = title ?? `SNØCAP | ${t(strings.oneLiner)}`;
+const pageOgTitle = title ?? "SNØCAP";
+const pageDescription = description ?? t(strings.oneLiner);
+const pageOgImage = ogImage
+  ? new URL(ogImage, strings.canonicalUrl).toString()
+  : `${strings.canonicalUrl}/assets/metadata/card-twitter.gif`;
+const pageUrl = Astro.url
+  ? new URL(Astro.url.pathname, strings.canonicalUrl).toString()
+  : strings.canonicalUrl;
 ---
 
 <!doctype html>
@@ -19,28 +32,26 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <meta name="description" content={t(strings.oneLiner)} />
-    <meta property="og:title" content="SNØCAP" />
-    <meta property="og:description" content={t(strings.oneLiner)} />
-    <meta
-      property="og:image"
-      content={`${strings.canonicalUrl}/assets/metadata/card-twitter.gif`}
-    />
+    <meta name="description" content={pageDescription} />
+    <meta property="og:title" content={pageOgTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:image" content={pageOgImage} />
     <meta
       property="og:locale"
       content={defaultOptions.locale.replace("-", "_")}
     />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta property="og:url" content={strings.canonicalUrl} />
-    <link rel="canonical" href={strings.canonicalUrl} />
+    <meta name="twitter:image" content={pageOgImage} />
+    <meta property="og:url" content={pageUrl} />
+    <link rel="canonical" href={pageUrl} />
 
     <link rel="icon" href="/favicon.ico" />
     <link rel="icon" href="/assets/metadata/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/assets/metadata/icon-apple-180.png" />
     <link rel="manifest" href="/assets/metadata/icons.webmanifest" />
     <meta name="theme-color" content="#FFFFFF" />
-    <title>SNØCAP | {t(strings.oneLiner)}</title>
+    <title>{pageTitle}</title>
   </head>
   <body>
     <Header slim={slim} />

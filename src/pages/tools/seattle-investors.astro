@@ -1,12 +1,10 @@
 ---
 import Layout from "layouts/Layout.astro";
-import topDiagram from "data/seattle-investors/top.mmd?raw";
-import directDiagram from "data/seattle-investors/direct.mmd?raw";
-import angelDiagram from "data/seattle-investors/angel.mmd?raw";
-import smallDiagram from "data/seattle-investors/small.mmd?raw";
-import bigDiagram from "data/seattle-investors/big.mmd?raw";
-import philDiagram from "data/seattle-investors/phil.mmd?raw";
-import fullDiagram from "data/seattle-investors/full.mmd?raw";
+
+const chartPng = (key: string) =>
+  `/assets/charts/seattle-investors/${key}.png`;
+const chartSvg = (key: string) =>
+  `/assets/charts/seattle-investors/${key}.svg`;
 
 const paths = [
   {
@@ -15,7 +13,6 @@ const paths = [
     label: "Direct deals",
     summary:
       "You'd pick this if you've already been an LP or angel-group member long enough to trust your own diligence, or you know an industry well enough to have a real sourcing edge. Highest control, highest research load. The work scales with the portfolio.",
-    diagram: directDiagram,
     pnwFirms: [
       {
         name: "9Zero · Climate Innovation Hub",
@@ -48,7 +45,6 @@ const paths = [
     label: "Angel groups & syndicates",
     summary:
       "You'd pick this if you like the idea of doing directs but want a portfolio approach without doing all the diligence yourself. Members pool dealflow and write checks together. Lower research load than going solo, faster ramp than LP'ing a fund, and a built-in network of co-investors.",
-    diagram: angelDiagram,
     pnwFirms: [
       {
         name: "E8 Angels",
@@ -100,7 +96,6 @@ const paths = [
     label: "Small / emerging VCs",
     summary:
       "You'd pick this if you want professional capital deployment but with close GP access and the asymmetric upside of backing a manager early. LP into a Fund I–II where the GPs personally know every founder. Higher variance than established managers, much closer access.",
-    diagram: smallDiagram,
     pnwGroups: [
       {
         label: "Software / B2B SaaS (general)",
@@ -624,7 +619,6 @@ const paths = [
     label: "Big / established VCs",
     summary:
       "You'd pick this if you want lower variance, an institutional process, and a longer track record over personal access. The largest climate-mandated capital pools in the region sit here. Many of these vehicles are restricted to corporate, pension, or family-office capital. Read the access badges before assuming it's LP-able.",
-    diagram: bigDiagram,
     pnwFirms: [
       {
         name: "Madrona",
@@ -776,7 +770,6 @@ const paths = [
     label: "Philanthropy & nonprofit capital",
     summary:
       "You'd pick this if measurable impact is the primary return target and you want tax efficiency on the way in. These vehicles fund the part of the ecosystem that venture economics don't reach: frontline-community cleantech, first-of-a-kind projects, and the open application processes that surface tomorrow's startups.",
-    diagram: philDiagram,
     pnwFirms: [
       {
         name: "VertueLab",
@@ -829,13 +822,16 @@ const introHref = (firmName: string) => {
   return `mailto:hello@snocap.vc?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 };
 
-const chartsDirUrl =
+const chartsGithubUrl =
   "https://github.com/snocap/snocap.vc/tree/main/src/data/seattle-investors";
-const fullChartEditUrl =
-  "https://github.com/snocap/snocap.vc/edit/main/src/data/seattle-investors/full.mmd";
 ---
 
-<Layout slim={true}>
+<Layout
+  slim={true}
+  title="Navigating Seattle's Investing Landscape | SNØCAP"
+  description="An aspiring-investor's guide to Pacific Northwest venture capital. 60+ Seattle-area funds, syndicates, and foundations organized by how you want to deploy capital and what specialty you want exposure to."
+  ogImage="/assets/og/seattle-investors.png"
+>
   <section class="tool-page">
     <div class="tool-header">
       <small class="breadcrumb">SNØCAP / TOOLS</small>
@@ -850,13 +846,33 @@ const fullChartEditUrl =
       </h5>
     </div>
 
-    <div class="diagram-container">
-      <pre class="mermaid" set:text={topDiagram} />
-    </div>
+    <hr class="intro-divider" />
+
+    <p class="disclaimer">
+      <strong>Not financial advice.</strong> This page is an editorial map of the
+      PNW investing landscape, not an offer to buy or sell securities or a
+      recommendation to commit capital to any fund. Do your own diligence; talk
+      to your tax and legal advisors before investing.
+    </p>
+
+    <figure class="chart-figure">
+      <img
+        src={chartPng("top")}
+        alt="Top-level decision chart for Seattle's investing landscape"
+        class="diagram-img"
+      />
+      <button
+        class="chart-magnify"
+        type="button"
+        data-svg={chartSvg("top")}
+        data-png={chartPng("top")}
+        aria-label="Open chart at full size"
+      >🔍 Expand</button>
+    </figure>
 
     <div class="meta-links">
       <a href="#full-chart">View the full chart →</a>
-      <a href={chartsDirUrl} target="_blank" rel="noopener">
+      <a href={chartsGithubUrl} target="_blank" rel="noopener">
         Contribute to these charts →
       </a>
     </div>
@@ -909,9 +925,21 @@ const fullChartEditUrl =
           <div class="path-body">
             <p class="path-intro">{path.summary}</p>
 
-            <div class="diagram-container diagram-container--inner">
-              <pre class="mermaid" set:text={path.diagram} />
-            </div>
+            <figure class="chart-figure chart-figure--inner">
+              <img
+                src={chartPng(path.key)}
+                alt={`${path.label} decision chart`}
+                class="diagram-img"
+                loading="lazy"
+              />
+              <button
+                class="chart-magnify"
+                type="button"
+                data-svg={chartSvg(path.key)}
+                data-png={chartPng(path.key)}
+                aria-label={`Open ${path.label} chart at full size`}
+              >🔍 Expand</button>
+            </figure>
 
             {path.pnwFirms && (
               <div class="firm-grid">
@@ -1075,19 +1103,28 @@ const fullChartEditUrl =
       <div class="path-body">
         <p class="path-intro">
           The same map as a single chart for screenshots, decks, or sharing.
-          This chart lives at <code>src/data/seattle-investors/full.mmd</code>;
-          the per-section charts in this page are also standalone <code
-            >.mmd</code
-          >
-          files in the same directory. Spot something missing or out of date? <a
-            href={fullChartEditUrl}
+          Each section above is also a standalone, editable chart. Spot
+          something missing or out of date? <a
+            href={chartsGithubUrl}
             target="_blank"
-            rel="noopener">Edit full.mmd on GitHub</a
+            rel="noopener">Edit the charts on GitHub</a
           > and submit a pull request.
         </p>
-        <div class="diagram-container diagram-container--inner">
-          <pre class="mermaid" set:text={fullDiagram} />
-        </div>
+        <figure class="chart-figure chart-figure--inner">
+          <img
+            src={chartPng("full")}
+            alt="Full chart of Seattle investors"
+            class="diagram-img"
+            loading="lazy"
+          />
+          <button
+            class="chart-magnify"
+            type="button"
+            data-svg={chartSvg("full")}
+            data-png={chartPng("full")}
+            aria-label="Open full chart at full size"
+          >🔍 Expand</button>
+        </figure>
       </div>
     </details>
 
@@ -1100,61 +1137,78 @@ const fullChartEditUrl =
         >.
       </p>
     </div>
+
+    <dialog class="chart-lightbox" id="chart-lightbox">
+      <button
+        class="chart-lightbox__close"
+        type="button"
+        aria-label="Close fullscreen chart"
+      >×</button>
+      <img class="chart-lightbox__img" alt="" />
+      <a class="chart-lightbox__svg" href="#" target="_blank" rel="noopener"
+        >Open as SVG ↗</a
+      >
+    </dialog>
   </section>
 </Layout>
 
 <script>
-  import mermaid from "mermaid";
-
-  declare global {
-    interface Window {
-      expandPath: (key: string) => void;
+  // The top chart is inline SVG with anchor links to #path-<key>. When a
+  // visitor clicks a node (or lands on the page with the hash already set),
+  // open the matching <details> and scroll it into view.
+  const openTargeted = () => {
+    const hash = location.hash.replace("#", "");
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (el && el.tagName === "DETAILS") {
+      (el as HTMLDetailsElement).open = true;
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 60);
     }
-  }
-
-  window.expandPath = function (key: string) {
-    const target = document.getElementById("path-" + key);
-    if (!target) return;
-    (target as HTMLDetailsElement).open = true;
-    setTimeout(function () {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 60);
   };
 
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: "loose",
-    theme: "base",
-    themeVariables: {
-      fontFamily: '"NB Akademie Std", Arial, sans-serif',
-      fontSize: "14px",
-      primaryColor: "#f5f5f5",
-      primaryBorderColor: "#9f9f9f",
-      primaryTextColor: "#000000",
-      secondaryColor: "#ffffff",
-      tertiaryColor: "#f0f0f0",
-      lineColor: "#9f9f9f",
-      nodeTextColor: "#000000",
-      mainBkg: "#f5f5f5",
-      nodeBorder: "#9f9f9f",
-      clusterBkg: "#ffffff",
-      edgeLabelBackground: "#ffffff",
-    },
-    flowchart: {
-      htmlLabels: true,
-      curve: "basis",
-      padding: 16,
-      nodeSpacing: 40,
-      rankSpacing: 60,
-    },
-  });
-
-  const renderCharts = () => mermaid.run();
-
+  window.addEventListener("hashchange", openTargeted);
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", renderCharts);
+    document.addEventListener("DOMContentLoaded", openTargeted);
   } else {
-    renderCharts();
+    openTargeted();
+  }
+
+  // Magnifier buttons: open the corresponding chart in a fullscreen <dialog>.
+  // The dialog shows the same PNG (so it's instant) plus an "Open as SVG"
+  // escape hatch for vector-quality zooming.
+  const lightbox = document.getElementById(
+    "chart-lightbox",
+  ) as HTMLDialogElement | null;
+  if (lightbox) {
+    const img = lightbox.querySelector(
+      ".chart-lightbox__img",
+    ) as HTMLImageElement | null;
+    const svgLink = lightbox.querySelector(
+      ".chart-lightbox__svg",
+    ) as HTMLAnchorElement | null;
+    const closeBtn = lightbox.querySelector(
+      ".chart-lightbox__close",
+    ) as HTMLButtonElement | null;
+
+    document.querySelectorAll<HTMLButtonElement>(".chart-magnify").forEach(
+      (btn) => {
+        btn.addEventListener("click", () => {
+          const png = btn.dataset.png;
+          const svg = btn.dataset.svg;
+          if (img && png) img.src = png;
+          if (svgLink && svg) svgLink.href = svg;
+          lightbox.showModal();
+        });
+      },
+    );
+
+    closeBtn?.addEventListener("click", () => lightbox.close());
+    // Click on the backdrop closes the modal.
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) lightbox.close();
+    });
   }
 </script>
 
@@ -1236,48 +1290,123 @@ const fullChartEditUrl =
     color: #0d9488;
   }
 
-  .diagram-container {
+  .chart-figure {
+    position: relative;
+    margin: 1rem 0;
+    text-align: center;
+  }
+
+  .chart-figure--inner {
+    margin: 0;
+  }
+
+  .diagram-img {
+    display: block;
     width: 100%;
-    overflow-x: auto;
-    padding: 1rem 0;
-  }
-
-  .diagram-container--inner {
-    padding: 0.5rem 0;
-  }
-
-  .mermaid {
-    display: flex;
-    justify-content: center;
-    font-family: var(--font-family);
-    background: none;
-    border: none;
-  }
-
-  .mermaid svg {
+    height: auto;
     max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .chart-magnify {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #0d9488;
+    background: #fff;
+    border: 1px solid rgba(13, 148, 136, 0.4);
+    border-radius: 0;
+    cursor: pointer;
+    line-height: 1;
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+
+  .chart-magnify:hover {
+    background: #0d9488;
+    color: #fff;
+  }
+
+  .chart-lightbox {
+    border: none;
+    padding: 0;
+    background: #fff;
+    max-width: 96vw;
+    max-height: 96vh;
+    width: auto;
     height: auto;
   }
 
-  /* Suppress FOUC: hide raw mermaid source until mermaid.run() finishes
-     and adds data-processed="true" to the element. */
-  pre.mermaid:not([data-processed="true"]) {
-    color: transparent;
-    font-size: 0 !important;
-    line-height: 0;
-    align-items: center;
-    min-height: 5rem;
-    background: rgba(13, 148, 136, 0.04);
-    border: 1px dashed rgba(13, 148, 136, 0.3);
-    overflow: hidden;
+  .chart-lightbox::backdrop {
+    background: rgba(0, 0, 0, 0.7);
   }
 
-  pre.mermaid:not([data-processed="true"])::before {
-    content: "Loading chart…";
-    color: #0d9488;
-    font-family: var(--font-family);
+  .chart-lightbox__img {
+    display: block;
+    max-width: 92vw;
+    max-height: 88vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .chart-lightbox__close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .chart-lightbox__close:hover {
+    background: #f5f5f5;
+  }
+
+  .chart-lightbox__svg {
+    display: block;
+    padding: 0.5rem 1rem;
+    text-align: right;
     font-size: 0.8125rem;
-    letter-spacing: 0.05rem;
+    color: #0d9488;
+    background: #fafafa;
+    border-top: 1px solid #e5e5e5;
+  }
+
+  .chart-lightbox__svg:hover {
+    text-decoration: underline;
+  }
+
+  .intro-divider {
+    width: 100%;
+    border: 0;
+    border-top: 1px solid #e5e5e5;
+    margin: 0;
+  }
+
+  .disclaimer {
+    margin: 0;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--color-tertiary);
+    background: #fafafa;
+    border-left: 3px solid #d97706;
+  }
+
+  .disclaimer strong {
+    color: #b45309;
+    font-weight: 500;
   }
 
   .legend {
@@ -1369,6 +1498,17 @@ const fullChartEditUrl =
     color: var(--color-tertiary);
     max-width: 50rem;
     margin: 0;
+  }
+
+  .path-intro a {
+    color: #0d9488;
+    text-decoration: underline;
+    text-decoration-color: rgba(13, 148, 136, 0.4);
+    text-underline-offset: 2px;
+  }
+
+  .path-intro a:hover {
+    text-decoration-color: #0d9488;
   }
 
   .firm-group {
@@ -1560,9 +1700,10 @@ const fullChartEditUrl =
       font-size: 1.875rem;
     }
 
-    .diagram-container {
-      margin: 0 calc(-1 * var(--gutter-width));
-      padding: 1rem var(--gutter-width);
+    .chart-figure {
+      margin-left: calc(-1 * var(--gutter-width));
+      margin-right: calc(-1 * var(--gutter-width));
+      padding: 0 var(--gutter-width);
     }
 
     .path-summary {

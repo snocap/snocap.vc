@@ -7,11 +7,11 @@ flowchart TD
     Q1 -->|"I want institutional process<br/>and lower variance"| BIG["🏛️ Big / established VCs<br/>━━━━━━<br/>Multi-fund · $200M+ AUM"]
     Q1 -->|"Impact is the goal,<br/>tax efficiency matters"| PHIL["💚 Philanthropy<br/>━━━━━━<br/>Foundations · 501(c)(3) accelerators"]
 
-    click DIRECT call expandPath("direct") "Click to expand directs"
-    click ANGEL call expandPath("angel") "Click to expand angel groups"
-    click SMALL call expandPath("small") "Click to expand small VCs"
-    click BIG call expandPath("big") "Click to expand big VCs"
-    click PHIL call expandPath("phil") "Click to expand philanthropy"
+    click DIRECT "#path-direct" "Click to expand directs" _self
+    click ANGEL "#path-angel" "Click to expand angel groups" _self
+    click SMALL "#path-small" "Click to expand small VCs" _self
+    click BIG "#path-big" "Click to expand big VCs" _self
+    click PHIL "#path-phil" "Click to expand philanthropy" _self
 
     classDef interactive fill:#fafafa,stroke:#0d9488,stroke-width:2px,color:#0d9488
     class DIRECT,ANGEL,SMALL,BIG,PHIL interactive
