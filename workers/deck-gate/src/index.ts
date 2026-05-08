@@ -73,6 +73,25 @@ function refFromEmail(email: string): string {
     .toLowerCase();
 }
 
+// Assigns a unique ref derived from the email alias. If the base ref is
+// already owned by a different email in D1, appends 3 bytes of random hex
+// so each viewer gets a stable, collision-free identifier.
+async function assignRef(
+  email: string,
+  base: string,
+  db: D1Database,
+): Promise<string> {
+  const existing = await db
+    .prepare("SELECT email FROM viewers WHERE ref = ? LIMIT 1")
+    .bind(base)
+    .first<{ email: string }>();
+  if (!existing || existing.email === email) return base;
+  const entropy = [...crypto.getRandomValues(new Uint8Array(3))]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${base}-${entropy}`;
+}
+
 function makeRefCookie(value: string): string {
   return `${REF_COOKIE_NAME}=${encodeURIComponent(value)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; Secure; SameSite=Lax`;
 }
@@ -184,8 +203,10 @@ export default {
         }
       }
 
-      // Determine ref to store: explicit ref > password default > email alias
-      const ref = effectiveRef || (password ? "direct" : refFromEmail(email));
+      // Determine ref: explicit/cookie ref takes precedence; otherwise derive
+      // from email alias with a D1 conflict check to ensure uniqueness.
+      const ref =
+        effectiveRef ?? (await assignRef(email, refFromEmail(email), env.DB));
 
       try {
         await env.DB.prepare(
