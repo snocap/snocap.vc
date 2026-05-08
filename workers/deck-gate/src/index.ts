@@ -223,13 +223,25 @@ export default {
         (await hmacVerify(parsed.email, parsed.hmac, env.HMAC_SECRET))
       ) {
         const refCookie = getCookie(request, REF_COOKIE_NAME);
+        const ref = refCookie || refFromEmail(parsed.email);
+
+        // On the main deck page, ensure ref is in the URL so shared links carry it
+        const isDeckRoot = url.pathname === "/deck" || url.pathname === "/deck/";
+        if (isDeckRoot && !url.searchParams.has("ref")) {
+          const redirectUrl = new URL(request.url);
+          redirectUrl.searchParams.set("ref", ref);
+          const headers = new Headers({ Location: redirectUrl.toString() });
+          if (!refCookie) headers.append("Set-Cookie", makeRefCookie(ref));
+          return new Response(null, { status: 302, headers });
+        }
+
         if (refCookie) {
           return fetch(request);
         }
         // Email cookie set but no ref cookie — derive ref from email and set it
         const upstream = await fetch(request);
         const headers = new Headers(upstream.headers);
-        headers.append("Set-Cookie", makeRefCookie(refFromEmail(parsed.email)));
+        headers.append("Set-Cookie", makeRefCookie(ref));
         return new Response(upstream.body, {
           status: upstream.status,
           statusText: upstream.statusText,
