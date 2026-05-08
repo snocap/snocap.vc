@@ -19,13 +19,17 @@
   function isMobileShare() {
     if (typeof navigator.share !== "function") return false;
     // Heuristic: only trust native share on touch-primary devices.
-    const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    const coarse =
+      window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
     return coarse;
   }
 
   function track(event, props) {
     if (window.posthog && typeof window.posthog.capture === "function") {
-      window.posthog.capture(event, Object.assign({ deck_id: "snocap-us-ii-pitch" }, props || {}));
+      window.posthog.capture(
+        event,
+        Object.assign({ deck_id: "snocap-us-ii-pitch" }, props || {}),
+      );
     }
   }
 
@@ -117,13 +121,17 @@
       }, 1800);
     } catch (e) {
       copyBtn.textContent = "Copy failed";
-      setTimeout(() => { copyBtn.textContent = "Copy"; }, 1800);
+      setTimeout(() => {
+        copyBtn.textContent = "Copy";
+      }, 1800);
     }
   }
 
   copyBtn.addEventListener("click", copyLink);
   closeBtn.addEventListener("click", closeModal);
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal();
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
   });
