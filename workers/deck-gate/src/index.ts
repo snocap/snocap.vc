@@ -226,7 +226,8 @@ export default {
         const ref = refCookie || refFromEmail(parsed.email);
 
         // On the main deck page, ensure ref is in the URL so shared links carry it
-        const isDeckRoot = url.pathname === "/deck" || url.pathname === "/deck/";
+        const isDeckRoot =
+          url.pathname === "/deck" || url.pathname === "/deck/";
         if (isDeckRoot && !url.searchParams.has("ref")) {
           const redirectUrl = new URL(request.url);
           redirectUrl.searchParams.set("ref", ref);
