@@ -5,9 +5,11 @@ interface Env {
   HMAC_SECRET: string;
   ADMIN_TOKEN: string;
   POSTHOG_API_KEY: string;
+  DECK_PASSWORD: string;
 }
 
 const COOKIE_NAME = "snocap_viewer";
+const REF_COOKIE_NAME = "snocap_ref";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 async function hmacSign(data: string, secret: string): Promise<string> {
@@ -64,6 +66,14 @@ function getCookie(request: Request, name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+function refFromEmail(email: string): string {
+  return email.split("@")[0].replace(/[^a-z0-9]/gi, "").toLowerCase();
+}
+
+function makeRefCookie(value: string): string {
+  return `${REF_COOKIE_NAME}=${encodeURIComponent(value)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; Secure; SameSite=Lax`;
+}
+
 async function handleAdmin(
   request: Request,
   env: Env,
@@ -77,14 +87,14 @@ async function handleAdmin(
   }
 
   const { results } = await env.DB.prepare(
-    `SELECT email, MIN(viewed_at) as first_viewed, COUNT(*) as views, country
+    `SELECT email, MIN(viewed_at) as first_viewed, COUNT(*) as views, country, ref
      FROM viewers GROUP BY email ORDER BY MAX(viewed_at) DESC LIMIT 200`,
   ).all();
 
   const rows = (results || [])
     .map(
       (r: Record<string, unknown>) =>
-        `<tr><td>${r.email}</td><td>${r.first_viewed}</td><td>${r.views}</td><td>${r.country || "—"}</td></tr>`,
+        `<tr><td>${r.email}</td><td>${r.first_viewed}</td><td>${r.views}</td><td>${r.country || "—"}</td><td>${r.ref || "—"}</td></tr>`,
     )
     .join("");
 
@@ -98,8 +108,8 @@ async function handleAdmin(
   th { color: #9f9f9f; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
 </style></head><body>
 <h1>Deck Viewers</h1>
-<table><thead><tr><th>Email</th><th>First Viewed</th><th>Views</th><th>Country</th></tr></thead>
-<tbody>${rows || "<tr><td colspan=4>No viewers yet</td></tr>"}</tbody></table>
+<table><thead><tr><th>Email</th><th>First Viewed</th><th>Views</th><th>Country</th><th>Referral</th></tr></thead>
+<tbody>${rows || "<tr><td colspan=5>No viewers yet</td></tr>"}</tbody></table>
 </body></html>`,
     { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } },
   );
@@ -116,56 +126,86 @@ export default {
       return fetch(request);
     }
 
-    // POST: email form submission
+    // POST: form submission
     if (request.method === "POST" && url.pathname === "/deck") {
       const formData = await request.formData();
+      const returnTo = (formData.get("return_to") as string) || "/deck";
+      const refField = (formData.get("ref") as string) || null;
+      const refCookie = getCookie(request, REF_COOKIE_NAME);
+      const safeReturn = returnTo.startsWith("/deck") ? returnTo : "/deck";
+
+      const effectiveRef = refField || refCookie || null;
+      const requirePassword = !effectiveRef;
+
       const email = ((formData.get("email") as string) || "")
         .trim()
         .toLowerCase();
-      const returnTo = (formData.get("return_to") as string) || "/deck";
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return new Response(
-          renderGatePage("Please enter a valid email address.", returnTo),
+          renderGatePage(
+            "Please enter a valid email address.",
+            returnTo,
+            refField || undefined,
+            requirePassword,
+          ),
           {
             status: 400,
-            headers: {
-              "Content-Type": "text/html",
-              "Cache-Control": "no-store",
-            },
+            headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
           },
         );
       }
 
-      const hmac = await hmacSign(email, env.HMAC_SECRET);
-      const cookieValue = makeCookieValue(email, hmac);
+      // Validate password when no ref is present
+      const password = (formData.get("password") as string) || "";
+      if (requirePassword) {
+        if (!env.DECK_PASSWORD || password !== env.DECK_PASSWORD) {
+          return new Response(
+            renderGatePage(
+              "Invalid access code.",
+              returnTo,
+              refField || undefined,
+              true,
+            ),
+            {
+              status: 400,
+              headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
+            },
+          );
+        }
+      }
+
+      // Determine ref to store: explicit ref > password default > email alias
+      const ref = effectiveRef || (password ? "direct" : refFromEmail(email));
 
       try {
         await env.DB.prepare(
-          "INSERT INTO viewers (email, user_agent, country) VALUES (?, ?, ?)",
+          "INSERT INTO viewers (email, user_agent, country, ref) VALUES (?, ?, ?, ?)",
         )
           .bind(
             email,
             request.headers.get("User-Agent") || "",
             (request.cf?.country as string) || "",
+            ref,
           )
           .run();
       } catch {
         // non-fatal: don't block access if D1 write fails
       }
 
-      const safeReturn = returnTo.startsWith("/deck") ? returnTo : "/deck";
+      const hmac = await hmacSign(email, env.HMAC_SECRET);
+      const cookieValue = makeCookieValue(email, hmac);
 
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: safeReturn,
-          "Set-Cookie": `${COOKIE_NAME}=${encodeURIComponent(cookieValue)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; Secure; SameSite=Lax`,
-        },
-      });
+      const headers = new Headers({ Location: safeReturn });
+      headers.append(
+        "Set-Cookie",
+        `${COOKIE_NAME}=${encodeURIComponent(cookieValue)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; Secure; SameSite=Lax`,
+      );
+      headers.append("Set-Cookie", makeRefCookie(ref));
+      return new Response(null, { status: 302, headers });
     }
 
-    // GET: check cookie
+    // GET: email cookie is the only bypass
     const cookieRaw = getCookie(request, COOKIE_NAME);
     if (cookieRaw) {
       const parsed = parseCookieValue(cookieRaw);
@@ -173,14 +213,42 @@ export default {
         parsed &&
         (await hmacVerify(parsed.email, parsed.hmac, env.HMAC_SECRET))
       ) {
-        return fetch(request);
+        const refCookie = getCookie(request, REF_COOKIE_NAME);
+        if (refCookie) {
+          return fetch(request);
+        }
+        // Email cookie set but no ref cookie — derive ref from email and set it
+        const upstream = await fetch(request);
+        const headers = new Headers(upstream.headers);
+        headers.append("Set-Cookie", makeRefCookie(refFromEmail(parsed.email)));
+        return new Response(upstream.body, {
+          status: upstream.status,
+          statusText: upstream.statusText,
+          headers,
+        });
       }
     }
 
-    // No valid cookie: show gate
-    return new Response(renderGatePage(undefined, url.pathname), {
-      status: 200,
-      headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
+    // No valid email cookie: show gate
+    // Ref param or ref cookie removes password requirement
+    const refParam = url.searchParams.get("ref") || undefined;
+    const refCookie = getCookie(request, REF_COOKIE_NAME);
+    const requirePassword = !refParam && !refCookie;
+
+    const gateHtml = renderGatePage(
+      undefined,
+      url.pathname,
+      refParam,
+      requirePassword,
+    );
+    const headers = new Headers({
+      "Content-Type": "text/html",
+      "Cache-Control": "no-store",
     });
+    // Persist ref param as cookie for future visits to this gate
+    if (refParam && !refCookie) {
+      headers.append("Set-Cookie", makeRefCookie(refParam));
+    }
+    return new Response(gateHtml, { status: 200, headers });
   },
 };

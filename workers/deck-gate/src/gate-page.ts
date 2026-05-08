@@ -1,4 +1,9 @@
-export function renderGatePage(error?: string, returnTo?: string): string {
+export function renderGatePage(
+  error?: string,
+  returnTo?: string,
+  ref?: string,
+  requirePassword = true,
+): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -98,7 +103,8 @@ export function renderGatePage(error?: string, returnTo?: string): string {
 
     form { display: flex; flex-direction: column; gap: 12px; }
 
-    input[type="email"] {
+    input[type="email"],
+    input[type="password"] {
       width: 100%;
       padding: 14px 16px;
       background: rgba(255,255,255,0.06);
@@ -112,8 +118,11 @@ export function renderGatePage(error?: string, returnTo?: string): string {
       transition: border-color 150ms ease;
     }
 
-    input[type="email"]::placeholder { color: #666; }
-    input[type="email"]:focus { border-color: #F15800; }
+    input[type="email"]::placeholder,
+    input[type="password"]::placeholder { color: #666; }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus { border-color: #F15800; }
 
     button {
       width: 100%;
@@ -156,7 +165,9 @@ export function renderGatePage(error?: string, returnTo?: string): string {
     <div class="prompt">Enter your email to view the deck.</div>
     <form method="POST" action="/deck">
       ${returnTo ? `<input type="hidden" name="return_to" value="${returnTo}" />` : ""}
+      ${ref ? `<input type="hidden" name="ref" value="${ref}" />` : ""}
       <input type="email" name="email" placeholder="you@company.com" required autofocus />
+      ${requirePassword ? `<input type="password" name="password" placeholder="Access code" required />` : ""}
       <button type="submit">View Deck</button>
     </form>
     <div class="fine-print">Your information is kept confidential and will not be shared.</div>
