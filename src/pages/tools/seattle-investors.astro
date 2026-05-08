@@ -863,10 +863,6 @@ const fullChartEditUrl =
 
     <div class="legend">
       <span class="legend-item">
-        <span class="legend-swatch legend-swatch--climate"></span>
-        Climate-aligned
-      </span>
-      <span class="legend-item">
         <span class="legend-badge access-lp">LP</span>
         Limited partner in a fund
       </span>
@@ -1263,6 +1259,27 @@ const fullChartEditUrl =
     height: auto;
   }
 
+  /* Suppress FOUC: hide raw mermaid source until mermaid.run() finishes
+     and adds data-processed="true" to the element. */
+  pre.mermaid:not([data-processed="true"]) {
+    color: transparent;
+    font-size: 0 !important;
+    line-height: 0;
+    align-items: center;
+    min-height: 5rem;
+    background: rgba(13, 148, 136, 0.04);
+    border: 1px dashed rgba(13, 148, 136, 0.3);
+    overflow: hidden;
+  }
+
+  pre.mermaid:not([data-processed="true"])::before {
+    content: "Loading chart…";
+    color: #0d9488;
+    font-family: var(--font-family);
+    font-size: 0.8125rem;
+    letter-spacing: 0.05rem;
+  }
+
   .legend {
     display: flex;
     flex-wrap: wrap;
@@ -1278,18 +1295,6 @@ const fullChartEditUrl =
     display: inline-flex;
     align-items: center;
     column-gap: 0.5rem;
-  }
-
-  .legend-swatch {
-    display: inline-block;
-    width: 0.875rem;
-    height: 0.875rem;
-    border: 1px solid #9f9f9f;
-  }
-
-  .legend-swatch--climate {
-    background: #d1fae5;
-    border-color: #0d9488;
   }
 
   .legend-badge {
@@ -1402,17 +1407,8 @@ const fullChartEditUrl =
     background: #fafafa;
   }
 
-  .firm-card[data-climate="true"] {
-    background: linear-gradient(180deg, #ecfdf5 0%, #fafafa 70%);
-    border-color: #99f6e4;
-  }
-
   .firm-card--honorable {
     background: #f9f9f9;
-  }
-
-  .firm-card--honorable[data-climate="true"] {
-    background: linear-gradient(180deg, #f0fdf4 0%, #f9f9f9 70%);
   }
 
   .firm-card h3 {
