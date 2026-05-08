@@ -67,7 +67,10 @@ function getCookie(request: Request, name: string): string | null {
 }
 
 function refFromEmail(email: string): string {
-  return email.split("@")[0].replace(/[^a-z0-9]/gi, "").toLowerCase();
+  return email
+    .split("@")[0]
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase();
 }
 
 function makeRefCookie(value: string): string {
@@ -151,7 +154,10 @@ export default {
           ),
           {
             status: 400,
-            headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
+            headers: {
+              "Content-Type": "text/html",
+              "Cache-Control": "no-store",
+            },
           },
         );
       }
@@ -169,7 +175,10 @@ export default {
             ),
             {
               status: 400,
-              headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
+              headers: {
+                "Content-Type": "text/html",
+                "Cache-Control": "no-store",
+              },
             },
           );
         }
