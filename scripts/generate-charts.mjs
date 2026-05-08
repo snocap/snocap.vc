@@ -202,12 +202,21 @@ async function renderChart(browser, { key }) {
 
     if (!svg) throw new Error(`No SVG produced for ${key}`);
 
+    // Mermaid emits HTML <br> tags inside <foreignObject> labels. They render
+    // fine when the SVG is embedded in an HTML document, but fail strict XML
+    // parsing when the file is opened directly (e.g. via the magnifier on
+    // mobile). Close them so the file is valid XML.
+    const xmlSafeSvg = svg.replace(/<br\s*>/g, "<br/>");
+
     const svgOut = join(
       projectRoot,
       `public/assets/charts/seattle-investors/${key}.svg`,
     );
     await mkdir(dirname(svgOut), { recursive: true });
-    await writeFile(svgOut, `<?xml version="1.0" encoding="UTF-8"?>\n${svg}\n`);
+    await writeFile(
+      svgOut,
+      `<?xml version="1.0" encoding="UTF-8"?>\n${xmlSafeSvg}\n`,
+    );
     console.log(`[charts] wrote assets/charts/seattle-investors/${key}.svg`);
 
     // Now rasterize the SVG to PNG. PNGs are what the page actually displays

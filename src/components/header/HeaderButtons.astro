@@ -15,7 +15,8 @@ const orientation = Astro.props.orientation || "vertical";
 
 <Fragment>
   <Button class={`link-apply link ${orientation}`} href="/apply">
-    {t("Apply for funding")}
+    <span class="apply-long">{t("Apply for funding")}</span>
+    <span class="apply-short">{t("Apply")}</span>
   </Button>
   {
     socialLinks.map(({ name, url, title, logo }) => (
@@ -44,6 +45,13 @@ const orientation = Astro.props.orientation || "vertical";
   }
   .link-apply.horizontal {
     margin-right: 3rem;
+  }
+  .link-apply :global(.apply-long) {
+    display: inline;
+    white-space: nowrap;
+  }
+  .link-apply :global(.apply-short) {
+    display: none;
   }
   .link-apply.vertical {
     width: 100%;

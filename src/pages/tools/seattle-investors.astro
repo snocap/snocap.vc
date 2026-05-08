@@ -1192,12 +1192,23 @@ const chartsGithubUrl =
       ".chart-lightbox__close",
     ) as HTMLButtonElement | null;
 
+    // On touch devices the in-page modal is essentially useless — the chart
+    // is still tiny and pinch-to-zoom is awkward inside a <dialog>. Open the
+    // SVG directly instead so the browser provides full native zoom + pan.
+    const isTouchDevice = () =>
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(max-width: 600px)").matches;
+
     document
       .querySelectorAll<HTMLButtonElement>(".chart-magnify")
       .forEach((btn) => {
         btn.addEventListener("click", () => {
           const png = btn.dataset.png;
           const svg = btn.dataset.svg;
+          if (isTouchDevice()) {
+            if (svg) window.open(svg, "_blank", "noopener");
+            return;
+          }
           if (img && png) img.src = png;
           if (svgLink && svg) svgLink.href = svg;
           lightbox.showModal();
@@ -1330,6 +1341,16 @@ const chartsGithubUrl =
   .chart-magnify:hover {
     background: #0d9488;
     color: #fff;
+  }
+
+  /* On narrow viewports, drop the button under the chart so it can't be
+     clipped by an overflowing chart edge or a tight gutter. */
+  @media (max-width: 600px) {
+    .chart-magnify {
+      position: static;
+      display: inline-flex;
+      margin-top: 0.5rem;
+    }
   }
 
   .chart-lightbox {
@@ -1530,12 +1551,15 @@ const chartsGithubUrl =
 
   .firm-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    /* min(20rem, 100%) ensures cards never demand more width than the
+       container — essential for narrow mobile viewports where 20rem (320px)
+       is wider than the available column. */
+    grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
     gap: 1.25rem;
   }
 
   .firm-grid--compact {
-    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
   }
 
   .firm-card {
@@ -1545,6 +1569,10 @@ const chartsGithubUrl =
     padding: 1.25rem;
     border: 1px solid #d9d9d9;
     background: #fafafa;
+    /* Prevent any long unbroken token (URL, hyphenless word) from forcing
+       the card to grow wider than its grid column. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .firm-card--honorable {
@@ -1637,6 +1665,12 @@ const chartsGithubUrl =
     font-size: 0.8125rem;
     color: var(--color-tertiary);
     word-break: break-word;
+    overflow-wrap: anywhere;
+    /* In a flex container, items default to min-width: auto which is the
+       intrinsic size of their content. For long URLs that prevents shrinking;
+       set min-width: 0 so the link wraps inside the card instead of pushing
+       the row beyond the card edge. */
+    min-width: 0;
   }
 
   .firm-link:hover {
@@ -1648,11 +1682,20 @@ const chartsGithubUrl =
     font-size: 0.8125rem;
     color: #0d9488;
     font-weight: 500;
-    white-space: nowrap;
   }
 
   .firm-intro:hover {
     text-decoration: underline;
+  }
+
+  /* On very narrow cards, stack the actions row vertically so the website
+     link and the "Request intro" link each get their own line instead of
+     overflowing horizontally. */
+  @media (max-width: 360px) {
+    .firm-actions {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 
   .honorable {

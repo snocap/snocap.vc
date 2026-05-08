@@ -82,5 +82,13 @@ const classes = Array.from(
     .logo-bar.slim .link-apply.horizontal {
       margin-right: 0;
     }
+    /* On mobile in slim mode the header is tight — collapse "Apply for
+       funding" to just "Apply" so it fits on one line. */
+    .logo-bar.slim .link-apply :global(.apply-long) {
+      display: none;
+    }
+    .logo-bar.slim .link-apply :global(.apply-short) {
+      display: inline;
+    }
   }
 </style>
