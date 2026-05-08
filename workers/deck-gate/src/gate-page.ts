@@ -5,6 +5,22 @@ export function renderGatePage(error?: string, returnTo?: string): string {
   <meta charset="utf-8" />
   <title>SNØCAP US II, LP — Pitch Deck</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="View the SNØCAP US II, LP pitch deck. Enter your email to access." />
+  <meta property="og:title" content="SNØCAP US II, LP — Pitch Deck" />
+  <meta property="og:description" content="View the SNØCAP US II, LP pitch deck. Enter your email to access." />
+  <meta property="og:image" content="https://snocap.vc/assets/metadata/card-twitter.gif" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://snocap.vc/deck" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="SNØCAP US II, LP — Pitch Deck" />
+  <meta name="twitter:description" content="View the SNØCAP US II, LP pitch deck. Enter your email to access." />
+  <meta name="twitter:image" content="https://snocap.vc/assets/metadata/card-twitter.gif" />
+  <link rel="canonical" href="https://snocap.vc/deck" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="icon" href="/assets/metadata/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/metadata/icon-apple-180.png" />
+  <meta name="theme-color" content="#0a0a0a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet" />
