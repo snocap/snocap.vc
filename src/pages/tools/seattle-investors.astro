@@ -1,10 +1,8 @@
 ---
 import Layout from "layouts/Layout.astro";
 
-const chartPng = (key: string) =>
-  `/assets/charts/seattle-investors/${key}.png`;
-const chartSvg = (key: string) =>
-  `/assets/charts/seattle-investors/${key}.svg`;
+const chartPng = (key: string) => `/assets/charts/seattle-investors/${key}.png`;
+const chartSvg = (key: string) => `/assets/charts/seattle-investors/${key}.svg`;
 
 const paths = [
   {
@@ -850,9 +848,9 @@ const chartsGithubUrl =
 
     <p class="disclaimer">
       <strong>Not financial advice.</strong> This page is an editorial map of the
-      PNW investing landscape, not an offer to buy or sell securities or a
-      recommendation to commit capital to any fund. Do your own diligence; talk
-      to your tax and legal advisors before investing.
+      PNW investing landscape, not an offer to buy or sell securities or a recommendation
+      to commit capital to any fund. Do your own diligence; talk to your tax and
+      legal advisors before investing.
     </p>
 
     <figure class="chart-figure">
@@ -866,8 +864,8 @@ const chartsGithubUrl =
         type="button"
         data-svg={chartSvg("top")}
         data-png={chartPng("top")}
-        aria-label="Open chart at full size"
-      >🔍 Expand</button>
+        aria-label="Open chart at full size">🔍 Expand</button
+      >
     </figure>
 
     <div class="meta-links">
@@ -938,7 +936,9 @@ const chartsGithubUrl =
                 data-svg={chartSvg(path.key)}
                 data-png={chartPng(path.key)}
                 aria-label={`Open ${path.label} chart at full size`}
-              >🔍 Expand</button>
+              >
+                🔍 Expand
+              </button>
             </figure>
 
             {path.pnwFirms && (
@@ -1122,8 +1122,8 @@ const chartsGithubUrl =
             type="button"
             data-svg={chartSvg("full")}
             data-png={chartPng("full")}
-            aria-label="Open full chart at full size"
-          >🔍 Expand</button>
+            aria-label="Open full chart at full size">🔍 Expand</button
+          >
         </figure>
       </div>
     </details>
@@ -1142,8 +1142,8 @@ const chartsGithubUrl =
       <button
         class="chart-lightbox__close"
         type="button"
-        aria-label="Close fullscreen chart"
-      >×</button>
+        aria-label="Close fullscreen chart">×</button
+      >
       <img class="chart-lightbox__img" alt="" />
       <a class="chart-lightbox__svg" href="#" target="_blank" rel="noopener"
         >Open as SVG ↗</a
@@ -1192,8 +1192,9 @@ const chartsGithubUrl =
       ".chart-lightbox__close",
     ) as HTMLButtonElement | null;
 
-    document.querySelectorAll<HTMLButtonElement>(".chart-magnify").forEach(
-      (btn) => {
+    document
+      .querySelectorAll<HTMLButtonElement>(".chart-magnify")
+      .forEach((btn) => {
         btn.addEventListener("click", () => {
           const png = btn.dataset.png;
           const svg = btn.dataset.svg;
@@ -1201,8 +1202,7 @@ const chartsGithubUrl =
           if (svgLink && svg) svgLink.href = svg;
           lightbox.showModal();
         });
-      },
-    );
+      });
 
     closeBtn?.addEventListener("click", () => lightbox.close());
     // Click on the backdrop closes the modal.

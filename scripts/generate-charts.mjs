@@ -269,9 +269,7 @@ async function main() {
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
   } catch (err) {
-    console.warn(
-      `[charts] Skipping — Chrome could not launch: ${err.message}`,
-    );
+    console.warn(`[charts] Skipping — Chrome could not launch: ${err.message}`);
     return;
   }
 
