@@ -28,6 +28,10 @@ concurrency:
 env:
   HUSKY: 0
   PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.PUBLIC_TURNSTILE_SITE_KEY }}
+  # Schema-read PAT used by scripts/generate-sectors.mjs to refresh the
+  # /apply sector list from Airtable. If unset, the committed
+  # src/data/sectors.ts is used as-is.
+  AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
 
 jobs:
   deploy:

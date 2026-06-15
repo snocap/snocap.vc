@@ -1,5 +1,6 @@
 ---
 import Layout from "layouts/Layout.astro";
+import { sectors } from "data/sectors";
 
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
 ---
@@ -8,11 +9,11 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
   <section class="apply-page">
     <div class="apply-header">
       <small class="breadcrumb">SNØCAP / APPLY</small>
-      <h1>Apply to SNØCAP</h1>
+      <h1>Apply for funding</h1>
       <h5>
-        We back deeptech founders building the materials, molecules, and
-        machines that enable modern industry. Pre-seed and seed. Up to $1.5M
-        first check.
+        See <a href="/#founders">what we look for</a> in the founders we back. Think
+        you're a match? Fill out the form below to apply. We review every submission
+        and reach out if there is a fit.
       </h5>
     </div>
 
@@ -58,13 +59,21 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
           />
         </div>
         <div class="field">
-          <label for="sectors">Sectors</label>
-          <input
-            type="text"
-            id="sectors"
-            name="sectors"
-            placeholder="e.g. Advanced materials, Energy storage, Industrial biotech"
-          />
+          <label for="sector-input">Sectors</label>
+          <div class="sector-select" id="sector-select">
+            <input type="hidden" id="sectors" name="sectors" />
+            <input
+              type="text"
+              id="sector-input"
+              list="sector-options"
+              placeholder="Add a sector…"
+              autocomplete="off"
+              aria-label="Add a sector"
+            />
+          </div>
+          <datalist id="sector-options">
+            {sectors.map((sector) => <option value={sector} />)}
+          </datalist>
         </div>
       </fieldset>
 
@@ -246,6 +255,91 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
+  // Sectors: tag-style multi-select backed by the Airtable <datalist>.
+  // Founders can pick a suggested sector or type a custom one; each becomes a
+  // removable chip. The committed value is comma-joined into the hidden
+  // #sectors input so the existing submit flow is unchanged.
+  const sectorWrap = document.getElementById("sector-select") as HTMLDivElement;
+  const sectorInput = document.getElementById(
+    "sector-input",
+  ) as HTMLInputElement;
+  const sectorHidden = document.getElementById("sectors") as HTMLInputElement;
+  const sectorOptions = new Set(
+    Array.from(
+      document.querySelectorAll<HTMLOptionElement>("#sector-options option"),
+    ).map((o) => o.value.toLowerCase()),
+  );
+  const selectedSectors: string[] = [];
+
+  function renderSectors() {
+    sectorWrap.querySelectorAll(".sector-tag").forEach((el) => el.remove());
+    for (const name of selectedSectors) {
+      const tag = document.createElement("span");
+      tag.className = "sector-tag";
+      const text = document.createElement("span");
+      text.textContent = name;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "sector-tag-remove";
+      remove.setAttribute("aria-label", `Remove ${name}`);
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        const i = selectedSectors.indexOf(name);
+        if (i > -1) selectedSectors.splice(i, 1);
+        renderSectors();
+        sectorInput.focus();
+      });
+      tag.append(text, remove);
+      sectorWrap.insertBefore(tag, sectorInput);
+    }
+    sectorHidden.value = selectedSectors.join(", ");
+  }
+
+  function addSector(raw: string) {
+    const name = raw.trim().replace(/,+$/, "").trim();
+    if (!name) return;
+    if (!selectedSectors.some((s) => s.toLowerCase() === name.toLowerCase())) {
+      selectedSectors.push(name);
+      renderSectors();
+    }
+    sectorInput.value = "";
+  }
+
+  sectorInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addSector(sectorInput.value);
+    } else if (
+      e.key === "Backspace" &&
+      !sectorInput.value &&
+      selectedSectors.length
+    ) {
+      selectedSectors.pop();
+      renderSectors();
+    }
+  });
+
+  // Picking a datalist suggestion replaces the whole value at once: Chrome
+  // reports inputType "insertReplacementText", Safari reports none. Typing a
+  // single character always reports "insertText", so treating either of those
+  // as a selection commits the chip on pick without firing mid-type (e.g.
+  // "Energy" while reaching for "Energy Storage").
+  sectorInput?.addEventListener("input", (e) => {
+    const inputType = (e as InputEvent).inputType;
+    const isSelection = inputType === "insertReplacementText" || !inputType;
+    if (
+      isSelection &&
+      sectorOptions.has(sectorInput.value.trim().toLowerCase())
+    ) {
+      addSector(sectorInput.value);
+    }
+  });
+
+  // Capture any trailing typed value when focus leaves the field.
+  sectorInput?.addEventListener("blur", () => {
+    if (sectorInput.value.trim()) addSector(sectorInput.value);
+  });
+
   // Form submission
   const form = document.getElementById("apply-form") as HTMLFormElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
@@ -270,6 +364,9 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     errorDiv.hidden = true;
+
+    // Commit any sector still sitting in the input but not yet chipped.
+    if (sectorInput?.value.trim()) addSector(sectorInput.value);
 
     const data = new FormData(form);
 
@@ -391,6 +488,14 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
 </script>
 
 <style>
+  /* `display: flex` on .apply-form / .success-state / .file-list would
+     otherwise override the [hidden] attribute, leaving the success state
+     visible before submit and the form visible after. Keep [hidden]
+     authoritative so "Application received" is strictly a post-submit state. */
+  [hidden] {
+    display: none !important;
+  }
+
   .apply-page {
     display: flex;
     flex-direction: column;
@@ -443,13 +548,15 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
     row-gap: 1.25rem;
   }
 
+  /* Darker than --color-tertiary (#9f9f9f) for readable form text on
+     low-contrast screens. #595959 clears WCAG AAA (7:1) on white. */
   legend {
     padding: 0 0.5rem;
     font-family: var(--font-family-mono);
     font-size: 0.75rem;
     letter-spacing: 0.06rem;
     text-transform: uppercase;
-    color: var(--color-tertiary);
+    color: #595959;
   }
 
   .field-row {
@@ -466,7 +573,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   label {
     font-size: 0.8125rem;
-    color: var(--color-tertiary);
+    color: #595959;
     font-family: var(--font-family-mono);
     letter-spacing: 0.02rem;
   }
@@ -504,9 +611,79 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
     color: #c0c0c0;
   }
 
+  /* Sectors tag-style multi-select: the wrapper looks like a text field, the
+     inner text input is borderless and grows to fill remaining space. */
+  .sector-select {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    box-sizing: border-box;
+    /* Reserve the height of a pill row up front so the box doesn't grow when
+       the first chip is added. */
+    min-height: 2.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+
+  .sector-select:focus-within {
+    border-color: var(--color-primary);
+  }
+
+  .sector-select input[type="text"] {
+    flex: 1 1 8rem;
+    width: auto;
+    min-width: 8rem;
+    padding: 0.125rem 0.25rem;
+    border: none;
+  }
+
+  /* Chips are created in client JS, so they never receive Astro's scope
+     attribute — these rules must be :global to apply. They still ship only in
+     this page's CSS bundle. */
+  :global(.sector-tag) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.625rem;
+    background: #f0f0f0;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    color: var(--color-primary);
+    white-space: nowrap;
+  }
+
+  :global(.sector-tag-remove) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: #888;
+    font-size: 0.9375rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  :global(.sector-tag-remove:hover) {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--color-primary);
+  }
+
   .field-hint {
     font-size: 0.875rem;
-    color: var(--color-tertiary);
+    color: #595959;
     margin: 0;
   }
 
@@ -514,7 +691,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
     display: inline-flex;
     align-items: center;
     cursor: pointer;
-    color: var(--color-tertiary);
+    color: #595959;
     font-size: 0.8125rem;
     font-family: var(--font-family-mono);
   }
