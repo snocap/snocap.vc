@@ -1,7 +1,0 @@
-name = "apply"
-main = "src/index.ts"
-compatibility_date = "2025-04-01"
-
-routes = [
-  { pattern = "snocap.vc/apply*", zone_name = "snocap.vc" }
-]

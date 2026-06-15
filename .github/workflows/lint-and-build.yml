@@ -7,7 +7,6 @@ on:
       - next
 env:
   HUSKY: 0
-  PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.PUBLIC_TURNSTILE_SITE_KEY }}
 
 permissions:
   contents: write
