@@ -27,6 +27,7 @@ concurrency:
 
 env:
   HUSKY: 0
+  PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.PUBLIC_TURNSTILE_SITE_KEY }}
 
 jobs:
   deploy:
