@@ -200,6 +200,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
         We review every submission and reach out if there is a fit. Thank you
         for applying to SNØCAP.
       </p>
+      <a href="/" class="success-home">← Return home</a>
     </div>
   </section>
 </Layout>
@@ -347,12 +348,19 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const successState = document.getElementById(
     "success-state",
   ) as HTMLDivElement;
+  const applyHeader = document.querySelector(".apply-header") as HTMLElement;
+
+  // Guards against a double submission (double-click, Enter key, etc.): once a
+  // submission is in flight it stays true until either an error resets it or
+  // the success state takes over.
+  let isSubmitting = false;
 
   function showError(msg: string) {
     errorDiv.textContent = msg;
     errorDiv.hidden = false;
     submitBtn.disabled = false;
     submitBtn.textContent = "Submit application";
+    isSubmitting = false;
   }
 
   function setStatus(msg: string) {
@@ -363,6 +371,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     errorDiv.hidden = true;
 
     // Commit any sector still sitting in the input but not yet chipped.
@@ -396,6 +405,7 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
       return;
     }
 
+    isSubmitting = true;
     setStatus("Verifying…");
 
     // Step 1: preflight
@@ -482,7 +492,10 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
       return;
     }
 
+    // Submission complete: collapse the form and the page header so the only
+    // thing left on screen is the confirmation.
     form.hidden = true;
+    if (applyHeader) applyHeader.hidden = true;
     successState.hidden = false;
   });
 </script>
@@ -809,6 +822,12 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
   .success-state p {
     color: var(--color-tertiary);
     max-width: 38rem;
+  }
+
+  .success-home {
+    margin-top: 0.5rem;
+    color: var(--color-primary);
+    width: fit-content;
   }
 
   @media (max-width: 742px) {
