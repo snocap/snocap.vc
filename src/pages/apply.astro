@@ -1,21 +1,831 @@
 ---
-// TODO: eventually code up this form
+import Layout from "layouts/Layout.astro";
+import { sectors } from "data/sectors";
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta
-      http-equiv="refresh"
-      content="0;url=https://form-23cf11.zapier.app/apply-to-snocap"
-    />
-    <title>Redirecting...</title>
-  </head>
-  <body>
-    <p>
-      If you are not redirected automatically, follow this <a
-        href="https://form-23cf11.zapier.app/apply-to-snocap">link</a
-      >.
-    </p>
-  </body>
-</html>
+<Layout slim={true}>
+  <section class="apply-page">
+    <div class="apply-header">
+      <small class="breadcrumb">SNØCAP / APPLY</small>
+      <h1>Apply for funding</h1>
+      <h5>
+        See <a href="/#founders">what we look for</a> in the founders we back. Think
+        you're a match? Fill out the form below to apply. We review every submission
+        and reach out if there is a fit.
+      </h5>
+    </div>
+
+    <form id="apply-form" class="apply-form" novalidate>
+      <input
+        type="text"
+        name="_gotcha"
+        tabindex="-1"
+        autocomplete="off"
+        class="honeypot"
+      />
+
+      <fieldset>
+        <legend>Company</legend>
+        <div class="field-row">
+          <div class="field field--required">
+            <label for="company">Company name</label>
+            <input
+              type="text"
+              id="company"
+              name="company"
+              autocomplete="organization"
+            />
+          </div>
+          <div class="field">
+            <label for="website">Website</label>
+            <input
+              type="url"
+              id="website"
+              name="website"
+              placeholder="https://"
+              autocomplete="url"
+            />
+          </div>
+        </div>
+        <div class="field">
+          <label for="oneLiner">One-liner</label>
+          <input
+            type="text"
+            id="oneLiner"
+            name="oneLiner"
+            placeholder="What does your company do in one sentence?"
+          />
+        </div>
+        <div class="field">
+          <label for="sector-input">Sectors</label>
+          <div class="sector-select" id="sector-select">
+            <input type="hidden" id="sectors" name="sectors" />
+            <input
+              type="text"
+              id="sector-input"
+              list="sector-options"
+              placeholder="Add a sector…"
+              autocomplete="off"
+              aria-label="Add a sector"
+            />
+          </div>
+          <datalist id="sector-options">
+            {sectors.map((sector) => <option value={sector} />)}
+          </datalist>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Contact</legend>
+        <div class="field-row">
+          <div class="field field--required">
+            <label for="firstName">First name</label>
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              autocomplete="given-name"
+            />
+          </div>
+          <div class="field field--required">
+            <label for="lastName">Last name</label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              autocomplete="family-name"
+            />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field field--required">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Raise</legend>
+        <div class="field-row">
+          <div class="field">
+            <label for="stage">Stage</label>
+            <select id="stage" name="stage">
+              <option value="Pre-seed">Pre-seed</option>
+              <option value="Seed" selected>Seed</option>
+              <option value="Series A">Series A</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="vehicle">Vehicle</label>
+            <select id="vehicle" name="vehicle">
+              <option value="">—</option>
+              <option value="SAFE">SAFE</option>
+              <option value="Convertible Note">Convertible Note</option>
+              <option value="Priced Equity">Priced Equity</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="valuation">Valuation cap / pre-money ($)</label>
+            <input
+              type="text"
+              id="valuation"
+              name="valuation"
+              placeholder="e.g. 5000000"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Documents</legend>
+        <p class="field-hint">
+          Pitch deck and any supporting materials. PDF, PPTX, DOCX, XLSX, PNG,
+          or JPG — max 25 MB per file, up to 5 files.
+        </p>
+        <label class="file-label" for="files">
+          <span class="file-label-text">Choose files</span>
+          <input
+            type="file"
+            id="files"
+            name="files"
+            multiple
+            accept=".pdf,.pptx,.docx,.xlsx,.png,.jpg,.jpeg"
+          />
+        </label>
+        <ul id="file-list" class="file-list" hidden></ul>
+      </fieldset>
+
+      <fieldset>
+        <legend>Referral</legend>
+        <div class="field">
+          <label for="referrer">How did you hear about SNØCAP?</label>
+          <input
+            type="text"
+            id="referrer"
+            name="referrer"
+            placeholder="Event, partner, LinkedIn, web search…"
+          />
+        </div>
+      </fieldset>
+
+      <div class="turnstile-row">
+        <div
+          class="cf-turnstile"
+          data-sitekey={siteKey}
+          data-callback="onTurnstileVerified"
+          data-expired-callback="onTurnstileExpired"
+        >
+        </div>
+      </div>
+
+      <div id="form-error" class="form-error" hidden></div>
+
+      <div class="form-actions">
+        <button type="submit" id="submit-btn" class="submit-btn">
+          Submit application
+        </button>
+      </div>
+    </form>
+
+    <div id="success-state" class="success-state" hidden>
+      <h2>Application received.</h2>
+      <p>
+        We review every submission and reach out if there is a fit. Thank you
+        for applying to SNØCAP.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer
+></script>
+
+<script>
+  let turnstileToken: string | null = null;
+
+  (
+    window as Window & { onTurnstileVerified?: (t: string) => void }
+  ).onTurnstileVerified = (token: string) => {
+    turnstileToken = token;
+  };
+
+  (window as Window & { onTurnstileExpired?: () => void }).onTurnstileExpired =
+    () => {
+      turnstileToken = null;
+    };
+
+  // File input: show selected files
+  const fileInput = document.getElementById("files") as HTMLInputElement;
+  const fileList = document.getElementById("file-list") as HTMLUListElement;
+
+  fileInput?.addEventListener("change", () => {
+    const files = Array.from(fileInput.files ?? []);
+    if (!files.length) {
+      fileList.hidden = true;
+      fileList.innerHTML = "";
+      return;
+    }
+    fileList.innerHTML = files
+      .map(
+        (f) =>
+          `<li><span class="file-name">${escapeHtml(f.name)}</span><span class="file-size">${formatBytes(f.size)}</span></li>`,
+      )
+      .join("");
+    fileList.hidden = false;
+  });
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  // Sectors: tag-style multi-select backed by the Airtable <datalist>.
+  // Founders can pick a suggested sector or type a custom one; each becomes a
+  // removable chip. The committed value is comma-joined into the hidden
+  // #sectors input so the existing submit flow is unchanged.
+  const sectorWrap = document.getElementById("sector-select") as HTMLDivElement;
+  const sectorInput = document.getElementById(
+    "sector-input",
+  ) as HTMLInputElement;
+  const sectorHidden = document.getElementById("sectors") as HTMLInputElement;
+  const sectorOptions = new Set(
+    Array.from(
+      document.querySelectorAll<HTMLOptionElement>("#sector-options option"),
+    ).map((o) => o.value.toLowerCase()),
+  );
+  const selectedSectors: string[] = [];
+
+  function renderSectors() {
+    sectorWrap.querySelectorAll(".sector-tag").forEach((el) => el.remove());
+    for (const name of selectedSectors) {
+      const tag = document.createElement("span");
+      tag.className = "sector-tag";
+      const text = document.createElement("span");
+      text.textContent = name;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "sector-tag-remove";
+      remove.setAttribute("aria-label", `Remove ${name}`);
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        const i = selectedSectors.indexOf(name);
+        if (i > -1) selectedSectors.splice(i, 1);
+        renderSectors();
+        sectorInput.focus();
+      });
+      tag.append(text, remove);
+      sectorWrap.insertBefore(tag, sectorInput);
+    }
+    sectorHidden.value = selectedSectors.join(", ");
+  }
+
+  function addSector(raw: string) {
+    const name = raw.trim().replace(/,+$/, "").trim();
+    if (!name) return;
+    if (!selectedSectors.some((s) => s.toLowerCase() === name.toLowerCase())) {
+      selectedSectors.push(name);
+      renderSectors();
+    }
+    sectorInput.value = "";
+  }
+
+  sectorInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addSector(sectorInput.value);
+    } else if (
+      e.key === "Backspace" &&
+      !sectorInput.value &&
+      selectedSectors.length
+    ) {
+      selectedSectors.pop();
+      renderSectors();
+    }
+  });
+
+  // Picking a datalist suggestion replaces the whole value at once: Chrome
+  // reports inputType "insertReplacementText", Safari reports none. Typing a
+  // single character always reports "insertText", so treating either of those
+  // as a selection commits the chip on pick without firing mid-type (e.g.
+  // "Energy" while reaching for "Energy Storage").
+  sectorInput?.addEventListener("input", (e) => {
+    const inputType = (e as InputEvent).inputType;
+    const isSelection = inputType === "insertReplacementText" || !inputType;
+    if (
+      isSelection &&
+      sectorOptions.has(sectorInput.value.trim().toLowerCase())
+    ) {
+      addSector(sectorInput.value);
+    }
+  });
+
+  // Capture any trailing typed value when focus leaves the field.
+  sectorInput?.addEventListener("blur", () => {
+    if (sectorInput.value.trim()) addSector(sectorInput.value);
+  });
+
+  // Form submission
+  const form = document.getElementById("apply-form") as HTMLFormElement;
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  const errorDiv = document.getElementById("form-error") as HTMLDivElement;
+  const successState = document.getElementById(
+    "success-state",
+  ) as HTMLDivElement;
+
+  function showError(msg: string) {
+    errorDiv.textContent = msg;
+    errorDiv.hidden = false;
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit application";
+  }
+
+  function setStatus(msg: string) {
+    submitBtn.textContent = msg;
+    submitBtn.disabled = true;
+    errorDiv.hidden = true;
+  }
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorDiv.hidden = true;
+
+    // Commit any sector still sitting in the input but not yet chipped.
+    if (sectorInput?.value.trim()) addSector(sectorInput.value);
+
+    const data = new FormData(form);
+
+    // Required field check
+    for (const name of ["company", "firstName", "lastName", "email"]) {
+      if (!((data.get(name) as string) ?? "").trim()) {
+        showError(`Please fill in the required field: ${name}`);
+        (form.elements.namedItem(name) as HTMLElement)?.focus();
+        return;
+      }
+    }
+
+    const email = (data.get("email") as string).trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!turnstileToken) {
+      showError("Please complete the security check.");
+      return;
+    }
+
+    const files = Array.from(fileInput.files ?? []);
+    if (files.length > 5) {
+      showError("You can upload up to 5 files.");
+      return;
+    }
+
+    setStatus("Verifying…");
+
+    // Step 1: preflight
+    const preflightBody: Record<string, string> = {
+      company: (data.get("company") as string).trim(),
+      oneLiner: (data.get("oneLiner") as string).trim(),
+      website: (data.get("website") as string).trim(),
+      sectors: (data.get("sectors") as string).trim(),
+      firstName: (data.get("firstName") as string).trim(),
+      lastName: (data.get("lastName") as string).trim(),
+      email: email,
+      phone: (data.get("phone") as string).trim(),
+      stage: (data.get("stage") as string) || "Seed",
+      valuation: (data.get("valuation") as string).trim(),
+      vehicle: (data.get("vehicle") as string).trim(),
+      referrer: (data.get("referrer") as string).trim(),
+      turnstileToken: turnstileToken,
+      _gotcha: (data.get("_gotcha") as string) ?? "",
+    };
+
+    let token: string;
+    try {
+      const res = await fetch("/apply/preflight", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(preflightBody),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        token?: string;
+        error?: string;
+      };
+      if (!res.ok || !json.ok || !json.token) {
+        showError(json.error ?? "Verification failed. Please try again.");
+        return;
+      }
+      token = json.token;
+    } catch {
+      showError("Network error during verification. Please try again.");
+      return;
+    }
+
+    // Step 2: upload files
+    if (files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        setStatus(`Uploading file ${i + 1} of ${files.length}…`);
+        const fd = new FormData();
+        fd.append("file", files[i]);
+        try {
+          const res = await fetch("/apply/upload", {
+            method: "POST",
+            headers: { authorization: `Bearer ${token}` },
+            body: fd,
+          });
+          const json = (await res.json()) as { ok?: boolean; error?: string };
+          if (!res.ok || !json.ok) {
+            showError(json.error ?? `Failed to upload ${files[i].name}.`);
+            return;
+          }
+        } catch {
+          showError(
+            `Network error uploading ${files[i].name}. Please try again.`,
+          );
+          return;
+        }
+      }
+    }
+
+    // Step 3: submit
+    setStatus("Submitting…");
+    try {
+      const res = await fetch("/apply/submit", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const json = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) {
+        showError(json.error ?? "Submission failed. Please try again.");
+        return;
+      }
+    } catch {
+      showError("Network error during submission. Please try again.");
+      return;
+    }
+
+    form.hidden = true;
+    successState.hidden = false;
+  });
+</script>
+
+<style>
+  /* `display: flex` on .apply-form / .success-state / .file-list would
+     otherwise override the [hidden] attribute, leaving the success state
+     visible before submit and the form visible after. Keep [hidden]
+     authoritative so "Application received" is strictly a post-submit state. */
+  [hidden] {
+    display: none !important;
+  }
+
+  .apply-page {
+    display: flex;
+    flex-direction: column;
+    padding: 4rem var(--gutter-width) 6rem;
+    row-gap: 2.5rem;
+    min-height: 80vh;
+    max-width: 55rem;
+    margin: 0 auto;
+  }
+
+  .apply-header {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1.25rem;
+  }
+
+  .breadcrumb {
+    color: var(--color-tertiary);
+    letter-spacing: 0.1rem;
+  }
+
+  h1 {
+    font-size: 2.625rem;
+    font-weight: 300;
+    line-height: 1.1;
+  }
+
+  h5 {
+    color: var(--color-tertiary);
+    font-size: 1.0625rem;
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  .honeypot {
+    display: none;
+  }
+
+  .apply-form {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2rem;
+  }
+
+  fieldset {
+    border: 1px solid #d9d9d9;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    row-gap: 1.25rem;
+  }
+
+  /* Darker than --color-tertiary (#9f9f9f) for readable form text on
+     low-contrast screens. #595959 clears WCAG AAA (7:1) on white. */
+  legend {
+    padding: 0 0.5rem;
+    font-family: var(--font-family-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06rem;
+    text-transform: uppercase;
+    color: #595959;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.375rem;
+  }
+
+  label {
+    font-size: 0.8125rem;
+    color: #595959;
+    font-family: var(--font-family-mono);
+    letter-spacing: 0.02rem;
+  }
+
+  .field--required label::after {
+    content: " *";
+    color: var(--color-primary);
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="url"],
+  input[type="tel"],
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    color: var(--color-primary);
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  input:focus,
+  select:focus {
+    border-color: var(--color-primary);
+  }
+
+  input::placeholder {
+    color: #c0c0c0;
+  }
+
+  /* Sectors tag-style multi-select: the wrapper looks like a text field, the
+     inner text input is borderless and grows to fill remaining space. */
+  .sector-select {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    box-sizing: border-box;
+    /* Reserve the height of a pill row up front so the box doesn't grow when
+       the first chip is added. */
+    min-height: 2.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+
+  .sector-select:focus-within {
+    border-color: var(--color-primary);
+  }
+
+  .sector-select input[type="text"] {
+    flex: 1 1 8rem;
+    width: auto;
+    min-width: 8rem;
+    padding: 0.125rem 0.25rem;
+    border: none;
+  }
+
+  /* Chips are created in client JS, so they never receive Astro's scope
+     attribute — these rules must be :global to apply. They still ship only in
+     this page's CSS bundle. */
+  :global(.sector-tag) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.625rem;
+    background: #f0f0f0;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    color: var(--color-primary);
+    white-space: nowrap;
+  }
+
+  :global(.sector-tag-remove) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: #888;
+    font-size: 0.9375rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  :global(.sector-tag-remove:hover) {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--color-primary);
+  }
+
+  .field-hint {
+    font-size: 0.875rem;
+    color: #595959;
+    margin: 0;
+  }
+
+  .file-label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    color: #595959;
+    font-size: 0.8125rem;
+    font-family: var(--font-family-mono);
+  }
+
+  .file-label input[type="file"] {
+    display: none;
+  }
+
+  .file-label-text {
+    padding: 0.4rem 0.875rem;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    letter-spacing: 0.04rem;
+    text-transform: uppercase;
+    font-size: 0.6875rem;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s;
+  }
+
+  .file-label:hover .file-label-text {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .file-list {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.375rem;
+  }
+
+  .file-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+  }
+
+  .file-name {
+    color: var(--color-primary);
+    word-break: break-all;
+  }
+
+  .file-size {
+    color: var(--color-tertiary);
+    font-family: var(--font-family-mono);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .turnstile-row {
+    display: flex;
+  }
+
+  .form-error {
+    padding: 0.75rem 1rem;
+    background: #fff5f5;
+    border: 1px solid #f87171;
+    color: #b91c1c;
+    font-size: 0.9375rem;
+  }
+
+  .form-actions {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.75rem;
+  }
+
+  .submit-btn {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: var(--color-primary);
+    color: var(--color-secondary);
+    border: 1px solid var(--color-primary);
+    font-family: var(--font-family);
+    font-size: 0.9375rem;
+    font-weight: 400;
+    letter-spacing: 0.04rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+    border-radius: 0;
+    -webkit-appearance: none;
+    align-self: flex-start;
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .success-state {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+    padding: 2.5rem 0;
+  }
+
+  .success-state h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--color-primary);
+  }
+
+  .success-state p {
+    color: var(--color-tertiary);
+    max-width: 38rem;
+  }
+
+  @media (max-width: 742px) {
+    .apply-page {
+      padding-top: 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+    }
+
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+
+    fieldset {
+      padding: 1.25rem;
+    }
+  }
+</style>
