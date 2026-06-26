@@ -474,7 +474,7 @@ const FUND_I_ROWS = [
     "Apr '25",
     "$150K",
     "$12.0M",
-    "1x†",
+    "1.25x",
     "Detroit Venture Partners, Newlab",
   ],
   [
