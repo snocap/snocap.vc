@@ -86,4 +86,11 @@ export const portfolio: PortfolioItem[] = [
     sectors: ["Waste", "Plastics", "Recycling"],
     website: "https://appliedbioplastics.com/",
   },
+  {
+    id: "biowraptor",
+    name: "BioWraptor",
+    logo: "/assets/portfolio/logo-biowraptor.png",
+    sectors: ["Biotechnology", "Life Sciences"],
+    website: "https://biowraptor.com/",
+  },
 ].sort((a, b) => a.name.localeCompare(b.name));
