@@ -522,11 +522,20 @@ const FUND_I_ROWS = [
     "1x†",
     "Valinor AB, Esmar AB, GU Ventures, Eight Plus Ventures, Anchorage Capital",
   ],
+  [
+    "BioWraptor Inc.",
+    "Room-temperature biomolecule preservation",
+    "Jul '26",
+    "$250K",
+    "$8.0M",
+    "1x",
+    "US NSF, Activate, Indie.Bio, Columbia Technology Ventures",
+  ],
 ];
 
 function FundITable({ rows }) {
   return (
-    <div style={{ position: "absolute", left: 96, top: 222, right: 96 }}>
+    <div style={{ position: "absolute", left: 96, top: 182, right: 96 }}>
       {/* Header */}
       <div
         style={{
@@ -534,7 +543,7 @@ function FundITable({ rows }) {
           gridTemplateColumns: "2fr 0.75fr 0.8fr 0.9fr 0.5fr 1.7fr",
           background: COLORS.paper,
           border: `1px solid ${COLORS.fog}`,
-          padding: "10px 18px",
+          padding: "6px 18px",
           columnGap: 12,
         }}
       >
@@ -566,7 +575,7 @@ function FundITable({ rows }) {
             borderLeft: `1px solid ${COLORS.fog}`,
             borderRight: `1px solid ${COLORS.fog}`,
             borderBottom: `1px solid ${COLORS.fog}`,
-            padding: "10px 18px",
+            padding: "6px 18px",
             alignItems: "center",
             background:
               idx % 2 ? "rgba(224,225,235,0.5)" : "rgba(255,255,255,0.5)",
@@ -629,12 +638,12 @@ function Slide07_FundI() {
         }}
       />
       {/* title */}
-      <SlideTitle style={{ fontSize: 72 }}>Fund I</SlideTitle>
+      <SlideTitle style={{ fontSize: 72, top: 56 }}>Fund I</SlideTitle>
       <div
         style={{
           position: "absolute",
           left: 96,
-          top: 168,
+          top: 128,
           fontFamily: FONT.mono,
           fontSize: 18,
           letterSpacing: "-0.04em",
@@ -648,7 +657,7 @@ function Slide07_FundI() {
         style={{
           position: "absolute",
           right: 96,
-          top: 168,
+          top: 128,
           fontFamily: FONT.mono,
           fontSize: 18,
           letterSpacing: "-0.04em",
@@ -666,9 +675,9 @@ function Slide07_FundI() {
         style={{
           position: "absolute",
           right: 96,
-          bottom: 86,
+          bottom: 100,
           fontFamily: FONT.mono,
-          fontSize: 14,
+          fontSize: 12,
           letterSpacing: "-0.04em",
           color: COLORS.ink,
         }}
