@@ -535,7 +535,7 @@ const FUND_I_ROWS = [
 
 function FundITable({ rows }) {
   return (
-    <div style={{ position: "absolute", left: 96, top: 182, right: 96 }}>
+    <div>
       {/* Header */}
       <div
         style={{
@@ -543,7 +543,8 @@ function FundITable({ rows }) {
           gridTemplateColumns: "2fr 0.75fr 0.8fr 0.9fr 0.5fr 1.7fr",
           background: COLORS.paper,
           border: `1px solid ${COLORS.fog}`,
-          padding: "6px 18px",
+          padding: "8px 18px",
+          alignItems: "center",
           columnGap: 12,
         }}
       >
@@ -575,7 +576,7 @@ function FundITable({ rows }) {
             borderLeft: `1px solid ${COLORS.fog}`,
             borderRight: `1px solid ${COLORS.fog}`,
             borderBottom: `1px solid ${COLORS.fog}`,
-            padding: "6px 18px",
+            padding: "8px 18px",
             alignItems: "center",
             background:
               idx % 2 ? "rgba(224,225,235,0.5)" : "rgba(255,255,255,0.5)",
@@ -668,22 +669,35 @@ function Slide07_FundI() {
         Fund Size: $4.8M
       </div>
 
-      <FundITable rows={FUND_I_ROWS} />
-
-      {/* footer notes */}
+      {/* table + legend, in flow together so the legend tracks the table's
+          actual height instead of sitting at a fixed distance from the slide
+          bottom */}
       <div
         style={{
           position: "absolute",
+          left: 96,
+          top: 182,
           right: 96,
-          bottom: 100,
-          fontFamily: FONT.mono,
-          fontSize: 12,
-          letterSpacing: "-0.04em",
-          color: COLORS.ink,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        † Currently raising
+        <FundITable rows={FUND_I_ROWS} />
+        <div
+          style={{
+            alignSelf: "flex-end",
+            marginTop: 20,
+            fontFamily: FONT.mono,
+            fontSize: 12,
+            letterSpacing: "-0.04em",
+            color: COLORS.ink,
+          }}
+        >
+          † Currently raising
+        </div>
       </div>
+
+      {/* footer notes */}
       <div
         style={{
           position: "absolute",
