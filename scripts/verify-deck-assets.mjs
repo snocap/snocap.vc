@@ -78,7 +78,7 @@ export async function verifyDir(dir) {
   return { checked: files.length, flagged };
 }
 
-// CLI entry — only when run directly, so the test file can import the helpers.
+// CLI entry — only when run directly, so the helpers stay importable.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const dir =
     process.argv[2] || new URL("../public/deck", import.meta.url).pathname;
