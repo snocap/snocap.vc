@@ -447,8 +447,8 @@ const FUND_I_ROWS = [
     "Oct '24",
     "$200K",
     "$6.0M",
-    "1x†",
-    "Keyhorse Capital, EGB Capital",
+    "2.33x",
+    "Cloudberry Capital, Keyhorse Capital, EGB Capital",
   ],
   [
     "Cool Amps Corp",
