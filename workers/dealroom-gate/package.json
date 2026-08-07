@@ -1,0 +1,12 @@
+{
+  "name": "dealroom-gate",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "derive-password": "node scripts/derive-password.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

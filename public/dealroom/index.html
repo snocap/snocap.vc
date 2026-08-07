@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SNØCAP — Deal Room</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        min-height: 100%;
+        font-family: "Inter", system-ui, sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 40px;
+        border-bottom: 1px solid #1a1a1a;
+      }
+
+      .brand {
+        font-family: "Fira Mono", monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9f9f9f;
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 40px;
+      }
+
+      .breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 13px;
+        color: #9f9f9f;
+        margin-bottom: 24px;
+      }
+
+      .breadcrumbs button {
+        background: none;
+        border: none;
+        color: #9f9f9f;
+        font-family: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        padding: 2px 0;
+      }
+
+      .breadcrumbs button:hover,
+      .breadcrumbs .current { color: #fff; }
+
+      .breadcrumbs .sep { color: #444; }
+
+      table { width: 100%; border-collapse: collapse; }
+
+      th, td {
+        text-align: left;
+        padding: 12px 8px;
+        border-bottom: 1px solid #1a1a1a;
+        font-size: 14px;
+      }
+
+      th {
+        color: #666;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        font-weight: 400;
+      }
+
+      tr.row { cursor: pointer; }
+      tr.row:hover td { background: rgba(255,255,255,0.03); }
+
+      .name-cell { display: flex; align-items: center; gap: 10px; }
+      .icon { width: 18px; text-align: center; opacity: 0.8; flex-shrink: 0; }
+      .modified { color: #888; white-space: nowrap; }
+
+      .empty, .error, .loading {
+        padding: 40px 0;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .error { color: #F15800; }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="brand">SNØCAP — GP Deal Room</div>
+    </div>
+    <main>
+      <div id="breadcrumbs" class="breadcrumbs"></div>
+      <div id="content"><div class="loading">Loading…</div></div>
+    </main>
+    <script src="/dealroom/app.js"></script>
+  </body>
+</html>
