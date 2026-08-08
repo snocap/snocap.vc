@@ -1,4 +1,8 @@
-export function renderGatePage(error?: string, returnTo?: string, ref?: string): string {
+export function renderGatePage(
+  error?: string,
+  returnTo?: string,
+  ref?: string,
+): string {
   return `<!doctype html>
 <html lang="en">
 <head>

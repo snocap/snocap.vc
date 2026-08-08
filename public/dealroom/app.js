@@ -16,7 +16,11 @@
   function formatModified(iso) {
     if (!iso) return "—";
     const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    return d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   }
 
   // trail: [{id, name}], root first. null id = the drive-configured root.
@@ -57,7 +61,10 @@
   }
 
   function openFile(file) {
-    window.open(`/dealroom/api/file?id=${encodeURIComponent(file.id)}`, "_blank");
+    window.open(
+      `/dealroom/api/file?id=${encodeURIComponent(file.id)}`,
+      "_blank",
+    );
   }
 
   function renderFiles(files) {
@@ -85,7 +92,9 @@
         <td>${isFolder ? "Folder" : friendlyType(file.mimeType)}</td>
         <td class="modified">${formatModified(file.modifiedTime)}</td>
       `;
-      tr.addEventListener("click", () => (isFolder ? openFolder(file) : openFile(file)));
+      tr.addEventListener("click", () =>
+        isFolder ? openFolder(file) : openFile(file),
+      );
       tbody.appendChild(tr);
     });
 
@@ -96,7 +105,8 @@
   function friendlyType(mimeType) {
     if (mimeType === "application/vnd.google-apps.document") return "Doc";
     if (mimeType === "application/vnd.google-apps.spreadsheet") return "Sheet";
-    if (mimeType === "application/vnd.google-apps.presentation") return "Slides";
+    if (mimeType === "application/vnd.google-apps.presentation")
+      return "Slides";
     if (mimeType === "application/pdf") return "PDF";
     return mimeType.split("/").pop();
   }

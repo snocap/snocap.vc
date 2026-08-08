@@ -24,10 +24,16 @@ async function hmacSign(data: string, secret: string): Promise<string> {
     ["sign"],
   );
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
-  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return [...new Uint8Array(sig)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
-async function hmacVerify(data: string, signature: string, secret: string): Promise<boolean> {
+async function hmacVerify(
+  data: string,
+  signature: string,
+  secret: string,
+): Promise<boolean> {
   const expected = await hmacSign(data, secret);
   if (expected.length !== signature.length) return false;
   let mismatch = 0;
@@ -41,7 +47,9 @@ function makeCookieValue(email: string, hmac: string): string {
   return btoa(email) + "." + hmac;
 }
 
-function parseCookieValue(value: string): { email: string; hmac: string } | null {
+function parseCookieValue(
+  value: string,
+): { email: string; hmac: string } | null {
   const dot = value.indexOf(".");
   if (dot === -1) return null;
   try {
@@ -60,7 +68,10 @@ function getCookie(request: Request, name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-async function verifiedEmailFromCookie(request: Request, secret: string): Promise<string | null> {
+async function verifiedEmailFromCookie(
+  request: Request,
+  secret: string,
+): Promise<string | null> {
   const cookieRaw = getCookie(request, COOKIE_NAME);
   if (!cookieRaw) return null;
   const parsed = parseCookieValue(cookieRaw);
@@ -69,7 +80,10 @@ async function verifiedEmailFromCookie(request: Request, secret: string): Promis
   return valid ? parsed.email : null;
 }
 
-async function handleAdmin(request: Request, env: Env): Promise<Response | null> {
+async function handleAdmin(
+  request: Request,
+  env: Env,
+): Promise<Response | null> {
   const url = new URL(request.url);
   if (url.pathname !== "/dealroom/admin") return null;
 
@@ -107,24 +121,37 @@ async function handleAdmin(request: Request, env: Env): Promise<Response | null>
   );
 }
 
-async function handleApi(request: Request, env: Env, email: string): Promise<Response | null> {
+async function handleApi(
+  request: Request,
+  env: Env,
+  email: string,
+): Promise<Response | null> {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/dealroom/api/")) return null;
 
   if (!env.DEALROOM_SA_KEY) {
-    return Response.json({ error: "Drive integration not configured yet" }, { status: 503 });
+    return Response.json(
+      { error: "Drive integration not configured yet" },
+      { status: 503 },
+    );
   }
 
   try {
     if (url.pathname === "/dealroom/api/list") {
-      const folderId = url.searchParams.get("folder") || env.DRIVE_ROOT_FOLDER_ID;
+      const folderId =
+        url.searchParams.get("folder") || env.DRIVE_ROOT_FOLDER_ID;
       const { folder, files } = await listFolder(env.DEALROOM_SA_KEY, folderId);
-      return Response.json({ folder, files, isRoot: folderId === env.DRIVE_ROOT_FOLDER_ID });
+      return Response.json({
+        folder,
+        files,
+        isRoot: folderId === env.DRIVE_ROOT_FOLDER_ID,
+      });
     }
 
     if (url.pathname === "/dealroom/api/file") {
       const fileId = url.searchParams.get("id");
-      if (!fileId) return Response.json({ error: "missing id" }, { status: 400 });
+      if (!fileId)
+        return Response.json({ error: "missing id" }, { status: 400 });
       return await streamFile(env.DEALROOM_SA_KEY, fileId);
     }
   } catch (err) {
@@ -149,32 +176,57 @@ export default {
     if (request.method === "POST" && url.pathname === "/dealroom") {
       const formData = await request.formData();
       const returnTo = (formData.get("return_to") as string) || "/dealroom";
-      const safeReturn = returnTo.startsWith("/dealroom") ? returnTo : "/dealroom";
+      const safeReturn = returnTo.startsWith("/dealroom")
+        ? returnTo
+        : "/dealroom";
       const refField = (formData.get("ref") as string) || "";
 
-      const email = ((formData.get("email") as string) || "").trim().toLowerCase();
+      const email = ((formData.get("email") as string) || "")
+        .trim()
+        .toLowerCase();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return new Response(renderGatePage("Please enter a valid email address.", returnTo, refField), {
-          status: 400,
-          headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
-        });
+        return new Response(
+          renderGatePage(
+            "Please enter a valid email address.",
+            returnTo,
+            refField,
+          ),
+          {
+            status: 400,
+            headers: {
+              "Content-Type": "text/html",
+              "Cache-Control": "no-store",
+            },
+          },
+        );
       }
 
       const ref = refField || refFromEmail(email);
       const password = (formData.get("password") as string) || "";
       const expected = await derivePassword(email, ref, env.DEALROOM_PW_SECRET);
       if (!env.DEALROOM_PW_SECRET || password !== expected) {
-        return new Response(renderGatePage("Invalid access code.", returnTo, refField), {
-          status: 400,
-          headers: { "Content-Type": "text/html", "Cache-Control": "no-store" },
-        });
+        return new Response(
+          renderGatePage("Invalid access code.", returnTo, refField),
+          {
+            status: 400,
+            headers: {
+              "Content-Type": "text/html",
+              "Cache-Control": "no-store",
+            },
+          },
+        );
       }
 
       try {
         await env.DB.prepare(
           "INSERT INTO viewers (email, ref, user_agent, country) VALUES (?, ?, ?, ?)",
         )
-          .bind(email, ref, request.headers.get("User-Agent") || "", (request.cf?.country as string) || "")
+          .bind(
+            email,
+            ref,
+            request.headers.get("User-Agent") || "",
+            (request.cf?.country as string) || "",
+          )
           .run();
       } catch {
         // non-fatal: don't block access if D1 write fails

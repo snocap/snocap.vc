@@ -75,7 +75,8 @@ let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getAccessToken(saKeyJson: string): Promise<string> {
   const now = Date.now();
-  if (cachedToken && cachedToken.expiresAt > now + 30_000) return cachedToken.token;
+  if (cachedToken && cachedToken.expiresAt > now + 30_000)
+    return cachedToken.token;
 
   const key: ServiceAccountKey = JSON.parse(saKeyJson);
   const assertion = await signServiceAccountJwt(key);
@@ -90,8 +91,14 @@ async function getAccessToken(saKeyJson: string): Promise<string> {
   if (!resp.ok) {
     throw new Error(`drive auth failed: ${resp.status} ${await resp.text()}`);
   }
-  const data = (await resp.json()) as { access_token: string; expires_in: number };
-  cachedToken = { token: data.access_token, expiresAt: now + data.expires_in * 1000 };
+  const data = (await resp.json()) as {
+    access_token: string;
+    expires_in: number;
+  };
+  cachedToken = {
+    token: data.access_token,
+    expiresAt: now + data.expires_in * 1000,
+  };
   return data.access_token;
 }
 
@@ -107,18 +114,24 @@ export async function listFolder(
     { headers: auth },
   );
   if (!folderMeta.ok) {
-    throw new Error(`drive folder lookup failed: ${folderMeta.status} ${await folderMeta.text()}`);
+    throw new Error(
+      `drive folder lookup failed: ${folderMeta.status} ${await folderMeta.text()}`,
+    );
   }
   const folder = (await folderMeta.json()) as { id: string; name: string };
 
   const q = encodeURIComponent(`'${folderId}' in parents and trashed = false`);
-  const fields = encodeURIComponent("files(id,name,mimeType,modifiedTime,size,iconLink)");
+  const fields = encodeURIComponent(
+    "files(id,name,mimeType,modifiedTime,size,iconLink)",
+  );
   const listResp = await fetch(
     `${DRIVE_API}/files?q=${q}&fields=${fields}&orderBy=folder,name&pageSize=200`,
     { headers: auth },
   );
   if (!listResp.ok) {
-    throw new Error(`drive list failed: ${listResp.status} ${await listResp.text()}`);
+    throw new Error(
+      `drive list failed: ${listResp.status} ${await listResp.text()}`,
+    );
   }
   const data = (await listResp.json()) as { files?: DriveFile[] };
   return { folder, files: data.files || [] };
@@ -138,14 +151,20 @@ const EXPORT_MIME_PREFERENCE: Record<string, string> = {
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
-export async function streamFile(saKeyJson: string, fileId: string): Promise<Response> {
+export async function streamFile(
+  saKeyJson: string,
+  fileId: string,
+): Promise<Response> {
   const token = await getAccessToken(saKeyJson);
   const auth = { Authorization: `Bearer ${token}` };
 
   const fields = encodeURIComponent("id,name,mimeType,exportLinks");
-  const metaResp = await fetch(`${DRIVE_API}/files/${fileId}?fields=${fields}`, {
-    headers: auth,
-  });
+  const metaResp = await fetch(
+    `${DRIVE_API}/files/${fileId}?fields=${fields}`,
+    {
+      headers: auth,
+    },
+  );
   if (!metaResp.ok) {
     return new Response("File not found", { status: 404 });
   }
@@ -153,17 +172,27 @@ export async function streamFile(saKeyJson: string, fileId: string): Promise<Res
 
   const isNative = meta.mimeType.startsWith("application/vnd.google-apps.");
   const sourceUrl = isNative
-    ? meta.exportLinks?.[EXPORT_MIME_PREFERENCE[meta.mimeType] || "application/pdf"]
+    ? meta.exportLinks?.[
+        EXPORT_MIME_PREFERENCE[meta.mimeType] || "application/pdf"
+      ]
     : `${DRIVE_API}/files/${fileId}?alt=media`;
 
   if (!sourceUrl) {
-    return new Response(`No export available for ${meta.mimeType}`, { status: 415 });
+    return new Response(`No export available for ${meta.mimeType}`, {
+      status: 415,
+    });
   }
 
   const upstream = await fetch(sourceUrl, { headers: auth });
   const headers = new Headers();
-  headers.set("Content-Type", upstream.headers.get("Content-Type") || "application/octet-stream");
-  headers.set("Content-Disposition", `inline; filename="${meta.name.replace(/"/g, "")}"`);
+  headers.set(
+    "Content-Type",
+    upstream.headers.get("Content-Type") || "application/octet-stream",
+  );
+  headers.set(
+    "Content-Disposition",
+    `inline; filename="${meta.name.replace(/"/g, "")}"`,
+  );
   headers.set("Cache-Control", "private, no-store");
   return new Response(upstream.body, { status: upstream.status, headers });
 }

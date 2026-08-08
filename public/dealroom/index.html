@@ -15,9 +15,14 @@
     />
 
     <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-      html, body {
+      html,
+      body {
         min-height: 100%;
         font-family: "Inter", system-ui, sans-serif;
         background: #0a0a0a;
@@ -66,13 +71,21 @@
       }
 
       .breadcrumbs button:hover,
-      .breadcrumbs .current { color: #fff; }
+      .breadcrumbs .current {
+        color: #fff;
+      }
 
-      .breadcrumbs .sep { color: #444; }
+      .breadcrumbs .sep {
+        color: #444;
+      }
 
-      table { width: 100%; border-collapse: collapse; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
 
-      th, td {
+      th,
+      td {
         text-align: left;
         padding: 12px 8px;
         border-bottom: 1px solid #1a1a1a;
@@ -87,21 +100,41 @@
         font-weight: 400;
       }
 
-      tr.row { cursor: pointer; }
-      tr.row:hover td { background: rgba(255,255,255,0.03); }
+      tr.row {
+        cursor: pointer;
+      }
+      tr.row:hover td {
+        background: rgba(255, 255, 255, 0.03);
+      }
 
-      .name-cell { display: flex; align-items: center; gap: 10px; }
-      .icon { width: 18px; text-align: center; opacity: 0.8; flex-shrink: 0; }
-      .modified { color: #888; white-space: nowrap; }
+      .name-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .icon {
+        width: 18px;
+        text-align: center;
+        opacity: 0.8;
+        flex-shrink: 0;
+      }
+      .modified {
+        color: #888;
+        white-space: nowrap;
+      }
 
-      .empty, .error, .loading {
+      .empty,
+      .error,
+      .loading {
         padding: 40px 0;
         text-align: center;
         color: #666;
         font-size: 14px;
       }
 
-      .error { color: #F15800; }
+      .error {
+        color: #f15800;
+      }
     </style>
   </head>
   <body>
