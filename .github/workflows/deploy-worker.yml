@@ -2,7 +2,7 @@ name: Deploy Deck Gate Worker
 on:
   push:
     branches: [main]
-    paths: ["workers/deck-gate/**"]
+    paths: ["workers/deck-gate/**", "workers/shared/**"]
   workflow_dispatch:
 
 jobs:

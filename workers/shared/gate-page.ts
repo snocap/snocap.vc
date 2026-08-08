@@ -1,0 +1,208 @@
+// The email/access-code gate page, shared by both gates. The chrome — dark
+// card, wordmark, Inter + NB Akademie Mono, orange (#F15800) focus and button
+// — is one design; only the copy, the form target and the head metadata differ
+// per gate.
+
+import { escapeHtml } from "./viewers.ts";
+
+const LOGO_SVG = `<svg class="logo" viewBox="0 0 885 139.88" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M113.44,563.44a34.06,34.06,0,0,0,1.13,8.58,29.58,29.58,0,0,0,4,8.77,34.9,34.9,0,0,0,6.89,7.74A32.29,32.29,0,0,0,135.79,594a43.24,43.24,0,0,0,13.87,2.07A46.07,46.07,0,0,0,166,593.24a28.61,28.61,0,0,0,12.45-8.87,21.91,21.91,0,0,0,5-14.25,24.14,24.14,0,0,0-2-10,18.59,18.59,0,0,0-5.09-7,26.64,26.64,0,0,0-7.73-4.24,50.21,50.21,0,0,0-9-2.46c-2.83-.44-6.1-.81-9.81-1.13q-48.48-4.24-48.48-36.91A35.53,35.53,0,0,1,104.2,494a32.39,32.39,0,0,1,7.54-10.86,42.27,42.27,0,0,1,10.85-7.36,56,56,0,0,1,12.73-4.25q3.3-.66,6.6-1t6.61-.33a55.33,55.33,0,0,1,16.69,2.55A51.89,51.89,0,0,1,179.84,480a36.13,36.13,0,0,1,10.66,12A37.74,37.74,0,0,1,195,508.36l-15.38,2.73q-1.32-13.2-10-20t-21.12-6.8a44.44,44.44,0,0,0-11.32,1.42,35.59,35.59,0,0,0-9.9,4.24A22.1,22.1,0,0,0,120,497.6a21.16,21.16,0,0,0-2.83,10.94q0,19.62,33.39,22.83l7.35.85c1.07.13,2.22.28,3.45.47s2.56.44,4,.76,2.79.62,4.05.94,2.42.63,3.49.94,2.2.69,3.4,1.13,2.42.95,3.68,1.51a36.81,36.81,0,0,1,6.5,3.68,45.08,45.08,0,0,1,5.38,4.81,27.73,27.73,0,0,1,4.34,6.23,33.44,33.44,0,0,1,2.73,7.92,45.14,45.14,0,0,1,1,9.71,34.34,34.34,0,0,1-6.6,20.94,42.7,42.7,0,0,1-17.92,13.87,64.5,64.5,0,0,1-25.47,4.81,68.29,68.29,0,0,1-19.52-2.62,47.3,47.3,0,0,1-14.81-7,45.66,45.66,0,0,1-10-10.06,42.71,42.71,0,0,1-6-11.79,44.62,44.62,0,0,1-2.08-12.17Z" transform="translate(-97.5 -470.06)"/><path d="M257,471.85H272.8l67.82,107.43V471.85h16v136H340.81L273,500.62V607.86H257Z" transform="translate(-97.5 -470.06)"/><path d="M425.26,578.72q-6.78-15.94-6.79-38.77a109.1,109.1,0,0,1,3.4-28.2,67.1,67.1,0,0,1,10-22.07,45.23,45.23,0,0,1,17.08-14.43A54.23,54.23,0,0,1,473,470.16q26.79,0,41,20.46l9.24-9.05,8.49,8.49-11.32,11.41q6.71,15.84,6.7,38.48,0,20.94-5.76,36.22a52.84,52.84,0,0,1-18.11,24.52q-12.35,9.06-30.27,9.06-27.17,0-41.6-20.28l-8.11,8.11-8.49-8.49ZM435.45,540q0,15.19,3.11,25.75L502.51,502Q492.42,484.2,473,484.21q-18,0-27.83,14.62t-9.71,41.22Zm7.73,38.2q9.44,17.93,29.81,17.92,17.92,0,27.73-14.71T510.43,540a91.61,91.61,0,0,0-3.3-25.65l-63.95,63.76Z" transform="translate(-97.5 -470.06)"/><path d="M580.72,540q0-20.66,5.94-36.22t18.21-24.61q12.25-9.06,29.71-9.06a52.62,52.62,0,0,1,17.16,2.74A44.78,44.78,0,0,1,665,479.59a56.24,56.24,0,0,1,15.56,19.9,73.69,73.69,0,0,1,3.4,9.62L668.25,512a60.92,60.92,0,0,0-2.83-7.07,44.17,44.17,0,0,0-4.62-7.36,51.84,51.84,0,0,0-6.51-6.79,29.94,29.94,0,0,0-8.77-4.81,33.31,33.31,0,0,0-11-1.88q-18.39,0-27.73,14.51t-9.33,41.28q0,27,9.33,41.56T634.48,596a32.69,32.69,0,0,0,20-6.89,37.39,37.39,0,0,0,6.6-6.79A42.46,42.46,0,0,0,665.7,575a46.14,46.14,0,0,0,2.74-7.08l15.65,2.93a45.85,45.85,0,0,1-3.2,9.62,53.14,53.14,0,0,1-6.32,10.28,51.14,51.14,0,0,1-9.43,9.55,44.58,44.58,0,0,1-13.3,6.84,52.12,52.12,0,0,1-17.07,2.75q-17.46,0-29.71-9.05t-18.21-24.62q-5.94-15.55-5.94-36.31Z" transform="translate(-97.5 -470.06)"/><path d="M771.9,471.85h16l45.18,136h-16.6l-10.28-29.71H753.51l-10.37,29.71h-16.6ZM801.61,564,780,493.74,758.13,564Z" transform="translate(-97.5 -470.06)"/><path d="M887.61,472h56.92q17.06,0,27.51,11.42t10.46,28.86q0,17.53-10.36,28.95t-27.42,11.32H903.84v55.27h-16Zm56.6,66.88q9.42,0,15.84-8.12a28.82,28.82,0,0,0,6.42-18.39,28.49,28.49,0,0,0-6.42-18.3q-6.4-7.92-15.84-7.92H903.65v52.73Z" transform="translate(-97.5 -470.06)"/></svg>`;
+
+export interface GatePageOptions {
+  /** <title>, and the tab name. */
+  title: string;
+  /** Extra <head> markup: icons, plus share cards for a public gate or robots for a private one. */
+  headExtra?: string;
+  /** Absolute URL of the hero image behind the card. Omit for a flat background. */
+  backgroundImage?: string;
+  /** Small mono line under the wordmark. */
+  subtitle: string;
+  /** One-line instruction above the form. */
+  prompt: string;
+  /** Form POST target. */
+  action: string;
+  submitLabel: string;
+  finePrint: string;
+  /** Rendered above the prompt when a submission was rejected. */
+  error?: string;
+  /** Path to send the viewer back to after a successful submit. */
+  returnTo?: string;
+  /** Referral slug carried through the form as a hidden field. */
+  ref?: string;
+  /** Set false to collect email only. */
+  requirePassword?: boolean;
+}
+
+export function renderGatePage({
+  title,
+  headExtra = "",
+  backgroundImage,
+  subtitle,
+  prompt,
+  action,
+  submitLabel,
+  finePrint,
+  error,
+  returnTo,
+  ref,
+  requirePassword = true,
+}: GatePageOptions): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>${title}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+${headExtra}
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    @font-face {
+      font-family: "NB Akademie Mono Std";
+      src: url("https://snocap.vc/deck/fonts/NB%20Akademie%20Mono%20Std/NB%20Akademie%20Mono%20Std.woff2") format("woff2");
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: "Inter", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+${
+  backgroundImage
+    ? `
+    .bg {
+      position: absolute;
+      inset: 0;
+      background: url("${backgroundImage}") center/cover no-repeat;
+      filter: grayscale(0.6) brightness(0.3);
+    }
+
+    .bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(10,10,10,0.6) 0%, rgba(10,10,10,0.95) 100%);
+    }
+`
+    : ""
+}
+    .card {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      width: 100%;
+      padding: 48px 40px;
+      text-align: center;
+    }
+
+    .logo {
+      width: 180px;
+      margin: 0 auto 12px;
+      opacity: 0.9;
+    }
+
+    .subtitle {
+      font-family: "NB Akademie Mono Std", "Fira Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9f9f9f;
+      margin-bottom: 48px;
+    }
+
+    .prompt {
+      font-size: 15px;
+      font-weight: 300;
+      color: #bdbdbd;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    form { display: flex; flex-direction: column; gap: 12px; }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 0;
+      color: #fff;
+      font-family: "Inter", system-ui, sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      outline: none;
+      transition: border-color 150ms ease;
+    }
+
+    input[type="email"]::placeholder,
+    input[type="password"]::placeholder { color: #666; }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus { border-color: #F15800; }
+
+    button {
+      width: 100%;
+      padding: 14px 20px;
+      background: #F15800;
+      color: #fff;
+      border: none;
+      border-radius: 0;
+      font-family: "NB Akademie Mono Std", "Fira Mono", monospace;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+
+    button:hover { background: #c24600; }
+
+    .fine-print {
+      font-size: 12px;
+      color: #666;
+      margin-top: 24px;
+      line-height: 1.5;
+    }
+
+    .error {
+      color: #F15800;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>${backgroundImage ? `\n  <div class="bg"></div>` : ""}
+  <div class="card">
+    ${LOGO_SVG}
+    <div class="subtitle">${subtitle}</div>
+    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
+    <div class="prompt">${prompt}</div>
+    <form method="POST" action="${action}">
+      ${returnTo ? `<input type="hidden" name="return_to" value="${escapeHtml(returnTo)}" />` : ""}
+      ${ref ? `<input type="hidden" name="ref" value="${escapeHtml(ref)}" />` : ""}
+      <input type="email" name="email" placeholder="you@company.com" required autofocus />
+      ${requirePassword ? `<input type="password" name="password" placeholder="Access code" required />` : ""}
+      <button type="submit">${submitLabel}</button>
+    </form>
+    <div class="fine-print">${finePrint}</div>
+  </div>
+</body>
+</html>`;
+}
