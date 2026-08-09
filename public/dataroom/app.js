@@ -93,6 +93,14 @@
   const breadcrumbsEl = document.getElementById("breadcrumbs");
   const contentEl = document.getElementById("content");
 
+  // Announce navigation so dataroom-tracker.js can record it. This file stays
+  // free of any analytics vendor; it says what happened and nothing about who
+  // is listening, the same split as deck-stage.js and deck-tracker.js. Only
+  // ids and generic types go in the detail — never a folder or file name.
+  function emit(name, detail) {
+    document.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+
   // ── URL state ──────────────────────────────────────────────────────────────
   // The hash holds the folder ids from the root down, so Back and Forward walk
   // the tree and a link to a subfolder opens there. It stays a fragment: the
@@ -180,6 +188,10 @@
   }
 
   function openFile(file) {
+    emit("dataroomfileopen", {
+      fileId: file.id,
+      fileType: describe(file).label,
+    });
     window.open(
       `/dataroom/api/file?id=${encodeURIComponent(file.id)}`,
       "_blank",
@@ -264,8 +276,15 @@
     }
   }
 
+  // Every move lands here — a row click, a breadcrumb, Back, Forward, and the
+  // first load — because they all go through the hash. That makes it the one
+  // place navigation has to be announced from.
   async function renderFromHash() {
     const ids = pathFromHash();
+    emit("dataroomnavigate", {
+      folderId: ids.length ? ids[ids.length - 1] : null,
+      depth: ids.length,
+    });
     trail = await trailForPath(ids);
     load(ids.length ? ids[ids.length - 1] : null);
   }

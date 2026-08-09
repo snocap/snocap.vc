@@ -40,6 +40,18 @@ async function handleApi(
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/dataroom/api/")) return null;
 
+  // Who is looking. The session cookie is HttpOnly, so the page cannot read
+  // the email out of it the way the deck's tracker does — this is how
+  // dataroom-tracker.js names the viewer to PostHog. Answered before the
+  // Drive check below: it needs no Drive grant, and analytics should still
+  // work while Drive is unconfigured.
+  if (url.pathname === "/dataroom/api/viewer") {
+    return Response.json(
+      { email },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   if (!env.DEALROOM_SA_KEY) {
     return Response.json(
       { error: "Drive integration not configured yet" },

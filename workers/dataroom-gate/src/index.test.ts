@@ -170,6 +170,41 @@ test("a signed cookie reaches the Drive API, which reports it is unconfigured", 
   assert.equal(res.status, 503);
 });
 
+test("a signed cookie can ask who it belongs to", async () => {
+  const cookie = `dataroom_viewer=${encodeURIComponent(await signViewerCookie("jon@sno.llc", HMAC_SECRET))}`;
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/dataroom/api/viewer", {
+      headers: { Cookie: cookie },
+    }),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { email: "jon@sno.llc" });
+});
+
+test("the viewer endpoint answers even while Drive is unconfigured", async () => {
+  // Tracking should not go dark because the Drive grant is missing — the
+  // room still renders its gate and its shell.
+  const cookie = `dataroom_viewer=${encodeURIComponent(await signViewerCookie("jon@sno.llc", HMAC_SECRET))}`;
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/dataroom/api/viewer", {
+      headers: { Cookie: cookie },
+    }),
+    env({ DEALROOM_SA_KEY: "" }),
+  );
+  assert.equal(res.status, 200);
+});
+
+test("the viewer endpoint tells an unsigned visitor nothing", async () => {
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/dataroom/api/viewer"),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("Content-Type") || "", /text\/html/);
+  assert.match(await res.text(), /<form method="POST" action="\/dataroom">/);
+});
+
 test("a forged cookie gets the gate, not the deal room", async () => {
   const forged = `${btoa("attacker@evil.com")}.${"00".repeat(32)}`;
   const res = await worker.fetch(
