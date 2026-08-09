@@ -153,10 +153,7 @@ test("verifiedEmail tolerates small clock skew between edge nodes", async () => 
   const req = cookieRequest(
     await signViewerCookie("jon@sno.llc", SECRET, NOW + 5),
   );
-  assert.equal(
-    await verifiedEmail(req, "v", SECRET, DAY, NOW),
-    "jon@sno.llc",
-  );
+  assert.equal(await verifiedEmail(req, "v", SECRET, DAY, NOW), "jon@sno.llc");
 });
 
 test("verifiedEmail rejects an issue time swapped for a later one", async () => {
@@ -165,9 +162,19 @@ test("verifiedEmail rejects an issue time swapped for a later one", async () => 
   const value = await signViewerCookie("jon@sno.llc", SECRET, NOW);
   const parsed = decodeViewerCookie(value);
   assert.ok(parsed !== null);
-  const extended = encodeViewerCookie(parsed.email, NOW + DAY * 10, parsed.hmac);
+  const extended = encodeViewerCookie(
+    parsed.email,
+    NOW + DAY * 10,
+    parsed.hmac,
+  );
   assert.equal(
-    await verifiedEmail(cookieRequest(extended), "v", SECRET, DAY, NOW + DAY * 10),
+    await verifiedEmail(
+      cookieRequest(extended),
+      "v",
+      SECRET,
+      DAY,
+      NOW + DAY * 10,
+    ),
     null,
   );
 });
