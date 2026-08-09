@@ -100,12 +100,12 @@ async function handleAdmin(
   const rows = (results || [])
     .map(
       (r: Record<string, unknown>) =>
-        `<tr><td>${r.email}</td><td>${r.first_viewed}</td><td>${r.views}</td><td>${r.country || "—"}</td><td>${r.ref || "—"}</td></tr>`,
+        `<tr><td>${r.email}</td><td>${r.first_viewed}</td><td>${r.views}</td><td>${r.country || "-"}</td><td>${r.ref || "-"}</td></tr>`,
     )
     .join("");
 
   return new Response(
-    `<!doctype html><html><head><title>Deal Room Viewers</title>
+    `<!doctype html><html><head><title>Fund 2 Data Room Viewers</title>
 <style>
   body { font-family: system-ui; background: #0a0a0a; color: #fff; padding: 40px; }
   h1 { font-weight: 300; margin-bottom: 24px; }
@@ -113,7 +113,7 @@ async function handleAdmin(
   th, td { text-align: left; padding: 10px 16px; border-bottom: 1px solid #222; font-size: 14px; }
   th { color: #9f9f9f; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
 </style></head><body>
-<h1>Deal Room Viewers</h1>
+<h1>Fund 2 Data Room Viewers</h1>
 <table><thead><tr><th>Email</th><th>First Viewed</th><th>Views</th><th>Country</th><th>Ref</th></tr></thead>
 <tbody>${rows || "<tr><td colspan=5>No viewers yet</td></tr>"}</tbody></table>
 </body></html>`,
