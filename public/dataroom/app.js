@@ -62,7 +62,7 @@
 
   function openFile(file) {
     window.open(
-      `/dealroom/api/file?id=${encodeURIComponent(file.id)}`,
+      `/dataroom/api/file?id=${encodeURIComponent(file.id)}`,
       "_blank",
     );
   }
@@ -122,7 +122,7 @@
     renderBreadcrumbs();
     try {
       const params = folderId ? `?folder=${encodeURIComponent(folderId)}` : "";
-      const resp = await fetch(`/dealroom/api/list${params}`);
+      const resp = await fetch(`/dataroom/api/list${params}`);
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
         throw new Error(body.error || `HTTP ${resp.status}`);

@@ -1,0 +1,25 @@
+# The Cloudflare worker name and the D1 database name below intentionally keep
+# the old spelling. Renaming the worker would deploy a NEW one with none of the
+# four secrets bound, taking the room down until they were re-added by hand; the
+# D1 name is likewise cosmetic and its id is what actually binds. URLs, which
+# are what people see, are /dataroom. Renaming the infrastructure is a separate,
+# deliberate migration.
+name = "dealroom-gate"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+routes = [
+  { pattern = "snocap.vc/dataroom*", zone_name = "snocap.vc" },
+  # Kept so the old path 301s to the new one instead of 404ing.
+  { pattern = "snocap.vc/dealroom*", zone_name = "snocap.vc" }
+]
+
+[vars]
+# The GP Docs deal-room folder in Drive (https://drive.google.com/drive/folders/1pkCOx6pM__kgD6Ho6RwSsptYQYGwaKc-).
+# Not secret on its own — it's useless without the DEALROOM_SA_KEY grant below.
+DRIVE_ROOT_FOLDER_ID = "1pkCOx6pM__kgD6Ho6RwSsptYQYGwaKc-"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dealroom-viewers"
+database_id = "48a6eda4-4cd3-4bf7-b965-6639476e42ca"

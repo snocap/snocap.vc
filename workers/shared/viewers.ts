@@ -1,5 +1,5 @@
 // The `viewers` D1 table and its admin view, shared by both gates. Each gate
-// binds its OWN database (deck-viewers / dealroom-viewers) — only the schema
+// binds its OWN database (deck-viewers / dataroom-viewers) — only the schema
 // and the queries are shared, never the data.
 
 export function escapeHtml(value: unknown): string {

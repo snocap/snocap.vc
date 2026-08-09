@@ -45,7 +45,7 @@ export async function verifyHmacHex(
   return timingSafeEqual(await hmacHex(data, secret), signature);
 }
 
-// RFC 4648 base32 without padding. Used for the dealroom access code, which
+// RFC 4648 base32 without padding. Used for the dataroom access code, which
 // people read off a screen and type back in — base32 drops the characters
 // that get confused by eye (0/O, 1/I).
 export function base32Encode(bytes: Uint8Array): string {

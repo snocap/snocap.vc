@@ -16,7 +16,7 @@ export function renderGatePage(
     headExtra: HEAD_EXTRA,
     subtitle: "Fund 2 Data Room",
     prompt: "Enter your email and access code to view the data room.",
-    action: "/dealroom",
+    action: "/dataroom",
     submitLabel: "Enter Data Room",
     finePrint:
       "This data room contains confidential SNØCAP fund materials. Access is logged and your access code is unique to you. Please don't share it.",

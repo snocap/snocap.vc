@@ -132,7 +132,7 @@ test("verifiedEmail accepts a cookie exactly at the lifetime boundary", async ()
 });
 
 test("the two gates expire independently at their own lifetimes", async () => {
-  // A dealroom cookie (24h) must be dead at an age the deck (30d) still allows.
+  // A dataroom cookie (24h) must be dead at an age the deck (30d) still allows.
   const req = cookieRequest(await signViewerCookie("jon@sno.llc", SECRET, NOW));
   const twoDaysLater = NOW + DAY * 2;
   assert.equal(await verifiedEmail(req, "v", SECRET, DAY, twoDaysLater), null);
@@ -232,15 +232,15 @@ test("setCookie writes a Secure, SameSite=Lax cookie and omits HttpOnly by defau
 
 test("setCookie appends HttpOnly when asked", () => {
   const header = setCookie({
-    name: "dealroom_viewer",
+    name: "dataroom_viewer",
     value: "abc.def",
-    path: "/dealroom",
+    path: "/dataroom",
     maxAge: 86400,
     httpOnly: true,
   });
   assert.equal(
     header,
-    "dealroom_viewer=abc.def; Path=/dealroom; Max-Age=86400; Secure; SameSite=Lax; HttpOnly",
+    "dataroom_viewer=abc.def; Path=/dataroom; Max-Age=86400; Secure; SameSite=Lax; HttpOnly",
   );
 });
 
