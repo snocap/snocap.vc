@@ -120,7 +120,7 @@
     if (nameById.has(id)) return nameById.get(id);
     try {
       const resp = await fetch(
-        `/dealroom/api/list?folder=${encodeURIComponent(id)}`,
+        `/dataroom/api/list?folder=${encodeURIComponent(id)}`,
       );
       if (!resp.ok) return null;
       const data = await resp.json();
