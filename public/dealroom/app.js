@@ -14,7 +14,7 @@
   }
 
   function formatModified(iso) {
-    if (!iso) return "—";
+    if (!iso) return "-";
     const d = new Date(iso);
     return d.toLocaleDateString(undefined, {
       year: "numeric",
@@ -24,7 +24,7 @@
   }
 
   // trail: [{id, name}], root first. null id = the drive-configured root.
-  let trail = [{ id: null, name: "Deal Room" }];
+  let trail = [{ id: null, name: "Fund 2 Data Room" }];
 
   const breadcrumbsEl = document.getElementById("breadcrumbs");
   const contentEl = document.getElementById("content");
