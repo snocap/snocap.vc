@@ -22,7 +22,7 @@ interface Env {
   DRIVE_ROOT_FOLDER_ID: string;
 }
 
-const COOKIE_NAME = "dealroom_viewer";
+const COOKIE_NAME = "dataroom_viewer";
 const COOKIE_MAX_AGE = 60 * 60 * 24; // 24h — shorter-lived than deck's 30 days
 
 function gateResponse(html: string, status: number): Response {
@@ -38,7 +38,7 @@ async function handleApi(
   email: string,
 ): Promise<Response | null> {
   const url = new URL(request.url);
-  if (!url.pathname.startsWith("/dealroom/api/")) return null;
+  if (!url.pathname.startsWith("/dataroom/api/")) return null;
 
   if (!env.DEALROOM_SA_KEY) {
     return Response.json(
@@ -48,7 +48,7 @@ async function handleApi(
   }
 
   try {
-    if (url.pathname === "/dealroom/api/list") {
+    if (url.pathname === "/dataroom/api/list") {
       const folderId =
         url.searchParams.get("folder") || env.DRIVE_ROOT_FOLDER_ID;
       const { folder, files } = await listFolder(env.DEALROOM_SA_KEY, folderId);
@@ -59,7 +59,7 @@ async function handleApi(
       });
     }
 
-    if (url.pathname === "/dealroom/api/file") {
+    if (url.pathname === "/dataroom/api/file") {
       const fileId = url.searchParams.get("id");
       if (!fileId)
         return Response.json({ error: "missing id" }, { status: 400 });
@@ -76,25 +76,33 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
+    // The room used to live at /dealroom. Links to the old path are already in
+    // inboxes, so keep them working rather than 404ing an LP.
+    if (url.pathname === "/dealroom" || url.pathname.startsWith("/dealroom/")) {
+      const moved = new URL(url);
+      moved.pathname = url.pathname.replace(/^\/dealroom/, "/dataroom");
+      return Response.redirect(moved.toString(), 301);
+    }
+
     const adminResponse = await handleViewerAdmin(request, {
-      path: "/dealroom/admin",
+      path: "/dataroom/admin",
       db: env.DB,
       adminToken: env.ADMIN_TOKEN,
       title: "Fund 2 Data Room Viewers",
     });
     if (adminResponse) return adminResponse;
 
-    if (!url.pathname.startsWith("/dealroom")) {
+    if (!url.pathname.startsWith("/dataroom")) {
       return fetch(request);
     }
 
     // POST: gate form submission
-    if (request.method === "POST" && url.pathname === "/dealroom") {
+    if (request.method === "POST" && url.pathname === "/dataroom") {
       const formData = await request.formData();
-      const returnTo = (formData.get("return_to") as string) || "/dealroom";
-      const safeReturn = returnTo.startsWith("/dealroom")
+      const returnTo = (formData.get("return_to") as string) || "/dataroom";
+      const safeReturn = returnTo.startsWith("/dataroom")
         ? returnTo
-        : "/dealroom";
+        : "/dataroom";
       const refField = (formData.get("ref") as string) || "";
 
       const email = normalizeEmail(formData.get("email"));
@@ -132,7 +140,7 @@ export default {
         setCookie({
           name: COOKIE_NAME,
           value: await signViewerCookie(email, env.HMAC_SECRET),
-          path: "/dealroom",
+          path: "/dataroom",
           maxAge: COOKIE_MAX_AGE,
           httpOnly: true,
         }),
