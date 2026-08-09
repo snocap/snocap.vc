@@ -138,7 +138,12 @@ export default {
     }
 
     // GET: email cookie is the only bypass
-    const email = await verifiedEmail(request, COOKIE_NAME, env.HMAC_SECRET);
+    const email = await verifiedEmail(
+      request,
+      COOKIE_NAME,
+      env.HMAC_SECRET,
+      COOKIE_MAX_AGE,
+    );
     if (email) {
       const refCookie = readCookie(request, REF_COOKIE_NAME);
       const ref = refCookie || refFromEmail(email);

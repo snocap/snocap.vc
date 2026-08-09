@@ -141,7 +141,12 @@ export default {
     }
 
     // Cookie is the sole bypass past this point — no ref/password shortcut.
-    const email = await verifiedEmail(request, COOKIE_NAME, env.HMAC_SECRET);
+    const email = await verifiedEmail(
+      request,
+      COOKIE_NAME,
+      env.HMAC_SECRET,
+      COOKIE_MAX_AGE,
+    );
     if (!email) {
       const refParam = url.searchParams.get("ref") || undefined;
       return gateResponse(
