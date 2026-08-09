@@ -134,7 +134,7 @@ test("handleViewerAdmin shows a dash for a missing country or ref", async () => 
     new Request("https://snocap.vc/deck/admin?token=s3cret-token"),
     adminOptions(db),
   );
-  assert.match(await res!.text(), /<td>—<\/td><td>—<\/td>/);
+  assert.match(await res!.text(), /<td>-<\/td><td>-<\/td>/);
 });
 
 test("handleViewerAdmin says so when nobody has viewed yet", async () => {

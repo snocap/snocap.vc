@@ -209,5 +209,5 @@ test("the admin table lives at /dealroom/admin and needs the admin token", async
     new Request("https://snocap.vc/dealroom/admin?token=admin-token"),
     env(),
   );
-  assert.match(await ok.text(), /<h1>Deal Room Viewers<\/h1>/);
+  assert.match(await ok.text(), /<h1>Fund 2 Data Room Viewers<\/h1>/);
 });

@@ -12,14 +12,14 @@ export function renderGatePage(
   ref?: string,
 ): string {
   return renderShell({
-    title: "SNØCAP — Deal Room",
+    title: "SNØCAP Fund 2 Data Room",
     headExtra: HEAD_EXTRA,
-    subtitle: "GP Deal Room",
-    prompt: "Enter your email and access code to view the deal room.",
+    subtitle: "Fund 2 Data Room",
+    prompt: "Enter your email and access code to view the data room.",
     action: "/dealroom",
-    submitLabel: "Enter Deal Room",
+    submitLabel: "Enter Data Room",
     finePrint:
-      "This deal room contains confidential SNØCAP fund materials. Access is logged and your access code is unique to you — please don't share it.",
+      "This data room contains confidential SNØCAP fund materials. Access is logged and your access code is unique to you. Please don't share it.",
     error,
     returnTo,
     ref,

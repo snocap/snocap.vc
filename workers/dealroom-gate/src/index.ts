@@ -80,7 +80,7 @@ export default {
       path: "/dealroom/admin",
       db: env.DB,
       adminToken: env.ADMIN_TOKEN,
-      title: "Deal Room Viewers",
+      title: "Fund 2 Data Room Viewers",
     });
     if (adminResponse) return adminResponse;
 

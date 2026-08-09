@@ -69,7 +69,7 @@ export async function handleViewerAdmin(
   const rows = (results || [])
     .map(
       (r: Record<string, unknown>) =>
-        `<tr><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.first_viewed)}</td><td>${escapeHtml(r.views)}</td><td>${r.country ? escapeHtml(r.country) : "—"}</td><td>${r.ref ? escapeHtml(r.ref) : "—"}</td></tr>`,
+        `<tr><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.first_viewed)}</td><td>${escapeHtml(r.views)}</td><td>${r.country ? escapeHtml(r.country) : "-"}</td><td>${r.ref ? escapeHtml(r.ref) : "-"}</td></tr>`,
     )
     .join("");
 
