@@ -1,0 +1,21 @@
+name: Test Workers
+
+on:
+  push:
+    branches: [main, next]
+    paths: ["workers/**"]
+  pull_request:
+    paths: ["workers/**"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+      # node --test is built in and the worker sources have no dependencies,
+      # so there is nothing to install.
+      - run: npm test
