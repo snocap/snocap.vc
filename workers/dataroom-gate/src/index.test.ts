@@ -1,5 +1,5 @@
 // What is distinctive about the deal room gate: a per-viewer access code
-// derived from (email, ref), no ref bypass at all, and a 24h HttpOnly cookie
+// derived from the email alone, no ref bypass at all, and a 24h HttpOnly cookie
 // scoped to /dataroom.
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
@@ -83,7 +83,7 @@ test("a ref in the URL does not set any cookie", async () => {
 });
 
 test("the derived per-viewer code opens the gate", async () => {
-  const code = await derivePassword("jon@sno.llc", "jon", PW_SECRET);
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
   const res = await worker.fetch(
     post({ email: "jon@sno.llc", password: code }),
     env(),
@@ -92,11 +92,7 @@ test("the derived per-viewer code opens the gate", async () => {
 });
 
 test("another viewer's code does not work", async () => {
-  const otherCode = await derivePassword(
-    "someone@else.com",
-    "someone",
-    PW_SECRET,
-  );
+  const otherCode = await derivePassword("someone@else.com", PW_SECRET);
   const res = await worker.fetch(
     post({ email: "jon@sno.llc", password: otherCode }),
     env(),
@@ -106,7 +102,7 @@ test("another viewer's code does not work", async () => {
 });
 
 test("the cookie is 24h, HttpOnly and scoped to /dataroom", async () => {
-  const code = await derivePassword("jon@sno.llc", "jon", PW_SECRET);
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
   const res = await worker.fetch(
     post({ email: "jon@sno.llc", password: code }),
     env(),
@@ -138,7 +134,7 @@ test("a malformed email is rejected", async () => {
 });
 
 test("a return_to outside /dataroom is ignored", async () => {
-  const code = await derivePassword("jon@sno.llc", "jon", PW_SECRET);
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
   const res = await worker.fetch(
     post({
       email: "jon@sno.llc",
@@ -273,34 +269,37 @@ test("a path merely starting with the old name is not redirected", async () => {
   assert.notEqual(res.status, 301);
 });
 
-// ── access codes must not be silently invalidated by the URL's ref ───────────
+// ── the URL's ref is attribution, never part of the access code ───────────────
 // Observed live 2026-08-10: a code minted for the email's own default ref was
-// rejected on a `/dataroom?ref=<someone-else>` link, because `ref` is part of
-// HMAC(email|ref). It looked unreproducible since a request omitting `ref`
-// falls back to the default and succeeds.
+// rejected on a `/dataroom?ref=<someone-else>` link, because `ref` used to be
+// part of HMAC(email|ref). It looked unreproducible since a request omitting
+// `ref` fell back to the default and succeeded. The code is now keyed on the
+// email alone (snocap/snocap.vc#11), so whichever ref the link carries is
+// irrelevant to whether the gate opens.
 
-test("a code minted for the email default still works when the form carries a different ref", async () => {
-  const code = await derivePassword("jon@sno.llc", "jon", PW_SECRET);
-  const res = await worker.fetch(
-    post({ email: "jon@sno.llc", password: code, ref: "someonelse" }),
-    env(),
-  );
-  assert.equal(res.status, 302);
-});
-
-test("a code minted for the submitted ref also still works", async () => {
-  const code = await derivePassword("jon@sno.llc", "referrer", PW_SECRET);
-  const res = await worker.fetch(
-    post({ email: "jon@sno.llc", password: code, ref: "referrer" }),
-    env(),
-  );
-  assert.equal(res.status, 302);
+test("the email's code opens the gate whatever ref the form carries", async () => {
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+  for (const ref of [undefined, "jon", "someonelse"]) {
+    const res = await worker.fetch(
+      post({ email: "jon@sno.llc", password: code, ...(ref ? { ref } : {}) }),
+      env(),
+    );
+    assert.equal(
+      res.status,
+      302,
+      `ref=${ref ?? "(none)"} should open the gate`,
+    );
+  }
 });
 
 test("a wrong code is still refused no matter which ref is submitted", async () => {
   for (const ref of ["", "jon", "someonelse"]) {
     const res = await worker.fetch(
-      post({ email: "jon@sno.llc", password: "NOTITNOW", ...(ref ? { ref } : {}) }),
+      post({
+        email: "jon@sno.llc",
+        password: "NOTITNOW",
+        ...(ref ? { ref } : {}),
+      }),
       env(),
     );
     assert.equal(res.status, 400, `ref=${ref || "(none)"} should be refused`);

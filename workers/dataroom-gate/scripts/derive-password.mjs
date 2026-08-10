@@ -7,11 +7,11 @@
 // Needs the Node in .node-version (22.18+ / 23.6+) — it imports TypeScript
 // directly, relying on built-in type stripping.
 import { derivePassword } from "../src/password.ts";
-import { normalizeEmail, refFromEmail } from "../../shared/email.ts";
+import { normalizeEmail } from "../../shared/email.ts";
 
-const [, , emailArg, refArg] = process.argv;
+const [, , emailArg] = process.argv;
 if (!emailArg) {
-  console.error("usage: derive-password.mjs <email> [ref]");
+  console.error("usage: derive-password.mjs <email>");
   process.exit(1);
 }
 
@@ -21,7 +21,6 @@ if (!secret) {
   process.exit(1);
 }
 
-const email = normalizeEmail(emailArg);
-const ref = refArg || refFromEmail(email);
-
-console.log(await derivePassword(email, ref, secret));
+// The code is keyed on the email alone — `ref` is attribution, not part of the
+// credential (snocap/snocap.vc#11).
+console.log(await derivePassword(normalizeEmail(emailArg), secret));
