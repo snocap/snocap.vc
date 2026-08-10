@@ -12,12 +12,12 @@
  *   - dataroom_file_opened when a file is opened or downloaded
  *   - dataroom_exit on pagehide, with session totals
  *
- * WHAT THIS DELIBERATELY DOES NOT SEND: folder names, file names, and the
- * breadcrumb trail. The room's contents are confidential LP material and the
- * names alone give most of it away. Every event carries Drive ids instead,
- * which anyone with access to the room can resolve back to a name, plus a
- * generic file type ("PDF", "Google Sheet") so a rollup reads without a
- * lookup. The URL hash is ids too, so $current_url leaks nothing either.
+ * Each folder/file event carries the human name (`folder_name` / `file_name`)
+ * alongside the Drive id and a generic file type ("PDF", "Google Sheet"). The
+ * name is what makes a #fundraising synopsis or a PostHog rollup readable —
+ * a bare id tells you nothing — and this is an LP-facing room, so its file
+ * names in analytics are acceptable to leak. (The URL hash stays ids: it is
+ * how navigation works, not a place we put names.)
  *
  * app.js does the navigating and dispatches `dataroomnavigate` /
  * `dataroomfileopen` on document; this file is the only one that knows about
@@ -45,6 +45,7 @@
 
   var folderEnteredAt = null;
   var currentFolderId = null;
+  var currentFolderName = null;
   var currentDepth = 0;
   var maxDepth = 0;
   var foldersOpened = {};
@@ -98,6 +99,7 @@
     track("dataroom_folder_dwell", {
       dataroom_id: dataroomId,
       folder_id: currentFolderId,
+      folder_name: currentFolderName,
       depth: currentDepth,
       seconds: seconds,
     });
@@ -109,6 +111,7 @@
     // "root" rather than null so the property is always a string and the root
     // groups like any other folder.
     currentFolderId = detail.folderId || "root";
+    currentFolderName = detail.folderName || null;
     currentDepth = typeof detail.depth === "number" ? detail.depth : 0;
     if (currentDepth > maxDepth) maxDepth = currentDepth;
     folderEnteredAt = Date.now();
@@ -117,6 +120,7 @@
     track("dataroom_folder_opened", {
       dataroom_id: dataroomId,
       folder_id: currentFolderId,
+      folder_name: currentFolderName,
       depth: currentDepth,
       is_root: currentDepth === 0,
     });
@@ -127,6 +131,7 @@
     track("dataroom_file_opened", {
       dataroom_id: dataroomId,
       file_id: detail.fileId,
+      file_name: detail.fileName || null,
       file_type: detail.fileType || null,
       folder_id: currentFolderId,
       depth: currentDepth,

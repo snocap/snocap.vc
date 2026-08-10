@@ -95,8 +95,10 @@
 
   // Announce navigation so dataroom-tracker.js can record it. This file stays
   // free of any analytics vendor; it says what happened and nothing about who
-  // is listening, the same split as deck-stage.js and deck-tracker.js. Only
-  // ids and generic types go in the detail — never a folder or file name.
+  // is listening, the same split as deck-stage.js and deck-tracker.js. The
+  // detail carries folder/file names (the room's contents are LP-facing but not
+  // secret from analytics — a name reads far better than a Drive id), alongside
+  // the id and a generic type.
   function emit(name, detail) {
     document.dispatchEvent(new CustomEvent(name, { detail }));
   }
@@ -190,6 +192,7 @@
   function openFile(file) {
     emit("dataroomfileopen", {
       fileId: file.id,
+      fileName: file.name,
       fileType: describe(file).label,
     });
     window.open(
@@ -281,11 +284,17 @@
   // place navigation has to be announced from.
   async function renderFromHash() {
     const ids = pathFromHash();
+    // Resolve the trail before announcing the move so the event carries the
+    // folder's name, not just its id. On the normal click-through path the name
+    // is already known (openFolder/load cached it); only a cold deep link to a
+    // subfolder can leave it a placeholder until load() fills it in.
+    trail = await trailForPath(ids);
+    const current = trail[trail.length - 1];
     emit("dataroomnavigate", {
       folderId: ids.length ? ids[ids.length - 1] : null,
+      folderName: current ? current.name : null,
       depth: ids.length,
     });
-    trail = await trailForPath(ids);
     load(ids.length ? ids[ids.length - 1] : null);
   }
 
