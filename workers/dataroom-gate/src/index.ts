@@ -40,6 +40,15 @@ async function handleApi(
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/dataroom/api/")) return null;
 
+  // Who the gate verified for this request. dataroom-tracker.js needs it to
+  // identify the viewer in PostHog: this cookie is HttpOnly (the deck's is not),
+  // so a script can't read the email out of it the way deck-tracker.js does.
+  // Answered before the Drive check below — it needs no Drive access, and a
+  // data room with Drive unconfigured should still identify its viewers.
+  if (url.pathname === "/dataroom/api/me") {
+    return Response.json({ email });
+  }
+
   if (!env.DEALROOM_SA_KEY) {
     return Response.json(
       { error: "Drive integration not configured yet" },

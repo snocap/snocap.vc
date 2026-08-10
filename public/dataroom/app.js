@@ -174,12 +174,25 @@
     });
   }
 
+  // Announce navigation for anything that wants to observe it (currently
+  // dataroom-tracker.js). Dispatching an event rather than calling the tracker
+  // keeps this file unaware of whether tracking is even loaded.
+  function announce(name, file) {
+    document.dispatchEvent(
+      new CustomEvent(name, {
+        detail: { id: file.id, name: file.name, mimeType: file.mimeType },
+      }),
+    );
+  }
+
   function openFolder(file) {
     nameById.set(file.id, file.name);
+    announce("dataroom:folder", file);
     navigateTo(currentPathIds().concat(file.id));
   }
 
   function openFile(file) {
+    announce("dataroom:file", file);
     window.open(
       `/dataroom/api/file?id=${encodeURIComponent(file.id)}`,
       "_blank",

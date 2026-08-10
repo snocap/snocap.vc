@@ -170,6 +170,28 @@ test("a signed cookie reaches the Drive API, which reports it is unconfigured", 
   assert.equal(res.status, 503);
 });
 
+test("/api/me returns the verified viewer, with no Drive config needed", async () => {
+  const cookie = `dataroom_viewer=${encodeURIComponent(await signViewerCookie("lp@example.com", HMAC_SECRET))}`;
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/dataroom/api/me", {
+      headers: { Cookie: cookie },
+    }),
+    env({ DEALROOM_SA_KEY: "" }),
+  );
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { email: "lp@example.com" });
+});
+
+test("/api/me without a signed cookie answers with the gate, never an identity", async () => {
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/dataroom/api/me"),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("Content-Type") || "", /text\/html/);
+  assert.match(await res.text(), /access code/); // the gate page, not a JSON identity
+});
+
 test("a forged cookie gets the gate, not the deal room", async () => {
   const forged = `${btoa("attacker@evil.com")}.${"00".repeat(32)}`;
   const res = await worker.fetch(
