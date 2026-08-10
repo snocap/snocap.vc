@@ -93,6 +93,16 @@
   const breadcrumbsEl = document.getElementById("breadcrumbs");
   const contentEl = document.getElementById("content");
 
+  // Announce navigation so dataroom-tracker.js can record it. This file stays
+  // free of any analytics vendor; it says what happened and nothing about who
+  // is listening, the same split as deck-stage.js and deck-tracker.js. The
+  // detail carries folder/file names (the room's contents are LP-facing but not
+  // secret from analytics — a name reads far better than a Drive id), alongside
+  // the id and a generic type.
+  function emit(name, detail) {
+    document.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+
   // ── URL state ──────────────────────────────────────────────────────────────
   // The hash holds the folder ids from the root down, so Back and Forward walk
   // the tree and a link to a subfolder opens there. It stays a fragment: the
@@ -174,25 +184,17 @@
     });
   }
 
-  // Announce navigation for anything that wants to observe it (currently
-  // dataroom-tracker.js). Dispatching an event rather than calling the tracker
-  // keeps this file unaware of whether tracking is even loaded.
-  function announce(name, file) {
-    document.dispatchEvent(
-      new CustomEvent(name, {
-        detail: { id: file.id, name: file.name, mimeType: file.mimeType },
-      }),
-    );
-  }
-
   function openFolder(file) {
     nameById.set(file.id, file.name);
-    announce("dataroom:folder", file);
     navigateTo(currentPathIds().concat(file.id));
   }
 
   function openFile(file) {
-    announce("dataroom:file", file);
+    emit("dataroomfileopen", {
+      fileId: file.id,
+      fileName: file.name,
+      fileType: describe(file).label,
+    });
     window.open(
       `/dataroom/api/file?id=${encodeURIComponent(file.id)}`,
       "_blank",
@@ -277,9 +279,22 @@
     }
   }
 
+  // Every move lands here — a row click, a breadcrumb, Back, Forward, and the
+  // first load — because they all go through the hash. That makes it the one
+  // place navigation has to be announced from.
   async function renderFromHash() {
     const ids = pathFromHash();
+    // Resolve the trail before announcing the move so the event carries the
+    // folder's name, not just its id. On the normal click-through path the name
+    // is already known (openFolder/load cached it); only a cold deep link to a
+    // subfolder can leave it a placeholder until load() fills it in.
     trail = await trailForPath(ids);
+    const current = trail[trail.length - 1];
+    emit("dataroomnavigate", {
+      folderId: ids.length ? ids[ids.length - 1] : null,
+      folderName: current ? current.name : null,
+      depth: ids.length,
+    });
     load(ids.length ? ids[ids.length - 1] : null);
   }
 

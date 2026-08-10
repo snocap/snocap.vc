@@ -170,26 +170,39 @@ test("a signed cookie reaches the Drive API, which reports it is unconfigured", 
   assert.equal(res.status, 503);
 });
 
-test("/api/me returns the verified viewer, with no Drive config needed", async () => {
-  const cookie = `dataroom_viewer=${encodeURIComponent(await signViewerCookie("lp@example.com", HMAC_SECRET))}`;
+test("a signed cookie can ask who it belongs to", async () => {
+  const cookie = `dataroom_viewer=${encodeURIComponent(await signViewerCookie("jon@sno.llc", HMAC_SECRET))}`;
   const res = await worker.fetch(
-    new Request("https://snocap.vc/dataroom/api/me", {
+    new Request("https://snocap.vc/dataroom/api/viewer", {
+      headers: { Cookie: cookie },
+    }),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { email: "jon@sno.llc" });
+});
+
+test("the viewer endpoint answers even while Drive is unconfigured", async () => {
+  // Tracking should not go dark because the Drive grant is missing — the
+  // room still renders its gate and its shell.
+  const cookie = `dataroom_viewer=${encodeURIComponent(await signViewerCookie("jon@sno.llc", HMAC_SECRET))}`;
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/dataroom/api/viewer", {
       headers: { Cookie: cookie },
     }),
     env({ DEALROOM_SA_KEY: "" }),
   );
   assert.equal(res.status, 200);
-  assert.deepEqual(await res.json(), { email: "lp@example.com" });
 });
 
-test("/api/me without a signed cookie answers with the gate, never an identity", async () => {
+test("the viewer endpoint tells an unsigned visitor nothing", async () => {
   const res = await worker.fetch(
-    new Request("https://snocap.vc/dataroom/api/me"),
+    new Request("https://snocap.vc/dataroom/api/viewer"),
     env(),
   );
   assert.equal(res.status, 200);
   assert.match(res.headers.get("Content-Type") || "", /text\/html/);
-  assert.match(await res.text(), /access code/); // the gate page, not a JSON identity
+  assert.match(await res.text(), /<form method="POST" action="\/dataroom">/);
 });
 
 test("a forged cookie gets the gate, not the deal room", async () => {

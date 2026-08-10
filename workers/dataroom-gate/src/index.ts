@@ -40,13 +40,16 @@ async function handleApi(
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/dataroom/api/")) return null;
 
-  // Who the gate verified for this request. dataroom-tracker.js needs it to
-  // identify the viewer in PostHog: this cookie is HttpOnly (the deck's is not),
-  // so a script can't read the email out of it the way deck-tracker.js does.
-  // Answered before the Drive check below — it needs no Drive access, and a
-  // data room with Drive unconfigured should still identify its viewers.
-  if (url.pathname === "/dataroom/api/me") {
-    return Response.json({ email });
+  // Who is looking. The session cookie is HttpOnly, so the page cannot read
+  // the email out of it the way the deck's tracker does — this is how
+  // dataroom-tracker.js names the viewer to PostHog. Answered before the
+  // Drive check below: it needs no Drive grant, and analytics should still
+  // work while Drive is unconfigured.
+  if (url.pathname === "/dataroom/api/viewer") {
+    return Response.json(
+      { email },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   if (!env.DEALROOM_SA_KEY) {

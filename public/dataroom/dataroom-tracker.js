@@ -1,23 +1,27 @@
 /**
- * dataroom-tracker.js — PostHog tracking for the SNØCAP data room.
+ * dataroom-tracker.js — PostHog tracking for the SNØCAP Fund 2 Data Room.
  *
- * The deck's counterpart (public/deck/deck-tracker.js) with the data room's
- * shape: there are no slides, so what matters is which FILES a viewer opened
- * and how long they stayed. Emits:
- *   - dataroom_loaded once on init
- *   - dataroom_folder_opened on each folder navigation
- *   - dataroom_file_downloaded when a file is opened (the API streams it, so
- *     opening it IS taking it)
- *   - dataroom_exit on pagehide, with totals
+ * The data room counterpart to deck-tracker.js: same PostHog project, same
+ * /track proxy, same shape of session (a load, a series of moves, an exit).
  *
- * The `dataroom_id` super property is what routes these to the data-room half
- * of the ingestion (src/api/routes/posthog.ts → classifySource), so it must be
- * registered before the first capture.
+ * Emits:
+ *   - $pageview on load (default)
+ *   - dataroom_loaded once, after the viewer is identified
+ *   - dataroom_folder_opened on every folder navigation, including Back
+ *   - dataroom_folder_dwell when leaving a folder, with seconds spent
+ *   - dataroom_file_opened when a file is opened or downloaded
+ *   - dataroom_exit on pagehide, with session totals
  *
- * Identity: the `dataroom_viewer` gate cookie is HttpOnly (unlike the deck's),
- * so this can't read the email out of it. /dataroom/api/me returns the email the
- * gate already verified for this request — one fetch, and the cookie stays
- * unreadable to scripts.
+ * Each folder/file event carries the human name (`folder_name` / `file_name`)
+ * alongside the Drive id and a generic file type ("PDF", "Google Sheet"). The
+ * name is what makes a #fundraising synopsis or a PostHog rollup readable —
+ * a bare id tells you nothing — and this is an LP-facing room, so its file
+ * names in analytics are acceptable to leak. (The URL hash stays ids: it is
+ * how navigation works, not a place we put names.)
+ *
+ * app.js does the navigating and dispatches `dataroomnavigate` /
+ * `dataroomfileopen` on document; this file is the only one that knows about
+ * PostHog, the same split as deck-stage.js and deck-tracker.js.
  */
 (function () {
   if (!window.posthog || !window.__POSTHOG_KEY) return;
@@ -38,62 +42,121 @@
 
   var dataroomId = "snocap-fund-2";
   var loadedAt = Date.now();
-  var filesTouched = 0;
-  var foldersOpened = 0;
 
-  posthog.register({ dataroom_id: dataroomId });
+  var folderEnteredAt = null;
+  var currentFolderId = null;
+  var currentFolderName = null;
+  var currentDepth = 0;
+  var maxDepth = 0;
+  var foldersOpened = {};
+  var filesOpened = 0;
 
-  // Identify BEFORE the first capture where possible, so the load event lands on
-  // the identified person rather than an anonymous one that later merges. The
-  // fetch is async, so dataroom_loaded is emitted from its completion — and
-  // still emitted if the call fails, just anonymously (an event we can see in
-  // PostHog beats no event because identification broke).
-  function start(email) {
-    if (email) posthog.identify(email);
-    posthog.capture("dataroom_loaded", { dataroom_id: dataroomId });
+  // Nothing is sent until we know who the viewer is: an anonymous
+  // dataroom_loaded would open a session that never resolves to a person, and
+  // the CRM rollup keys off the identified email. Events raised in the
+  // meantime queue here and flush in order.
+  var identified = false;
+  var pending = [];
+
+  function track(name, props) {
+    if (!identified) {
+      pending.push([name, props]);
+      return;
+    }
+    posthog.capture(name, props);
   }
 
-  fetch("/dataroom/api/me", { credentials: "same-origin" })
-    .then(function (res) {
-      return res.ok ? res.json() : null;
-    })
-    .then(function (body) {
-      start(body && body.email ? body.email : null);
-    })
-    .catch(function () {
-      start(null);
-    });
+  function flush() {
+    identified = true;
+    for (var i = 0; i < pending.length; i++) {
+      posthog.capture(pending[i][0], pending[i][1]);
+    }
+    pending = [];
+  }
 
-  // app.js announces navigation; this file only listens. Keeping the tracker off
-  // app.js's internals means a change to the file browser can't silently break
-  // tracking (and vice versa).
-  document.addEventListener("dataroom:file", function (e) {
-    var detail = e.detail || {};
-    filesTouched++;
-    posthog.capture("dataroom_file_downloaded", {
+  // The gate cookie is HttpOnly here (unlike the deck's), so the email comes
+  // from the worker instead of document.cookie. A failure still starts the
+  // session — an anonymous visit in PostHog beats no visit at all.
+  function identifyViewer() {
+    return fetch("/dataroom/api/viewer", { credentials: "same-origin" })
+      .then(function (resp) {
+        return resp.ok ? resp.json() : null;
+      })
+      .then(function (data) {
+        if (data && data.email) posthog.identify(data.email);
+      })
+      .catch(function () {})
+      .then(function () {
+        posthog.register({ dataroom_id: dataroomId });
+        flush();
+      });
+  }
+
+  function flushDwell() {
+    if (currentFolderId === null || folderEnteredAt === null) return;
+    var seconds = Math.round((Date.now() - folderEnteredAt) / 1000);
+    if (seconds <= 0) return;
+    track("dataroom_folder_dwell", {
       dataroom_id: dataroomId,
-      file_id: detail.id,
-      file_name: detail.name,
-      mime_type: detail.mimeType,
+      folder_id: currentFolderId,
+      folder_name: currentFolderName,
+      depth: currentDepth,
+      seconds: seconds,
     });
+  }
+
+  function onNavigate(detail) {
+    flushDwell();
+
+    // "root" rather than null so the property is always a string and the root
+    // groups like any other folder.
+    currentFolderId = detail.folderId || "root";
+    currentFolderName = detail.folderName || null;
+    currentDepth = typeof detail.depth === "number" ? detail.depth : 0;
+    if (currentDepth > maxDepth) maxDepth = currentDepth;
+    folderEnteredAt = Date.now();
+    foldersOpened[currentFolderId] = true;
+
+    track("dataroom_folder_opened", {
+      dataroom_id: dataroomId,
+      folder_id: currentFolderId,
+      folder_name: currentFolderName,
+      depth: currentDepth,
+      is_root: currentDepth === 0,
+    });
+  }
+
+  function onFileOpen(detail) {
+    filesOpened++;
+    track("dataroom_file_opened", {
+      dataroom_id: dataroomId,
+      file_id: detail.fileId,
+      file_name: detail.fileName || null,
+      file_type: detail.fileType || null,
+      folder_id: currentFolderId,
+      depth: currentDepth,
+    });
+  }
+
+  document.addEventListener("dataroomnavigate", function (e) {
+    onNavigate(e.detail || {});
   });
 
-  document.addEventListener("dataroom:folder", function (e) {
-    var detail = e.detail || {};
-    foldersOpened++;
-    posthog.capture("dataroom_folder_opened", {
-      dataroom_id: dataroomId,
-      folder_id: detail.id,
-      folder_name: detail.name,
-    });
+  document.addEventListener("dataroomfileopen", function (e) {
+    onFileOpen(e.detail || {});
   });
 
   window.addEventListener("pagehide", function () {
-    posthog.capture("dataroom_exit", {
+    flushDwell();
+    track("dataroom_exit", {
       dataroom_id: dataroomId,
       total_seconds: Math.round((Date.now() - loadedAt) / 1000),
-      files_downloaded: filesTouched,
-      folders_opened: foldersOpened,
+      folders_opened: Object.keys(foldersOpened).length,
+      files_opened: filesOpened,
+      max_depth: maxDepth,
     });
   });
+
+  track("dataroom_loaded", { dataroom_id: dataroomId });
+  identifyViewer();
 })();
