@@ -272,3 +272,46 @@ test("a path merely starting with the old name is not redirected", async () => {
   );
   assert.notEqual(res.status, 301);
 });
+
+// ── access codes must not be silently invalidated by the URL's ref ───────────
+// Observed live 2026-08-10: a code minted for the email's own default ref was
+// rejected on a `/dataroom?ref=<someone-else>` link, because `ref` is part of
+// HMAC(email|ref). It looked unreproducible since a request omitting `ref`
+// falls back to the default and succeeds.
+
+test("a code minted for the email default still works when the form carries a different ref", async () => {
+  const code = await derivePassword("jon@sno.llc", "jon", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code, ref: "someonelse" }),
+    env(),
+  );
+  assert.equal(res.status, 302);
+});
+
+test("a code minted for the submitted ref also still works", async () => {
+  const code = await derivePassword("jon@sno.llc", "referrer", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code, ref: "referrer" }),
+    env(),
+  );
+  assert.equal(res.status, 302);
+});
+
+test("a wrong code is still refused no matter which ref is submitted", async () => {
+  for (const ref of ["", "jon", "someonelse"]) {
+    const res = await worker.fetch(
+      post({ email: "jon@sno.llc", password: "NOTITNOW", ...(ref ? { ref } : {}) }),
+      env(),
+    );
+    assert.equal(res.status, 400, `ref=${ref || "(none)"} should be refused`);
+    assert.match(await res.text(), /Invalid access code/);
+  }
+});
+
+test("an empty code is refused rather than matched against a derivation", async () => {
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "" }),
+    env(),
+  );
+  assert.equal(res.status, 400);
+});

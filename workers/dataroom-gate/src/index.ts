@@ -129,22 +129,64 @@ export default {
         );
       }
 
-      const ref = refField || refFromEmail(email);
+      // An access code is HMAC(email|ref), and `ref` comes off the URL — so the
+      // same person needs a different code depending on which link they
+      // clicked. That bit a real LP: a code minted for the email's own default
+      // ref was rejected on a `/dataroom?ref=<someone-else>` link, which
+      // expected an entirely different code, and "Invalid access code" gave no
+      // hint that the ref was the problem. Nobody could reproduce it either,
+      // because a request that omits `ref` falls back to the default and
+      // succeeds.
+      //
+      // So accept EITHER derivation — the ref the form carried, or the email's
+      // own default. `ref` is attribution (who sent them), not the credential.
+      const defaultRef = refFromEmail(email);
+      const candidateRefs =
+        refField && refField !== defaultRef ? [refField, defaultRef] : [defaultRef];
       const password = (formData.get("password") as string) || "";
       // Check the secret before deriving: HMAC key import rejects an empty
       // key, so an unset secret would otherwise throw a 500 instead of
       // turning the visitor away.
-      const expected = env.DEALROOM_PW_SECRET
-        ? await derivePassword(email, ref, env.DEALROOM_PW_SECRET)
-        : null;
-      if (expected === null || password !== expected) {
+      let matchedRef: string | null = null;
+      if (env.DEALROOM_PW_SECRET && password) {
+        for (const candidate of candidateRefs) {
+          const expected = await derivePassword(
+            email,
+            candidate,
+            env.DEALROOM_PW_SECRET,
+          );
+          if (password === expected) {
+            matchedRef = candidate;
+            break;
+          }
+        }
+      }
+      if (matchedRef === null) {
+        // Only successful logins reach the viewers table, so a rejection left
+        // no trace at all and "it won't let me in" was undiagnosable. Record
+        // enough to tell a wrong code from a ref mismatch — never the code.
+        console.warn(
+          JSON.stringify({
+            event: "dataroom_gate_denied",
+            email,
+            submittedRef: refField || null,
+            triedRefs: candidateRefs,
+            reason: !env.DEALROOM_PW_SECRET
+              ? "secret-unset"
+              : password
+                ? "code-mismatch"
+                : "code-missing",
+          }),
+        );
         return gateResponse(
           renderGatePage("Invalid access code.", returnTo, refField),
           400,
         );
       }
 
-      await logViewer(env.DB, { email, ref, request });
+      // The row keeps the ref the visitor ARRIVED with, which is what
+      // attribution means — not whichever derivation happened to validate.
+      await logViewer(env.DB, { email, ref: refField || defaultRef, request });
 
       const headers = new Headers({ Location: safeReturn });
       headers.append(
