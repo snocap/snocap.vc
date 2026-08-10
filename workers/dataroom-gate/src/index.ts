@@ -129,22 +129,54 @@ export default {
         );
       }
 
-      const ref = refField || refFromEmail(email);
+      // The access code is keyed on the EMAIL alone — HMAC(email). `ref` comes
+      // off the URL and is attribution only (who sent this person), never part
+      // of the credential, so the link someone clicked can no longer decide
+      // which code is valid. That was a real bug: a code minted for an LP's own
+      // email was rejected on a `/dataroom?ref=<someone-else>` link that
+      // expected a different HMAC(email|ref) code, and it looked unreproducible
+      // because a request omitting `ref` fell back to the default and succeeded.
+      // Keying on the email retires that whole class of failure. (A tradeoff
+      // azoff signed off on in snocap/snocap.vc#11: every code previously issued
+      // as HMAC(email|ref) is invalidated and must be re-handed-out.)
       const password = (formData.get("password") as string) || "";
       // Check the secret before deriving: HMAC key import rejects an empty
       // key, so an unset secret would otherwise throw a 500 instead of
       // turning the visitor away.
-      const expected = env.DEALROOM_PW_SECRET
-        ? await derivePassword(email, ref, env.DEALROOM_PW_SECRET)
-        : null;
-      if (expected === null || password !== expected) {
+      let matched = false;
+      if (env.DEALROOM_PW_SECRET && password) {
+        const expected = await derivePassword(email, env.DEALROOM_PW_SECRET);
+        matched = password === expected;
+      }
+      if (!matched) {
+        // Only successful logins reach the viewers table, so a rejection left
+        // no trace at all and "it won't let me in" was undiagnosable. Record
+        // enough to tell a wrong code from a missing one — never the code.
+        console.warn(
+          JSON.stringify({
+            event: "dataroom_gate_denied",
+            email,
+            submittedRef: refField || null,
+            reason: !env.DEALROOM_PW_SECRET
+              ? "secret-unset"
+              : password
+                ? "code-mismatch"
+                : "code-missing",
+          }),
+        );
         return gateResponse(
           renderGatePage("Invalid access code.", returnTo, refField),
           400,
         );
       }
 
-      await logViewer(env.DB, { email, ref, request });
+      // The row keeps the ref the visitor ARRIVED with, which is what
+      // attribution means — now cleanly separate from the credential.
+      await logViewer(env.DB, {
+        email,
+        ref: refField || refFromEmail(email),
+        request,
+      });
 
       const headers = new Headers({ Location: safeReturn });
       headers.append(
