@@ -99,6 +99,44 @@ try {
   );
   console.log(`deck loaded: ${slideCount} slides`);
 
+  // `networkidle0` does not mean the webfonts are ready: a @font-face file is
+  // only fetched once a glyph needs it, so Chrome can reach idle, rasterise in
+  // fallback type, and embed THAT. Every PDF shipped in Fira Mono for exactly
+  // this reason. Waiting on document.fonts settles the swap before page.pdf().
+  await page.evaluate(() => document.fonts.ready);
+
+  // fonts.ready also resolves when a face FAILED to load, so assert the faces
+  // the deck declares are actually usable. Derived from the stylesheet rather
+  // than hardcoded, so a Claude Design re-pull that renames a family asserts
+  // the new name instead of silently passing. Cross-origin sheets (Google
+  // Fonts) throw on cssRules and are skipped.
+  const missingFaces = await page.evaluate(() => {
+    const declared = [...document.styleSheets]
+      .flatMap((sheet) => {
+        try {
+          return [...sheet.cssRules];
+        } catch {
+          return [];
+        }
+      })
+      // CSSRule.FONT_FACE_RULE === 5; the constructor name is the modern
+      // spelling. Either identifies the rule across Chrome versions.
+      .filter(
+        (rule) =>
+          rule.type === 5 || rule.constructor.name === "CSSFontFaceRule",
+      )
+      .map((rule) => rule.style.fontFamily.replace(/["']/g, "").trim());
+    return [...new Set(declared)].filter(
+      (family) => !document.fonts.check(`1em "${family}"`),
+    );
+  });
+  if (missingFaces.length > 0) {
+    throw new Error(
+      `brand fonts failed to load, the PDF would ship in fallback type: ${missingFaces.join(", ")}`,
+    );
+  }
+  console.log("fonts ready: all declared @font-face families loaded");
+
   const pdf = await page.pdf({
     path: PDF_OUT,
     width: "1920px",
