@@ -28,8 +28,15 @@ const DIST = new URL("../dist", import.meta.url).pathname;
 const DECK = join(DIST, "deck");
 const MB = 1048576;
 
+// The 4MB PDF budget from #12 was measured with a local Chrome + Ghostscript,
+// not CI's: the CI runner's puppeteer-downloaded Chrome rasterises the same
+// slides slightly larger, so the very commit that added the budget failed it
+// on main at 4.02MB — no deck content changed between the two measurements
+// (github.com/snocap/snocap.vc/actions/runs/31456765503). 4.5MB gives headroom
+// for that build-to-build variance without loosening the check's actual job:
+// catching a real content regression toward the original 35MB.
 const budgets = {
-  pdf: Number(process.env.DECK_PDF_MAX_BYTES || 4 * MB),
+  pdf: Number(process.env.DECK_PDF_MAX_BYTES || 4.5 * MB),
   asset: Number(process.env.DECK_ASSET_MAX_BYTES || 1.5 * MB),
   pageLoad: Number(process.env.DECK_PAGE_LOAD_MAX_BYTES || 8 * MB),
   images: Number(process.env.DECK_IMAGES_MAX_BYTES || 32 * MB),
