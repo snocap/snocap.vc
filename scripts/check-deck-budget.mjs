@@ -19,6 +19,12 @@
  * Every budget is env-overridable so a deliberate change is one variable and a
  * visible diff, not a code edit.
  *
+ * Anything past DECK_BUDGET_WARN_PCT of its budget (default 90%) prints a
+ * warning without failing. The PDF first breached its budget by 20KB, with no
+ * signal on the run before — the deck is re-pulled from Claude Design and its
+ * weight drifts, so the useful time to hear about that is the cycle before it
+ * turns the build red.
+ *
  * Usage: node scripts/check-deck-budget.mjs
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -49,14 +55,21 @@ function walk(dir, test) {
   return files;
 }
 
+const warnPct = Number(process.env.DECK_BUDGET_WARN_PCT || 90);
+
 const failures = [];
+const warnings = [];
 const report = [];
 
 function check(label, actual, budget, detail = "") {
-  const pct = ((actual / budget) * 100).toFixed(0);
-  const line = `${actual <= budget ? "✓" : "✗"} ${label}: ${(actual / MB).toFixed(2)}MB of ${(budget / MB).toFixed(2)}MB budget (${pct}%)${detail}`;
+  const pct = (actual / budget) * 100;
+  const over = actual > budget;
+  const near = !over && pct >= warnPct;
+  const mark = over ? "✗" : near ? "⚠" : "✓";
+  const line = `${mark} ${label}: ${(actual / MB).toFixed(2)}MB of ${(budget / MB).toFixed(2)}MB budget (${pct.toFixed(0)}%)${detail}`;
   report.push(line);
-  if (actual > budget) failures.push(line);
+  if (over) failures.push(line);
+  else if (near) warnings.push(line);
 }
 
 // 1. The PDF. Both copies generate-pdf.mjs writes have to be the compressed one.
@@ -126,6 +139,14 @@ check(
 );
 
 for (const line of report) console.log(line);
+
+if (failures.length === 0 && warnings.length > 0) {
+  console.warn(
+    `\ncheck-deck-budget: within budget, but ${warnings.length} at or past ${warnPct}% —` +
+      ` shrink it now rather than after it turns the build red:`,
+  );
+  for (const line of warnings) console.warn(line);
+}
 
 if (failures.length > 0) {
   console.error("\ncheck-deck-budget: FAILED");
