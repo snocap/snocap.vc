@@ -26,6 +26,9 @@ const MIME = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  // scripts/optimize-deck-images.mjs re-encodes photographs that need an alpha
+  // channel as WebP. Serving those as octet-stream leaves the slide blank.
+  ".webp": "image/webp",
   ".gif": "image/gif",
   ".woff": "font/woff",
   ".woff2": "font/woff2",
@@ -58,7 +61,14 @@ try {
   const puppeteer = await import("puppeteer");
   browser = await puppeteer.default.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      // Containers often cap /dev/shm at 64MB, which the renderer blows through
+      // on a 16-slide 1920x1080 deck — the frame detaches mid-navigation. Use
+      // /tmp for shared memory instead.
+      "--disable-dev-shm-usage",
+    ],
   });
 
   const page = await browser.newPage();

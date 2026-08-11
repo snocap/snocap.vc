@@ -24,6 +24,12 @@ runs:
       shell: bash
       run: npm ci
 
+    # A headless DesignSync pull truncates any file over 256 KiB silently, so the
+    # pulled assets are decode-checked before anything is built from them.
+    - name: Verify deck assets
+      shell: bash
+      run: npm run verify-deck
+
     - name: Run build
       shell: bash
       run: npm run build
@@ -32,6 +38,22 @@ runs:
       shell: bash
       run: npm run optimize-deck
 
+    # scripts/compress-pdf.mjs re-encodes the images Chrome embeds losslessly at
+    # 300 DPI, which is what keeps deck.pdf near 3MB instead of 35MB. Without
+    # ghostscript that step skips and the budget check below fails the build.
+    - name: Install ghostscript
+      shell: bash
+      run: |
+        if ! command -v gs >/dev/null; then
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ghostscript
+        fi
+        gs --version
+
     - name: Generate deck PDF
       shell: bash
       run: npm run pdf
+
+    - name: Check deck size budgets
+      shell: bash
+      run: npm run check:deck

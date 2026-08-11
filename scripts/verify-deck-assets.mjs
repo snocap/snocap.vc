@@ -25,7 +25,9 @@ import { join, relative } from "node:path";
 // DesignSync get_file cap. A file landing at exactly this size is almost
 // certainly a truncation, not a coincidence.
 export const TRUNCATION_BOUNDARY = 256 * 1024; // 262144
-const IMAGE_RE = /\.(png|jpe?g)$/i;
+// WebP is here for dist/ (scripts/optimize-deck-images.mjs emits it); the pulled
+// assets under public/ are only ever PNG or JPEG.
+const IMAGE_RE = /\.(png|jpe?g|webp)$/i;
 
 export function walk(dir) {
   const files = [];
