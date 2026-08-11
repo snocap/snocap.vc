@@ -26,12 +26,37 @@
  * change (verified page-by-page against the uncompressed original). Text, vector
  * art and links stay untouched.
  *
+ * Which knob to reach for, with measured numbers
+ * ----------------------------------------------
+ * All from the same 38.9MB Chrome output, ghostscript 10.02.1 (what CI installs
+ * on ubuntu-latest), 15 pages:
+ *
+ *   DPI  QFactor  chroma  result
+ *    96     0.25   4:4:4  3.99MB   over the 4MB budget
+ *    96     0.30   4:4:4  3.74MB
+ *    96     0.35   4:4:4  3.50MB   <- shipped
+ *    96     0.40   4:4:4  3.31MB   next step if a re-pull eats the headroom
+ *    96     0.25   4:2:0  3.67MB   saves less than the QFactor step, see below
+ *    84     0.25   4:4:4  3.45MB   softens every image
+ *    72     0.25   4:4:4  2.95MB
+ *
+ * QFactor is the cheapest lever: 0.25 -> 0.35 costs 0.15dB PSNR on the worst
+ * page (the halftone hero, where JPEG rings most) and is indistinguishable at
+ * 6x zoom, while resolution below 96 DPI softens everything and 4:2:0 both
+ * saves less and risks fringing on fine coloured type.
+ *
+ * Beware: output size is ghostscript-version-dependent. The same input gives
+ * 3.33MB on gs 10.00.0 (Debian bookworm) and 3.99MB on gs 10.02.1 (Ubuntu
+ * noble) at identical settings — a 20% spread. That is why the version is
+ * logged below: a budget check that moves without a content change is the
+ * first thing to suspect.
+ *
  * Tunables, if the deck ever needs print-resolution output:
  *   DECK_PDF_IMAGE_DPI  image density cap, in page DPI (default 96 = 1:1 at
  *                       1920x1080; 192 would be 2x retina, and roughly doubles
  *                       the file)
  *   DECK_PDF_QFACTOR    JPEG quality, Distiller-style, lower is better
- *                       (default 0.25, about quality 90; no chroma subsampling)
+ *                       (default 0.35, about quality 85; no chroma subsampling)
  *   GS_BIN              ghostscript binary (default "gs")
  */
 import { spawnSync } from "node:child_process";
@@ -51,7 +76,7 @@ const TMP = PDF + ".tmp";
 
 const GS = process.env.GS_BIN || "gs";
 const DPI = Number(process.env.DECK_PDF_IMAGE_DPI || 96);
-const QFACTOR = process.env.DECK_PDF_QFACTOR || "0.25";
+const QFACTOR = process.env.DECK_PDF_QFACTOR || "0.35";
 const MB = 1048576;
 
 function gs(args) {
@@ -83,7 +108,8 @@ if (!existsSync(PDF)) {
   process.exit(0);
 }
 
-if (gs(["--version"]).status !== 0) {
+const version = gs(["--version"]);
+if (version.status !== 0) {
   // Same posture as generate-pdf.mjs without Chrome: local dev keeps working,
   // and check-deck-budget.mjs is what makes CI refuse an uncompressed deck.
   console.warn(
@@ -157,6 +183,8 @@ if (after >= before) {
 renameSync(TMP, PDF);
 copyFileSync(PDF, PDF_ALT);
 console.log(
-  `PDF compressed: ${(before / MB).toFixed(1)}MB → ${(after / MB).toFixed(1)}MB` +
-    ` (-${((1 - after / before) * 100).toFixed(0)}%, ${pagesAfter} pages, images ≤${DPI} DPI)`,
+  `PDF compressed: ${(before / MB).toFixed(2)}MB → ${(after / MB).toFixed(2)}MB` +
+    ` (-${((1 - after / before) * 100).toFixed(0)}%, ${pagesAfter} pages,` +
+    ` images ≤${DPI} DPI, QFactor ${QFACTOR}, 4:4:4,` +
+    ` ghostscript ${(version.stdout || "?").trim()})`,
 );
