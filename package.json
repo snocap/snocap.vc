@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "npm run generate:charts && npm run generate:sectors && astro build",
+    "build": "npm run generate:charts && npm run generate:sectors && astro build && node scripts/stage-deck-fonts.mjs",
     "generate:charts": "node scripts/generate-charts.mjs",
     "generate:sectors": "node scripts/generate-sectors.mjs",
     "optimize-deck": "node scripts/optimize-deck-images.mjs",

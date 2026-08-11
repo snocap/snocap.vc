@@ -8,7 +8,7 @@
  */
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { join, extname } from "node:path";
+import { join, extname, sep } from "node:path";
 
 const DIST = new URL("../dist", import.meta.url).pathname;
 const PORT = 4321;
@@ -37,10 +37,27 @@ const MIME = {
 };
 
 const server = createServer(async (req, res) => {
-  let path = new URL(req.url, `http://localhost`).pathname;
+  // `URL.pathname` stays percent-encoded, and the brand font directories have
+  // spaces in their names ("NB Akademie Std"). Without decoding, the browser's
+  // request for `.../NB%20Akademie%20Std/...` looked for a directory literally
+  // named `NB%20Akademie%20Std` and 404'd — so every PDF shipped in fallback
+  // type. Decoding is what makes any asset with a space in its path reachable.
+  let path;
+  try {
+    path = decodeURIComponent(new URL(req.url, `http://localhost`).pathname);
+  } catch {
+    res.writeHead(400).end("bad request path");
+    return;
+  }
   if (path.endsWith("/")) path += "index.html";
 
+  // Decoding can introduce `..` (from `%2e%2e`), so re-check containment after
+  // join() has normalised it. This server only ever serves dist/.
   const file = join(DIST, path);
+  if (file !== DIST && !file.startsWith(DIST + sep)) {
+    res.writeHead(403).end("forbidden");
+    return;
+  }
   try {
     const data = await readFile(file);
     const ext = extname(file);

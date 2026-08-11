@@ -28,7 +28,7 @@
  * Usage: node scripts/check-deck-budget.mjs
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, dirname } from "node:path";
 
 const DIST = new URL("../dist", import.meta.url).pathname;
 const DECK = join(DIST, "deck");
@@ -44,6 +44,14 @@ const budgets = {
 const IMAGE_RE = /\.(png|jpe?g|webp|gif)$/i;
 const TEXT_RE = /\.(html|css|js|jsx|mjs|json)$/i;
 const REFERENCE_RE = /assets\/[\w./-]+\.(?:png|jpe?g|webp|gif|svg)/gi;
+
+// Every url() target in the deck's own CSS, quoted or not. REFERENCE_RE above
+// cannot stand in for this: it only matches paths beginning `assets/`, its
+// character class excludes spaces, and it lists no font extensions — so the
+// deck's `url("./fonts/NB Akademie Std/NB Akademie Std.woff2")` was invisible
+// to it. That reference pointed at /deck/fonts/, nothing was ever there, and
+// the live deck plus every generated PDF silently rendered in fallback type.
+const CSS_URL_RE = /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi;
 
 function walk(dir, test) {
   const files = [];
@@ -129,6 +137,28 @@ for (const rel of referenced) {
     pageLoad += statSync(join(DECK, rel)).size;
   } catch {
     failures.push(`✗ dist/deck references a missing asset: ${rel}`);
+  }
+}
+
+// Every url() in the deck's CSS must resolve, fonts included. Site-absolute
+// targets resolve against dist/, relative ones against the stylesheet's own
+// directory — the same way a browser resolves them.
+
+for (const css of textFiles.filter((f) => f.endsWith(".css"))) {
+  for (const [, , target] of readFileSync(css, "utf8").matchAll(CSS_URL_RE)) {
+    if (/^(?:data:|https?:|\/\/|#)/i.test(target)) continue;
+    const clean = target.split(/[?#]/)[0];
+    if (!clean) continue;
+    const resolved = clean.startsWith("/")
+      ? join(DIST, clean)
+      : join(dirname(css), clean);
+    try {
+      pageLoad += statSync(resolved).size;
+    } catch {
+      failures.push(
+        `✗ ${relative(DIST, css)} references a missing file: ${clean}`,
+      );
+    }
   }
 }
 check(
