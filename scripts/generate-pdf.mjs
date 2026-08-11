@@ -110,7 +110,7 @@ try {
   // than hardcoded, so a Claude Design re-pull that renames a family asserts
   // the new name instead of silently passing. Cross-origin sheets (Google
   // Fonts) throw on cssRules and are skipped.
-  const missingFaces = await page.evaluate(() => {
+  const missingFaces = await page.evaluate(async () => {
     const declared = [...document.styleSheets]
       .flatMap((sheet) => {
         try {
@@ -126,9 +126,24 @@ try {
           rule.type === 5 || rule.constructor.name === "CSSFontFaceRule",
       )
       .map((rule) => rule.style.fontFamily.replace(/["']/g, "").trim());
-    return [...new Set(declared)].filter(
-      (family) => !document.fonts.check(`1em "${family}"`),
-    );
+
+    // load(), not check(). A @font-face file is fetched lazily, so check() is
+    // false for a face nothing has needed yet, and fonts.ready only settles
+    // loads already pending — together they report a perfectly good font as
+    // missing. load() forces the fetch and is what actually guarantees the
+    // face is in place before page.pdf().
+    const missing = [];
+    for (const family of [...new Set(declared)]) {
+      try {
+        const faces = await document.fonts.load(`1em "${family}"`);
+        if (faces.length === 0 || !document.fonts.check(`1em "${family}"`)) {
+          missing.push(family);
+        }
+      } catch {
+        missing.push(family);
+      }
+    }
+    return missing;
   });
   if (missingFaces.length > 0) {
     throw new Error(
