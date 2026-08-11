@@ -197,9 +197,14 @@ done < <(find "$DECK_DIR" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.
 
 if [[ "$LARGE_COUNT" -gt 0 ]]; then
   echo "NOTE: $LARGE_COUNT images over 1MB (total ~$((LARGE_SIZE / 1048576))MB)."
-  echo "Run image optimization before committing."
+  echo "That is expected — public/deck/ keeps the pristine pull. Optimization"
+  echo "happens on the way to dist/ (npm run optimize-deck), so it survives the"
+  echo "next pull; do not hand-optimize these files."
 fi
 
 echo ""
-echo "Done. Review the changes with:"
-echo "  cd $REPO_DIR && git diff --stat"
+echo "Done. Verify and check the size budgets before committing:"
+echo "  cd $REPO_DIR"
+echo "  git diff --stat"
+echo "  npm run verify-deck   # no truncated/corrupt images in the pull"
+echo "  npm run build && npm run optimize-deck && npm run pdf && npm run check:deck"
