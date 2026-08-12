@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import worker from "./index.ts";
 import { derivePassword } from "./password.ts";
+import { hashOverride } from "./override.ts";
 import { signViewerCookie } from "../../shared/cookie.ts";
 
 const HMAC_SECRET = "test-hmac-secret";
@@ -39,6 +40,12 @@ function env(overrides: Record<string, unknown> = {}) {
     DRIVE_ROOT_FOLDER_ID: "root-folder",
     ...overrides,
   } as never;
+}
+
+// A fake OVERRIDES KV binding backed by a Map (the worker only calls .get).
+function fakeOverridesKv(entries: Record<string, string> = {}) {
+  const map = new Map(Object.entries(entries));
+  return { get: async (key: string) => map.get(key) ?? null };
 }
 
 function post(body: Record<string, string>): Request {
@@ -313,4 +320,57 @@ test("an empty code is refused rather than matched against a derivation", async 
     env(),
   );
   assert.equal(res.status, 400);
+});
+
+// ── TEMPORARY per-email override (override.ts) ────────────────────────────────
+// A GP can shadow the derived default for one LP. The override is checked before
+// the derived code and is authoritative when set.
+
+test("a per-email override opens the gate", async () => {
+  const OVERRIDES = fakeOverridesKv({
+    "pw-override:jon@sno.llc": await hashOverride("MANUALPW"),
+  });
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "MANUALPW" }),
+    env({ OVERRIDES }),
+  );
+  assert.equal(res.status, 302);
+});
+
+test("an override shadows the derived code: the old derived code stops working", async () => {
+  const derived = await derivePassword("jon@sno.llc", PW_SECRET);
+  const OVERRIDES = fakeOverridesKv({
+    "pw-override:jon@sno.llc": await hashOverride("MANUALPW"),
+  });
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: derived }),
+    env({ OVERRIDES }),
+  );
+  // Override is set, so the derived code is no longer accepted for this email.
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /Invalid access code/);
+});
+
+test("an email with no override still uses the derived code", async () => {
+  const OVERRIDES = fakeOverridesKv({
+    "pw-override:someone@else.com": await hashOverride("THEIRPW"),
+  });
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code }),
+    env({ OVERRIDES }),
+  );
+  assert.equal(res.status, 302);
+});
+
+test("a wrong password against a set override is refused", async () => {
+  const OVERRIDES = fakeOverridesKv({
+    "pw-override:jon@sno.llc": await hashOverride("MANUALPW"),
+  });
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "TOTALLYWRONG" }),
+    env({ OVERRIDES }),
+  );
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /Invalid access code/);
 });

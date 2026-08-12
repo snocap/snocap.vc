@@ -23,3 +23,17 @@ DRIVE_ROOT_FOLDER_ID = "1pkCOx6pM__kgD6Ho6RwSsptYQYGwaKc-"
 binding = "DB"
 database_name = "dealroom-viewers"
 database_id = "48a6eda4-4cd3-4bf7-b965-6639476e42ca"
+
+# TEMPORARY per-email password overrides (see src/override.ts) — a GP can shadow
+# the derived default for one LP (Philip Chow's diligence). SUNSET CANDIDATE:
+# remove this block, src/override.ts, and its call-sites in src/index.ts to fully
+# retire the feature.
+#
+# ONE-TIME SETUP before deploying: create the namespace and paste its id here:
+#   cd workers/dataroom-gate && npx wrangler kv namespace create OVERRIDES
+# then set that same id as DATAROOM_OVERRIDE_KV_NAMESPACE_ID for the kernelbot
+# writer (mirrors how DEALROOM_PW_SECRET is shared with the worker). Until the id
+# is filled in, deploy will refuse this binding — that is the intended reminder.
+[[kv_namespaces]]
+binding = "OVERRIDES"
+id = "REPLACE_ME_wrangler_kv_namespace_create_OVERRIDES"

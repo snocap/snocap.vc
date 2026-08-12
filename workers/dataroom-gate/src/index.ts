@@ -1,5 +1,6 @@
 import { renderGatePage } from "./gate-page.ts";
 import { derivePassword } from "./password.ts";
+import { checkEmailOverride, type OverrideKV } from "./override.ts";
 import { listFolder, streamFile } from "./drive.ts";
 import {
   setCookie,
@@ -20,6 +21,10 @@ interface Env {
   DEALROOM_PW_SECRET: string;
   DEALROOM_SA_KEY: string;
   DRIVE_ROOT_FOLDER_ID: string;
+  // TEMPORARY per-email password overrides (see override.ts). Optional: absent
+  // until the KV namespace is created + bound, in which case the gate simply
+  // falls through to the derived code for everyone.
+  OVERRIDES?: OverrideKV;
 }
 
 const COOKIE_NAME = "dataroom_viewer";
@@ -140,13 +145,34 @@ export default {
       // azoff signed off on in snocap/snocap.vc#11: every code previously issued
       // as HMAC(email|ref) is invalidated and must be re-handed-out.)
       const password = (formData.get("password") as string) || "";
+
+      // TEMPORARY per-email override (see override.ts), checked BEFORE the
+      // derived code. `null` means no override is set for this email, so we fall
+      // through to the unchanged derived-code path. When an override IS set it is
+      // authoritative — it SHADOWS the default for that email alone, so a
+      // mismatch does not fall back to the derived code. Scoped to Philip Chow's
+      // diligence; built to be ripped out cleanly once his deal closes.
+      const override = await checkEmailOverride(env.OVERRIDES, email, password);
+
       // Check the secret before deriving: HMAC key import rejects an empty
       // key, so an unset secret would otherwise throw a 500 instead of
       // turning the visitor away.
-      let matched = false;
-      if (env.DEALROOM_PW_SECRET && password) {
-        const expected = await derivePassword(email, env.DEALROOM_PW_SECRET);
-        matched = password === expected;
+      let matched: boolean;
+      let reason: string;
+      if (override !== null) {
+        matched = override;
+        reason = "override-mismatch";
+      } else {
+        matched = false;
+        reason = !env.DEALROOM_PW_SECRET
+          ? "secret-unset"
+          : password
+            ? "code-mismatch"
+            : "code-missing";
+        if (env.DEALROOM_PW_SECRET && password) {
+          const expected = await derivePassword(email, env.DEALROOM_PW_SECRET);
+          matched = password === expected;
+        }
       }
       if (!matched) {
         // Only successful logins reach the viewers table, so a rejection left
@@ -157,11 +183,7 @@ export default {
             event: "dataroom_gate_denied",
             email,
             submittedRef: refField || null,
-            reason: !env.DEALROOM_PW_SECRET
-              ? "secret-unset"
-              : password
-                ? "code-mismatch"
-                : "code-missing",
+            reason,
           }),
         );
         return gateResponse(
