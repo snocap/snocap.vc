@@ -1,6 +1,6 @@
 import { renderGatePage } from "./gate-page.ts";
 import { derivePassword } from "./password.ts";
-import { checkEmailOverride, type OverrideKV } from "./override.ts";
+import { checkEmailOverride } from "./override.ts";
 import { listFolder, streamFile } from "./drive.ts";
 import {
   setCookie,
@@ -21,10 +21,13 @@ interface Env {
   DEALROOM_PW_SECRET: string;
   DEALROOM_SA_KEY: string;
   DRIVE_ROOT_FOLDER_ID: string;
-  // TEMPORARY per-email password overrides (see override.ts). Optional: absent
-  // until the KV namespace is created + bound, in which case the gate simply
+  // TEMPORARY per-email password overrides (see override.ts). The override lives
+  // in the kernelbot-host Redis; the gate POSTs to the kernelbot-api endpoint at
+  // OVERRIDE_API_BASE, authenticating with the DATAROOM_OVERRIDE_SECRET Worker
+  // secret. Both are optional — absent until provisioned, in which case the gate
   // falls through to the derived code for everyone.
-  OVERRIDES?: OverrideKV;
+  OVERRIDE_API_BASE?: string;
+  DATAROOM_OVERRIDE_SECRET?: string;
 }
 
 const COOKIE_NAME = "dataroom_viewer";
@@ -147,12 +150,14 @@ export default {
       const password = (formData.get("password") as string) || "";
 
       // TEMPORARY per-email override (see override.ts), checked BEFORE the
-      // derived code. `null` means no override is set for this email, so we fall
+      // derived code. This POSTs to the kernelbot-api endpoint, which owns the
+      // override store (kernelbot-host Redis). `null` means no override is set for
+      // this email (or the endpoint is unavailable → fail-open), so we fall
       // through to the unchanged derived-code path. When an override IS set it is
-      // authoritative — it SHADOWS the default for that email alone, so a
-      // mismatch does not fall back to the derived code. Scoped to Philip Chow's
-      // diligence; built to be ripped out cleanly once his deal closes.
-      const override = await checkEmailOverride(env.OVERRIDES, email, password);
+      // authoritative — it SHADOWS the default for that email alone, so a mismatch
+      // does not fall back to the derived code. Scoped to Philip Chow's diligence;
+      // built to be ripped out cleanly once his deal closes.
+      const override = await checkEmailOverride(env, email, password);
 
       // Check the secret before deriving: HMAC key import rejects an empty
       // key, so an unset secret would otherwise throw a 500 instead of

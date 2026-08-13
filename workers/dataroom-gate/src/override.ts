@@ -10,125 +10,101 @@
 //
 // SUNSET CANDIDATE. This whole feature is scoped to Philip Chow's situation and is
 // meant to be ripped out once his deal closes. To fully remove it: delete this
-// file, its two call-sites in index.ts, and the [[kv_namespaces]] OVERRIDES
-// binding in wrangler.toml. Nothing else depends on it.
+// file, its call-site in index.ts, and the OVERRIDE_API_BASE var + the
+// DATAROOM_OVERRIDE_SECRET Worker secret. Nothing else depends on it.
 //
-// Storage: a Cloudflare KV namespace (binding OVERRIDES). The Slack ask said
-// "redis", but this worker runs on Cloudflare Workers and cannot open a raw TCP
-// connection to a Redis server; KV is the same Cloudflare account already in use
-// and needs no new external signup. Values are the HASHED password only — never
-// plaintext. The write path lives on the kernelbot side (a GP-gated capability);
-// this module is read-only (verify on login).
+// Storage: NOT here. The override lives in the kernelbot-host Redis and is checked
+// server-side by the kernelbot-api container (exposed as api.sno.llc). This module
+// is a thin PASSTHROUGH: it POSTs {email, password} to that endpoint and trusts its
+// verdict. A Cloudflare Worker cannot open a raw TCP Redis connection, so rather
+// than mirror the store in Cloudflare KV we call out to the host that already owns
+// it. The PBKDF2 hashing + timing-safe compare that used to live here now live
+// authoritatively server-side (kernelbot test/unit/local/dataroom-override.test.ts
+// pins the hash vector).
 //
-// Hash format (shared with the kernelbot writer — keep the two in lockstep):
-//   pbkdf2-sha256$<iterations>$<saltBase64>$<derivedKeyBase64>
-// PBKDF2-HMAC-SHA256, 32-byte derived key, random 16-byte salt, compared in
-// constant time. A pinned cross-repo vector in override.test.ts fails loudly if
-// either side's format drifts.
+// Endpoint contract (both repos must match exactly):
+//   POST ${OVERRIDE_API_BASE}/dataroom/override-check
+//   header  x-dataroom-secret: <DATAROOM_OVERRIDE_SECRET>   (mirrors x-apply-secret)
+//   body    { email, password }
+//   200 { override: false }                    → no override; fall through to derived
+//   200 { override: true, match: <boolean> }   → override set; allow iff match
+//   400/401                                    → bad request / bad secret
+//
+// Failure mode: FAIL-OPEN. A missing secret, network error, non-2xx response, or
+// unparseable body all resolve to `null` (fall through to the derived code) — the
+// same behavior the KV version had when its store was simply unbound: "override
+// infra unavailable → everyone uses the derived code." That keeps a transient
+// kernelbot-host outage from locking LPs out of the room; the derived code is a
+// real credential, so this is not a security downgrade. The only property lost
+// during an outage is the override's shadowing, which self-heals when the endpoint
+// returns.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { timingSafeEqual } from "../../shared/crypto.ts";
-import { normalizeEmail } from "../../shared/email.ts";
+// The default kernelbot-api origin. Overridable via the OVERRIDE_API_BASE var so a
+// test or a staging deploy can point elsewhere without a code change.
+const DEFAULT_API_BASE = "https://api.sno.llc";
+const OVERRIDE_PATH = "/dataroom/override-check";
 
-// The KV key for an email's override. Keyed on the NORMALIZED email so the write
-// and read sides agree regardless of case/whitespace.
-const KV_PREFIX = "pw-override:";
-
-// OWASP 2023 floor for PBKDF2-HMAC-SHA256. Logins are infrequent, so this is a
-// non-issue for latency and buys margin against offline cracking of the KV blob.
-export const OVERRIDE_ITERATIONS = 210_000;
-const KEY_LEN = 32; // bytes
-
-// The minimum shape we need off the KV binding. Cloudflare's real KVNamespace
-// satisfies this (its text .get returns Promise<string | null>); typing it this
-// narrowly keeps the worker free of @cloudflare/workers-types.
-export interface OverrideKV {
-  get(key: string): Promise<string | null>;
+// The minimum config this module needs off the worker Env: the endpoint base and
+// the shared secret it authenticates with. Both optional — absent until the var +
+// secret are provisioned, in which case the gate falls through to the derived code
+// for everyone.
+export interface OverrideEnv {
+  OVERRIDE_API_BASE?: string;
+  DATAROOM_OVERRIDE_SECRET?: string;
 }
 
-function b64encode(bytes: Uint8Array): string {
-  let s = "";
-  for (const b of bytes) s += String.fromCharCode(b);
-  return btoa(s);
-}
-
-function b64decode(s: string): Uint8Array {
-  const bin = atob(s);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
-async function pbkdf2(
-  password: string,
-  salt: Uint8Array,
-  iterations: number,
-): Promise<Uint8Array> {
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(password),
-    "PBKDF2",
-    false,
-    ["deriveBits"],
-  );
-  const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt, iterations },
-    keyMaterial,
-    KEY_LEN * 8,
-  );
-  return new Uint8Array(bits);
-}
-
-// Hash a password with a fresh random salt into the shared encoded form. The
-// production writer is the kernelbot-side capability; this is exported so the
-// worker's own tests can mint a valid stored value without duplicating the
-// format, which also documents exactly what the writer must produce.
-export async function hashOverride(
-  password: string,
-  iterations: number = OVERRIDE_ITERATIONS,
-): Promise<string> {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const hash = await pbkdf2(password, salt, iterations);
-  return `pbkdf2-sha256$${iterations}$${b64encode(salt)}$${b64encode(hash)}`;
-}
-
-// Verify a submitted password against a stored encoded hash. A malformed record
-// verifies false (never throws) so a corrupt KV value can't 500 the gate.
-export async function verifyOverride(
-  password: string,
-  stored: string,
-): Promise<boolean> {
-  const parts = stored.split("$");
-  if (parts.length !== 4 || parts[0] !== "pbkdf2-sha256") return false;
-  const iterations = Number(parts[1]);
-  if (!Number.isInteger(iterations) || iterations <= 0) return false;
-  let salt: Uint8Array;
-  try {
-    salt = b64decode(parts[2]);
-  } catch {
-    return false;
-  }
-  const actual = b64encode(await pbkdf2(password, salt, iterations));
-  return timingSafeEqual(actual, parts[3]);
+// The endpoint's JSON verdict. `match` is only meaningful when `override` is true.
+interface OverrideResponse {
+  override?: boolean;
+  match?: boolean;
 }
 
 // The gate's entry point. Returns:
 //   true  → an override exists for this email and the password matches
 //   false → an override exists but the password does NOT match
-//   null  → no override set for this email → caller falls through to the
-//           unchanged derived-code path
+//   null  → no override set for this email (or the override infra is unavailable)
+//           → caller falls through to the unchanged derived-code path
 //
-// When an override IS set it is authoritative: a mismatch does NOT fall back to
-// the derived code. Setting an override shadows the default for that email, which
-// is exactly "prefer the override over the default password."
+// When an override IS set it is authoritative: a mismatch returns false and does
+// NOT fall back to the derived code. Setting an override shadows the default for
+// that email, which is exactly "prefer the override over the default password."
 export async function checkEmailOverride(
-  store: OverrideKV | undefined,
+  env: OverrideEnv,
   email: string,
   password: string,
 ): Promise<boolean | null> {
-  if (!store) return null;
-  const stored = await store.get(KV_PREFIX + normalizeEmail(email));
-  if (!stored) return null;
-  if (!password) return false;
-  return verifyOverride(password, stored);
+  // No secret provisioned → override infra is off → fall through (see FAIL-OPEN).
+  const secret = env.DATAROOM_OVERRIDE_SECRET;
+  if (!secret) return null;
+
+  const base = (env.OVERRIDE_API_BASE ?? DEFAULT_API_BASE).replace(/\/+$/, "");
+
+  let res: Response;
+  try {
+    res = await fetch(base + OVERRIDE_PATH, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-dataroom-secret": secret,
+      },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
+    return null; // network error → fail open
+  }
+
+  if (!res.ok) return null; // 4xx/5xx (incl. a 400 on empty password) → fail open
+
+  let data: OverrideResponse;
+  try {
+    data = (await res.json()) as OverrideResponse;
+  } catch {
+    return null; // non-JSON body → fail open
+  }
+
+  // No override for this email → fall through to the derived code.
+  if (!data || data.override !== true) return null;
+  // Override set → authoritative: allow iff the endpoint verified the password.
+  return data.match === true;
 }

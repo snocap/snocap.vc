@@ -19,21 +19,26 @@ routes = [
 # Not secret on its own — it's useless without the DEALROOM_SA_KEY grant below.
 DRIVE_ROOT_FOLDER_ID = "1pkCOx6pM__kgD6Ho6RwSsptYQYGwaKc-"
 
+# TEMPORARY per-email password overrides (see src/override.ts) — a GP can shadow
+# the derived default for one LP (Philip Chow's diligence). The override store now
+# lives in the kernelbot-host Redis; the gate POSTs to the kernelbot-api endpoint
+# below rather than reading Cloudflare KV (a Worker can't open a raw TCP Redis
+# connection). SUNSET CANDIDATE: remove this var, src/override.ts, and its
+# call-site in src/index.ts to fully retire the feature.
+#
+# The endpoint is the existing api.sno.llc (kernelbot-api :3010 via the
+# cloudflared-web tunnel) — no new tunnel/hostname/proxy worker.
+OVERRIDE_API_BASE = "https://api.sno.llc"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "dealroom-viewers"
 database_id = "48a6eda4-4cd3-4bf7-b965-6639476e42ca"
 
-# TEMPORARY per-email password overrides (see src/override.ts) — a GP can shadow
-# the derived default for one LP (Philip Chow's diligence). SUNSET CANDIDATE:
-# remove this block, src/override.ts, and its call-sites in src/index.ts to fully
-# retire the feature.
-#
-# ONE-TIME SETUP before deploying: create the namespace and paste its id here:
-#   cd workers/dataroom-gate && npx wrangler kv namespace create OVERRIDES
-# then set that same id as DATAROOM_OVERRIDE_KV_NAMESPACE_ID for the kernelbot
-# writer (mirrors how DEALROOM_PW_SECRET is shared with the worker). Until the id
-# is filled in, deploy will refuse this binding — that is the intended reminder.
-[[kv_namespaces]]
-binding = "OVERRIDES"
-id = "REPLACE_ME_wrangler_kv_namespace_create_OVERRIDES"
+# ONE-TIME SETUP before deploying: the gate authenticates to the endpoint with a
+# shared secret, provisioned as a Worker secret (NOT in this file):
+#   cd workers/dataroom-gate && npx wrangler secret put DATAROOM_OVERRIDE_SECRET
+# Paste the same long random string the kernelbot side holds as
+# DATAROOM_OVERRIDE_SECRET (its .env / .env.enc), mirroring how the apply worker
+# shares APPLY_SHARED_SECRET. Until it is set, checkEmailOverride() fails open and
+# the gate falls through to the derived code for everyone.

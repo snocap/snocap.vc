@@ -1,104 +1,193 @@
-// Tests for the TEMPORARY per-email password override (override.ts). The stored
-// value is a salted PBKDF2 hash; the write side lives in the kernelbot repo, so
-// the format is a cross-repo contract. The pinned vector below is the guard: if
-// either side changes the encoding, this fails loudly.
+// Tests for the TEMPORARY per-email password override (override.ts). The override
+// store and its PBKDF2 hashing/verify now live server-side in the kernelbot-api
+// endpoint (and its test/unit/local/dataroom-override.test.ts pins the hash
+// vector); this module is a thin passthrough, so what's tested here is the HTTP
+// contract and the fail-open behavior — NOT the crypto, which moved out of repo.
 import assert from "node:assert/strict";
-import { test } from "node:test";
-import {
-  checkEmailOverride,
-  hashOverride,
-  verifyOverride,
-  OVERRIDE_ITERATIONS,
-} from "./override.ts";
+import { afterEach, test } from "node:test";
+import { checkEmailOverride } from "./override.ts";
 
-// A single fake KV binding backed by a Map, matching the OverrideKV shape.
-function fakeKv(entries: Record<string, string> = {}) {
-  const map = new Map(Object.entries(entries));
-  return {
-    get: async (key: string) => map.get(key) ?? null,
-    set: (key: string, value: string) => map.set(key, value),
-  };
+const SECRET = "test-dataroom-secret";
+const BASE = "https://api.test";
+
+// Capture the last request the module made so a test can assert its shape.
+interface Captured {
+  url: string;
+  method?: string;
+  headers: Headers;
+  body: unknown;
 }
 
-test("hashOverride round-trips: the same password verifies, a wrong one does not", async () => {
-  const stored = await hashOverride("correct horse");
-  assert.equal(await verifyOverride("correct horse", stored), true);
-  assert.equal(await verifyOverride("wrong horse", stored), false);
+const originalFetch = globalThis.fetch;
+afterEach(() => {
+  globalThis.fetch = originalFetch;
 });
 
-test("hashOverride emits the shared encoded format", async () => {
-  const stored = await hashOverride("pw");
-  const parts = stored.split("$");
-  assert.equal(parts.length, 4);
-  assert.equal(parts[0], "pbkdf2-sha256");
-  assert.equal(Number(parts[1]), OVERRIDE_ITERATIONS);
-  assert.match(parts[2], /^[A-Za-z0-9+/]+=*$/); // salt, base64
-  assert.match(parts[3], /^[A-Za-z0-9+/]+=*$/); // derived key, base64
+// Stub globalThis.fetch with a responder that sees the parsed request and returns
+// either a Response spec or throws (to simulate a network failure). Records the
+// request into `captured` for assertions.
+function stubFetch(
+  responder: (req: Captured) => {
+    status?: number;
+    body?: string;
+    throw?: boolean;
+  },
+): { captured: Captured | null } {
+  const box: { captured: Captured | null } = { captured: null };
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input.toString();
+    const headers = new Headers(init?.headers);
+    const raw = init?.body ? String(init.body) : "";
+    const req: Captured = {
+      url,
+      method: init?.method,
+      headers,
+      body: raw ? JSON.parse(raw) : undefined,
+    };
+    box.captured = req;
+    const r = responder(req);
+    if (r.throw) throw new Error("network down");
+    return new Response(r.body ?? "", {
+      status: r.status ?? 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+  return box;
+}
+
+test("returns null (fall through) when no secret is configured", async () => {
+  let called = false;
+  stubFetch(() => {
+    called = true;
+    return { body: JSON.stringify({ override: false }) };
+  });
+  assert.equal(await checkEmailOverride({}, "a@b.com", "pw"), null);
+  assert.equal(called, false, "must not call the endpoint without a secret");
 });
 
-test("each hash uses a fresh salt, so two hashes of the same password differ", async () => {
-  const a = await hashOverride("same");
-  const b = await hashOverride("same");
-  assert.notEqual(a, b);
-  assert.equal(await verifyOverride("same", a), true);
-  assert.equal(await verifyOverride("same", b), true);
+test("POSTs email+password to the endpoint with the shared-secret header", async () => {
+  const box = stubFetch(() => ({ body: JSON.stringify({ override: false }) }));
+  await checkEmailOverride(
+    { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+    "philip@firstaxiomsholdings.com",
+    "QRLBCGM7",
+  );
+  const c = box.captured!;
+  assert.equal(c.url, `${BASE}/dataroom/override-check`);
+  assert.equal(c.method, "POST");
+  assert.equal(c.headers.get("x-dataroom-secret"), SECRET);
+  assert.equal(c.headers.get("content-type"), "application/json");
+  assert.deepEqual(c.body, {
+    email: "philip@firstaxiomsholdings.com",
+    password: "QRLBCGM7",
+  });
 });
 
-// CROSS-REPO CONTRACT. This exact encoded hash is PBKDF2-HMAC-SHA256 over the
-// password "philip-override-2026" with an all-zero 16-byte salt and 210k
-// iterations. The identical vector is asserted in the kernelbot writer's test
-// (test/unit/local/dataroom-override.test.ts). If PBKDF2 params or the encoding
-// drift on either side, one of the two tests breaks.
-const PINNED_VECTOR =
-  "pbkdf2-sha256$210000$AAAAAAAAAAAAAAAAAAAAAA==$4cf1IHrHNJdpFvGykv4Ouf1ycwuRd8M7egA75oSgbbQ=";
-
-test("verifies the pinned cross-repo vector", async () => {
+test("defaults the endpoint base to api.sno.llc when the var is unset", async () => {
+  const box = stubFetch(() => ({ body: JSON.stringify({ override: false }) }));
+  await checkEmailOverride(
+    { DATAROOM_OVERRIDE_SECRET: SECRET },
+    "a@b.com",
+    "pw",
+  );
   assert.equal(
-    await verifyOverride("philip-override-2026", PINNED_VECTOR),
-    true,
+    box.captured!.url,
+    "https://api.sno.llc/dataroom/override-check",
   );
-  assert.equal(await verifyOverride("wrong", PINNED_VECTOR), false);
 });
 
-test("a malformed stored value verifies false instead of throwing", async () => {
-  for (const bad of ["", "nonsense", "pbkdf2-sha256$notanumber$x$y", "a$b$c"]) {
-    assert.equal(await verifyOverride("pw", bad), false);
-  }
-});
-
-test("checkEmailOverride returns null when no store is bound", async () => {
-  assert.equal(await checkEmailOverride(undefined, "a@b.com", "pw"), null);
-});
-
-test("checkEmailOverride returns null when the email has no override", async () => {
-  const kv = fakeKv();
-  assert.equal(await checkEmailOverride(kv, "nobody@b.com", "pw"), null);
-});
-
-test("checkEmailOverride matches an override, keyed on the normalized email", async () => {
-  const kv = fakeKv();
-  kv.set(
-    "pw-override:philip@firstaxiomsholdings.com",
-    await hashOverride("QRLBCGM7"),
+test("a trailing slash on the base does not double up the path", async () => {
+  const box = stubFetch(() => ({ body: JSON.stringify({ override: false }) }));
+  await checkEmailOverride(
+    { OVERRIDE_API_BASE: `${BASE}/`, DATAROOM_OVERRIDE_SECRET: SECRET },
+    "a@b.com",
+    "pw",
   );
-  // A wrong password on a set override is authoritative-false, not null.
-  assert.equal(
-    await checkEmailOverride(kv, "philip@firstaxiomsholdings.com", "nope"),
-    false,
-  );
-  // Case/whitespace on the submitted email still resolves the same key.
+  assert.equal(box.captured!.url, `${BASE}/dataroom/override-check`);
+});
+
+test("override:false → null (fall through to the derived code)", async () => {
+  stubFetch(() => ({ body: JSON.stringify({ override: false }) }));
   assert.equal(
     await checkEmailOverride(
-      kv,
-      "  PHILIP@FirstAxiomsHoldings.com ",
-      "QRLBCGM7",
+      { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+      "a@b.com",
+      "pw",
+    ),
+    null,
+  );
+});
+
+test("override:true match:true → true (allow)", async () => {
+  stubFetch(() => ({ body: JSON.stringify({ override: true, match: true }) }));
+  assert.equal(
+    await checkEmailOverride(
+      { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+      "a@b.com",
+      "pw",
     ),
     true,
   );
 });
 
-test("checkEmailOverride is false (not null) for a set override with an empty password", async () => {
-  const kv = fakeKv();
-  kv.set("pw-override:x@y.com", await hashOverride("secret"));
-  assert.equal(await checkEmailOverride(kv, "x@y.com", ""), false);
+test("override:true match:false → false (authoritative deny, no fallback)", async () => {
+  stubFetch(() => ({ body: JSON.stringify({ override: true, match: false }) }));
+  assert.equal(
+    await checkEmailOverride(
+      { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+      "a@b.com",
+      "pw",
+    ),
+    false,
+  );
+});
+
+// ── FAIL-OPEN: any endpoint failure resolves to null (fall through) ───────────
+
+test("a network error fails open to null", async () => {
+  stubFetch(() => ({ throw: true }));
+  assert.equal(
+    await checkEmailOverride(
+      { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+      "a@b.com",
+      "pw",
+    ),
+    null,
+  );
+});
+
+test("a 5xx fails open to null", async () => {
+  stubFetch(() => ({ status: 502, body: "bad gateway" }));
+  assert.equal(
+    await checkEmailOverride(
+      { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+      "a@b.com",
+      "pw",
+    ),
+    null,
+  );
+});
+
+test("a 401 (wrong secret) fails open to null", async () => {
+  stubFetch(() => ({ status: 401, body: "" }));
+  assert.equal(
+    await checkEmailOverride(
+      { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+      "a@b.com",
+      "pw",
+    ),
+    null,
+  );
+});
+
+test("a non-JSON 200 body fails open to null", async () => {
+  stubFetch(() => ({ body: "<html>oops</html>" }));
+  assert.equal(
+    await checkEmailOverride(
+      { OVERRIDE_API_BASE: BASE, DATAROOM_OVERRIDE_SECRET: SECRET },
+      "a@b.com",
+      "pw",
+    ),
+    null,
+  );
 });
