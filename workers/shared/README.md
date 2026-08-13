@@ -24,7 +24,7 @@ differences are the point:
 | Access code | one shared `DECK_PASSWORD`     | derived from the email alone, via a secret         | one shared `LINK_ADMIN_PASSWORD`          |
 | Ref bypass  | yes — a ref skips the code     | no — the cookie is the only way in                 | no; sign-in is also domain-restricted     |
 | Cookie      | `snocap_viewer`, 30d, `Path=/` | `dataroom_viewer`, 24h, `Path=/dataroom`, HttpOnly | `link_admin`, 12h, `Path=/link`, HttpOnly |
-| Storage     | D1 `deck-viewers`              | D1 `dealroom-viewers`                              | KV `LINKS`                                |
+| Storage     | D1 `deck-viewers`              | D1 `dealroom-viewers`                              | Redis via the api (`link:slug:<slug>`)    |
 
 The data room's D1 database is `dealroom-viewers`, not `dataroom-viewers`: the
 Worker was renamed, the database was not. Renaming it would be a second

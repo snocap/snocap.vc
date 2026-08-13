@@ -1,43 +1,86 @@
 // What is distinctive about the link worker: a permanent redirect only for a
-// link that can never expire, one indistinguishable miss for everything else,
-// and a create endpoint reachable only with a signed session cookie.
+// link that can never expire, one indistinguishable miss for everything else
+// (including an unreachable store), and a create endpoint reachable only with a
+// signed session cookie. The store is no longer a KV binding — it is the
+// kernelbot-api over HTTP (src/store.ts), so these tests drive the worker's
+// `fetch` against a fake api stubbed onto globalThis.fetch.
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import worker from "./index.ts";
-import { linkKey } from "./links.ts";
+import type { LinkRecord } from "./links.ts";
 import { signViewerCookie } from "../../shared/cookie.ts";
 
 const SESSION_SECRET = "test-session-secret";
 const ADMIN_PASSWORD = "test-admin-password";
+const API_SECRET = "test-link-secret";
+const API_BASE = "https://api.test";
 const HOME = "https://snocap.vc/";
 
-function fakeKv(seed: Record<string, unknown> = {}) {
-  const store = new Map<string, string>();
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+/**
+ * A fake of the kernelbot-api's two link routes over a fetch stub. Models the
+ * server-side rules the worker now delegates: resolve drops an expired record
+ * (found:false), and create is an atomic check-then-set that answers 409 only
+ * when a LIVE record already holds the slug.
+ */
+function fakeApi(seed: Record<string, Partial<LinkRecord>> = {}) {
+  const store = new Map<string, LinkRecord>();
   for (const [slug, record] of Object.entries(seed)) {
-    store.set(linkKey(slug), JSON.stringify(record));
+    store.set(slug, record as LinkRecord);
   }
-  return {
-    puts: [] as { key: string; options: Record<string, unknown> }[],
-    async get(key: string) {
-      return store.get(key) ?? null;
+  const live = (record: LinkRecord | undefined): record is LinkRecord =>
+    Boolean(
+      record && (record.expiresAt === null || Date.now() < record.expiresAt),
+    );
+  const api = {
+    store,
+    calls: [] as { url: string; secret: string | null; body: unknown }[],
+    read(slug: string): LinkRecord | null {
+      return store.get(slug) ?? null;
     },
-    async put(key: string, value: string, options: Record<string, unknown>) {
-      store.set(key, value);
-      this.puts.push({ key, options });
-    },
-    read(slug: string) {
-      const raw = store.get(linkKey(slug));
-      return raw ? JSON.parse(raw) : null;
-    },
+    fetchImpl: (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const secret = new Headers(init?.headers).get("x-link-secret");
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+      api.calls.push({ url, secret, body });
+      if (url.endsWith("/link/resolve")) {
+        const record = store.get(body.slug);
+        if (!live(record)) return jsonResponse({ found: false }, 200);
+        return jsonResponse({ found: true, record }, 200);
+      }
+      if (url.endsWith("/link/create")) {
+        if (live(store.get(body.slug))) {
+          return jsonResponse({ ok: false }, 409);
+        }
+        store.set(body.slug, body.record);
+        return jsonResponse({ ok: true }, 201);
+      }
+      throw new Error(`unexpected url ${url}`);
+    }) as typeof fetch,
   };
+  return api;
+}
+
+/** Install a fake api on globalThis.fetch and hand back its handle. */
+function installApi(seed: Record<string, Partial<LinkRecord>> = {}) {
+  const api = fakeApi(seed);
+  globalThis.fetch = api.fetchImpl;
+  return api;
 }
 
 function env(overrides: Record<string, unknown> = {}) {
   return {
-    LINKS: fakeKv(),
     LINK_SESSION_SECRET: SESSION_SECRET,
     LINK_ADMIN_PASSWORD: ADMIN_PASSWORD,
     LINK_ALLOWED_EMAIL_DOMAINS: "sno.llc,snocap.vc",
+    LINK_API_SECRET: API_SECRET,
+    LINK_API_BASE: API_BASE,
     ...overrides,
   } as never;
 }
@@ -64,13 +107,10 @@ afterEach(() => {
 // ── the redirect, which is the whole point ────────────────────────────────────
 
 test("a link with no expiry redirects permanently", async () => {
+  installApi({ deck: { url: "https://example.com/deck", expiresAt: null } });
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/deck"),
-    env({
-      LINKS: fakeKv({
-        deck: { url: "https://example.com/deck", expiresAt: null },
-      }),
-    }),
+    env(),
   );
   assert.equal(res.status, 301);
   assert.equal(res.headers.get("Location"), "https://example.com/deck");
@@ -78,16 +118,15 @@ test("a link with no expiry redirects permanently", async () => {
 
 test("a link WITH an expiry redirects temporarily and is never cached", async () => {
   // A 301 here would let a browser keep following a link past its expiry date.
+  installApi({
+    promo: {
+      url: "https://example.com/promo",
+      expiresAt: Date.now() + 86_400_000,
+    },
+  });
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/promo"),
-    env({
-      LINKS: fakeKv({
-        promo: {
-          url: "https://example.com/promo",
-          expiresAt: Date.now() + 86_400_000,
-        },
-      }),
-    }),
+    env(),
   );
   assert.equal(res.status, 302);
   assert.equal(res.headers.get("Location"), "https://example.com/promo");
@@ -97,29 +136,29 @@ test("a link WITH an expiry redirects temporarily and is never cached", async ()
 test("a permanent redirect carries a bounded cache lifetime", async () => {
   // Explicit, because a 301 with no Cache-Control is cached indefinitely and a
   // mistyped destination would be unfixable for anyone who followed it.
+  installApi({ deck: { url: "https://example.com/", expiresAt: null } });
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/deck"),
-    env({
-      LINKS: fakeKv({ deck: { url: "https://example.com/", expiresAt: null } }),
-    }),
+    env(),
   );
   assert.match(res.headers.get("Cache-Control") ?? "", /max-age=3600/);
 });
 
 test("an expired link redirects to snocap.vc", async () => {
+  // The api drops the expired record server-side (found:false).
+  installApi({
+    gone: { url: "https://example.com/gone", expiresAt: Date.now() - 1000 },
+  });
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/gone"),
-    env({
-      LINKS: fakeKv({
-        gone: { url: "https://example.com/gone", expiresAt: Date.now() - 1000 },
-      }),
-    }),
+    env(),
   );
   assert.equal(res.status, 302);
   assert.equal(res.headers.get("Location"), HOME);
 });
 
 test("an unknown link redirects to snocap.vc rather than 404ing", async () => {
+  installApi();
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/never-existed"),
     env(),
@@ -130,14 +169,14 @@ test("an unknown link redirects to snocap.vc rather than 404ing", async () => {
 
 test("an expired link is indistinguishable from one that never existed", async () => {
   // No information leak about whether a slug was ever real.
+  installApi({
+    gone: { url: "https://example.com/", expiresAt: Date.now() - 1000 },
+  });
   const expired = await worker.fetch(
     new Request("https://snocap.vc/link/gone"),
-    env({
-      LINKS: fakeKv({
-        gone: { url: "https://example.com/", expiresAt: Date.now() - 1000 },
-      }),
-    }),
+    env(),
   );
+  installApi();
   const unknown = await worker.fetch(
     new Request("https://snocap.vc/link/never-existed"),
     env(),
@@ -156,6 +195,7 @@ test("an expired link is indistinguishable from one that never existed", async (
 
 test("a miss is never a permanent redirect", async () => {
   // The slug may be created tomorrow, so nothing about a miss may be cached.
+  installApi();
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/never-existed"),
     env(),
@@ -164,27 +204,33 @@ test("a miss is never a permanent redirect", async () => {
   assert.equal(res.headers.get("Cache-Control"), "no-store");
 });
 
-test("an unreadable stored record is treated as a miss", async () => {
-  const links = fakeKv();
-  await links.put(linkKey("broken"), "not json", {});
+test("an unreadable record from the api is treated as a miss", async () => {
+  // found:true but the record does not parse — never trust it into a Location.
+  globalThis.fetch = (async () =>
+    jsonResponse({ found: true, record: { nope: 1 } }, 200)) as typeof fetch;
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/broken"),
-    env({ LINKS: links }),
+    env(),
   );
+  assert.equal(res.status, 302);
   assert.equal(res.headers.get("Location"), HOME);
 });
 
 test("a slug is resolved case-insensitively", async () => {
+  const api = installApi({
+    deck: { url: "https://example.com/", expiresAt: null },
+  });
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/DECK"),
-    env({
-      LINKS: fakeKv({ deck: { url: "https://example.com/", expiresAt: null } }),
-    }),
+    env(),
   );
   assert.equal(res.status, 301);
+  // The slug reached the api already lowercased.
+  assert.equal(api.calls.at(-1)?.body.slug, "deck");
 });
 
 test("a multi-segment or encoded-traversal slug is a miss, not a path escape", async () => {
+  installApi();
   for (const path of [
     "/link/a/b",
     "/link/%2e%2e%2fdeck",
@@ -214,23 +260,85 @@ test("a literal ../ never reaches the worker as a slug", async () => {
   assert.equal(await res.text(), "/deck");
 });
 
+// ── availability: a redirect fails to a miss, never a stale 301 ────────────────
+
+test("an unreachable api is an ordinary miss, never a cached redirect", async () => {
+  // A transient outage must never mint a 301 that a browser caches into a
+  // permanently wrong redirect.
+  globalThis.fetch = (async () => {
+    throw new Error("network down");
+  }) as typeof fetch;
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/deck"),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("Location"), HOME);
+  assert.equal(res.headers.get("Cache-Control"), "no-store");
+});
+
+test("an api 5xx is a miss, never a 301", async () => {
+  globalThis.fetch = (async () =>
+    new Response("upstream boom", { status: 502 })) as typeof fetch;
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/deck"),
+    env(),
+  );
+  assert.notEqual(res.status, 301);
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("Location"), HOME);
+});
+
+test("a record the api mis-serves past its expiry is still guarded as a miss", async () => {
+  // Defense in depth: even if the api hands back an expired record, the worker's
+  // own isExpired check refuses to redirect to it.
+  globalThis.fetch = (async () =>
+    jsonResponse(
+      {
+        found: true,
+        record: { url: "https://example.com/", expiresAt: Date.now() - 1000 },
+      },
+      200,
+    )) as typeof fetch;
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/stale"),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("Location"), HOME);
+});
+
+test("the resolve call carries the shared secret and the slug", async () => {
+  const api = installApi({
+    deck: { url: "https://example.com/", expiresAt: null },
+  });
+  await worker.fetch(new Request("https://snocap.vc/link/deck"), env());
+  const call = api.calls.at(-1);
+  assert.ok(call?.url.startsWith(`${API_BASE}/link/resolve`));
+  assert.equal(call?.secret, API_SECRET);
+  assert.equal(call?.body.slug, "deck");
+});
+
 // ── the sno.llc/r/* surface ───────────────────────────────────────────────────
 
 test("sno.llc/r/<slug> resolves the same link as snocap.vc/link/<slug>", async () => {
   const seed = { deck: { url: "https://example.com/deck", expiresAt: null } };
+  installApi(seed);
   const short = await worker.fetch(
     new Request("https://sno.llc/r/deck"),
-    env({ LINKS: fakeKv(seed) }),
+    env(),
   );
+  installApi(seed);
   const long = await worker.fetch(
     new Request("https://snocap.vc/link/deck"),
-    env({ LINKS: fakeKv(seed) }),
+    env(),
   );
   assert.equal(short.status, long.status);
   assert.equal(short.headers.get("Location"), long.headers.get("Location"));
 });
 
 test("an unknown slug on sno.llc/r/ redirects to snocap.vc", async () => {
+  installApi();
   const res = await worker.fetch(
     new Request("https://sno.llc/r/never-existed"),
     env(),
@@ -240,6 +348,7 @@ test("an unknown slug on sno.llc/r/ redirects to snocap.vc", async () => {
 });
 
 test("sno.llc/r with no slug redirects to snocap.vc", async () => {
+  installApi();
   const res = await worker.fetch(new Request("https://sno.llc/r"), env());
   assert.equal(res.headers.get("Location"), HOME);
 });
@@ -371,38 +480,54 @@ test("a cookie signed with another worker's secret does not open the tool", asyn
 // ── creating a link ───────────────────────────────────────────────────────────
 
 test("creating a link stores it and confirms the short URL", async () => {
-  const links = fakeKv();
+  const api = installApi();
   const res = await worker.fetch(
     createRequest(
       { url: "https://example.com/long/path", pathname: "Fund-Two" },
       await session(),
     ),
-    env({ LINKS: links }),
+    env(),
   );
   assert.equal(res.status, 302);
   assert.equal(res.headers.get("Location"), "/link?created=fund-two");
-  assert.deepEqual(links.read("fund-two"), {
+  assert.deepEqual(api.read("fund-two"), {
     url: "https://example.com/long/path",
     expiresAt: null,
-    createdAt: links.read("fund-two").createdAt,
+    createdAt: api.read("fund-two")!.createdAt,
     createdBy: "jon@sno.llc",
   });
 });
 
-test("a permanent link is stored with no KV TTL", async () => {
-  const links = fakeKv();
+test("the create call carries the shared secret and the slugged record", async () => {
+  const api = installApi();
+  await worker.fetch(
+    createRequest(
+      { url: "https://example.com/", pathname: "keyed" },
+      await session(),
+    ),
+    env(),
+  );
+  const call = api.calls.at(-1);
+  assert.ok(call?.url.startsWith(`${API_BASE}/link/create`));
+  assert.equal(call?.secret, API_SECRET);
+  assert.equal(call?.body.slug, "keyed");
+  assert.equal(call?.body.record.url, "https://example.com/");
+});
+
+test("a permanent link is stored with no expiry", async () => {
+  const api = installApi();
   await worker.fetch(
     createRequest(
       { url: "https://example.com/", pathname: "forever" },
       await session(),
     ),
-    env({ LINKS: links }),
+    env(),
   );
-  assert.deepEqual(links.puts[0].options, {});
+  assert.equal(api.read("forever")?.expiresAt, null);
 });
 
-test("an expiring link is stored with a KV TTL as well as its date", async () => {
-  const links = fakeKv();
+test("an expiring link is stored with its date as an absolute instant", async () => {
+  const api = installApi();
   const year = new Date().getUTCFullYear() + 1;
   await worker.fetch(
     createRequest(
@@ -413,68 +538,88 @@ test("an expiring link is stored with a KV TTL as well as its date", async () =>
       },
       await session(),
     ),
-    env({ LINKS: links }),
+    env(),
   );
-  assert.ok(typeof links.puts[0].options.expirationTtl === "number");
-  assert.ok(links.read("temporary").expiresAt > Date.now());
+  const record = api.read("temporary");
+  assert.ok(record && typeof record.expiresAt === "number");
+  assert.ok(record.expiresAt! > Date.now());
 });
 
 test("a created link is immediately resolvable", async () => {
-  const links = fakeKv();
-  const context = env({ LINKS: links });
+  installApi();
   await worker.fetch(
     createRequest(
       { url: "https://example.com/deck", pathname: "deck" },
       await session(),
     ),
-    context,
+    env(),
   );
   const res = await worker.fetch(
     new Request("https://snocap.vc/link/deck"),
-    context,
+    env(),
   );
   assert.equal(res.status, 301);
   assert.equal(res.headers.get("Location"), "https://example.com/deck");
 });
 
 test("creating a link requires a session", async () => {
-  const links = fakeKv();
+  const api = installApi();
   const res = await worker.fetch(
     createRequest({ url: "https://example.com/", pathname: "sneaky" }),
-    env({ LINKS: links }),
+    env(),
   );
   assert.equal(res.status, 401);
-  assert.equal(links.read("sneaky"), null);
+  assert.equal(api.read("sneaky"), null);
+  // The store was never even called for an unauthenticated create.
+  assert.equal(api.calls.length, 0);
+});
+
+test("a store outage on create tells the admin to retry and loses nothing silently", async () => {
+  // A create has no safe silent fallback: a 502 the admin can see and retry is
+  // better than a redirect that quietly did not store the link.
+  globalThis.fetch = (async () => {
+    throw new Error("network down");
+  }) as typeof fetch;
+  const res = await worker.fetch(
+    createRequest(
+      { url: "https://example.com/", pathname: "unlucky" },
+      await session(),
+    ),
+    env(),
+  );
+  assert.equal(res.status, 502);
+  assert.match(await res.text(), /unavailable/);
 });
 
 test("a javascript: destination is rejected", async () => {
-  const links = fakeKv();
+  const api = installApi();
   const res = await worker.fetch(
     createRequest(
       { url: "javascript:alert(1)", pathname: "xss" },
       await session(),
     ),
-    env({ LINKS: links }),
+    env(),
   );
   assert.equal(res.status, 400);
   assert.match(await res.text(), /http:\/\/ and https:\/\//);
-  assert.equal(links.read("xss"), null);
+  assert.equal(api.read("xss"), null);
 });
 
 test("an invalid pathname is rejected", async () => {
-  const links = fakeKv();
+  const api = installApi();
   const res = await worker.fetch(
     createRequest(
       { url: "https://example.com/", pathname: "../escape" },
       await session(),
     ),
-    env({ LINKS: links }),
+    env(),
   );
   assert.equal(res.status, 400);
-  assert.equal(links.read("../escape"), null);
+  assert.equal(api.read("../escape"), null);
 });
 
 test("a pathname colliding with the create endpoint is rejected", async () => {
+  installApi();
   const res = await worker.fetch(
     createRequest(
       { url: "https://example.com/", pathname: "create" },
@@ -487,6 +632,7 @@ test("a pathname colliding with the create endpoint is rejected", async () => {
 });
 
 test("an expiry date in the past is rejected", async () => {
+  installApi();
   const res = await worker.fetch(
     createRequest(
       {
@@ -503,6 +649,7 @@ test("an expiry date in the past is rejected", async () => {
 });
 
 test("a rejected submission keeps what was typed", async () => {
+  installApi();
   const res = await worker.fetch(
     createRequest(
       { url: "https://example.com/keep-me", pathname: "../bad" },
@@ -514,8 +661,9 @@ test("a rejected submission keeps what was typed", async () => {
 });
 
 test("a live pathname cannot be repointed", async () => {
-  // The old link is already in circulation and its 301 may be cached.
-  const links = fakeKv({
+  // The old link is already in circulation and its 301 may be cached; the api
+  // answers 409 for a live slug.
+  const api = installApi({
     taken: { url: "https://example.com/original", expiresAt: null },
   });
   const res = await worker.fetch(
@@ -523,15 +671,15 @@ test("a live pathname cannot be repointed", async () => {
       { url: "https://example.com/hijacked", pathname: "taken" },
       await session(),
     ),
-    env({ LINKS: links }),
+    env(),
   );
   assert.equal(res.status, 409);
   assert.match(await res.text(), /already taken/);
-  assert.equal(links.read("taken").url, "https://example.com/original");
+  assert.equal(api.read("taken")?.url, "https://example.com/original");
 });
 
 test("an expired pathname can be claimed again", async () => {
-  const links = fakeKv({
+  const api = installApi({
     recycled: { url: "https://example.com/old", expiresAt: Date.now() - 1000 },
   });
   const res = await worker.fetch(
@@ -539,14 +687,15 @@ test("an expired pathname can be claimed again", async () => {
       { url: "https://example.com/new", pathname: "recycled" },
       await session(),
     ),
-    env({ LINKS: links }),
+    env(),
   );
   assert.equal(res.status, 302);
-  assert.equal(links.read("recycled").url, "https://example.com/new");
+  assert.equal(api.read("recycled")?.url, "https://example.com/new");
 });
 
 test("the destination URL never reaches the logs", async () => {
   // A short link often exists because the URL behind it is not public.
+  installApi();
   const written: string[] = [];
   const originalLog = console.log;
   console.log = (value: string) => written.push(String(value));

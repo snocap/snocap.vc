@@ -12,32 +12,37 @@ The short-link tool behind `snocap.vc/link`.
 | `GET /r/<path>` on `sno.llc`  | The same lookup on the short domain (see below)             |
 | Anything else under `/link`   | `302` to `https://snocap.vc/` — never a 404                 |
 
-## Why KV, and not redis
+## Redis, via the api
 
-The ask was "save it into redis". A Cloudflare Worker runs at the edge and has
-no route to kernelbot's internal `kernelbot-redis`, so honouring that literally
-would mean standing up a public write endpoint on `api.sno.llc` and then
-defending it — HMAC over the payload, a nonce and timestamp against replay, a
-seen-nonce cache. That is a lot of machinery whose only purpose is to protect a
-door we do not otherwise need to open.
+The ask was "save it into redis". A Cloudflare Worker runs at the edge and
+cannot open a raw TCP connection to kernelbot's internal `kernelbot-redis`, so it
+reaches the store the same way the data room override does (`workers/dataroom-gate`):
+it POSTs to the **kernelbot-api** at `https://api.sno.llc` (kernelbot-api `:3010`
+via the existing cloudflared-web tunnel — no new tunnel, hostname or proxy
+worker), authenticating with a shared-secret header `x-link-secret:
+<LINK_API_SECRET>`. The api owns the Redis read and write under the namespace
+`link:slug:<slug>`; this worker never touches Redis directly. All of that lives
+in `src/store.ts`.
 
-Worker-owned KV removes the door instead of guarding it. **There is no write API
-to abuse**: the sole writer is the authenticated form inside this worker, so the
-"a bad actor posts straight to our API" failure mode does not exist to be
-defended against. KV also expresses expiration natively as a per-key TTL, and
-reads are edge-local, so a redirect costs no cross-service round trip.
+Two routes:
 
-What that gives up versus redis:
+- `POST /link/resolve` `{ slug }` → `{ found: false }` for an unknown **or
+  expired** slug, or `{ found: true, record }` for a live one.
+- `POST /link/create` `{ slug, record }` → `2xx` on store, or `409` when a
+  **live** record already holds the slug (an expired one is claimable). The
+  check-then-set is atomic server-side against Redis — a strict improvement on
+  KV's last-writer-wins.
 
-- **Links are invisible to kernelbot.** Nothing in the agent stack can list or
-  create a short link; this worker is the only way in. A `/link/admin` listing
-  page, or a kernelbot-side write path, would be new work.
-- **KV writes are eventually consistent.** A freshly created link can miss for a
-  few seconds in a distant region, and a miss lands on `snocap.vc` rather than
-  erroring — briefly confusing, never broken.
-- **No audit trail beyond the record itself.** Each record carries `createdBy`
-  and `createdAt`, but there is no history of edits or hit counts. D1 (already
-  used by both gate workers) is where to go if that is wanted later.
+What this buys over the previous KV design: **short links are now visible to the
+agent stack** — kernelbot can list or create one through the api — instead of
+being sealed inside a Worker-only KV namespace. It also removes a pre-merge
+blocker: there is no `wrangler kv namespace create` step any more.
+
+The cost, accepted knowingly: **every public redirect now depends on
+`api.sno.llc`.** A redirect has nothing meaningful to fail open to, so when the
+api is unreachable, times out, or 5xxs, the worker returns the **same uniform
+302** a miss returns — never a 301 (see "Availability" below). A short ~2s
+timeout keeps a hung api from holding the request open.
 
 ## Expiry: one timezone, checked on every read
 
@@ -46,10 +51,12 @@ through all of the named date and dies at `00:00:00Z` the next day. That instant
 is stored as `expiresAt` in epoch milliseconds, so the redirect path only ever
 compares two numbers and never re-parses a date.
 
-The record's `expiresAt` is authoritative on every read. The KV TTL is set as
-well, but only as a garbage collector: KV's TTL floor is 60 seconds and deletion
-is eventual, so a link expiring in the next minute would outlive its own date if
-the TTL were the only check.
+The record's `expiresAt` is authoritative on every read. Enforcement is
+server-side: the api's `resolve` route drops a record whose date has passed
+(answering `found:false`), and may set a Redis TTL as a collector so dead keys
+do not accumulate. The worker keeps its own `isExpired` guard on the returned
+record as defense-in-depth, so a record is never trusted past its date even if
+the api mis-serves one.
 
 ## 301 versus 302
 
@@ -70,6 +77,21 @@ return the **same** `302` to `https://snocap.vc/` with the same headers and an
 empty body. Nothing distinguishes "this expired" from "this never existed", so
 the redirect surface cannot be probed for which slugs are real. A miss is never
 a `301` — a slug that misses today may be created tomorrow.
+
+## Availability
+
+Every public redirect now depends on `api.sno.llc`. When the api is unreachable,
+times out (~2s), or answers `5xx`, the resolve returns the **same uniform `302`
+to `https://snocap.vc/`** a miss returns — deliberately **never a `301`**. A
+transient outage must never be cached into a permanently wrong redirect, and a
+redirect has nothing meaningful to fail open to, so it degrades to the temporary
+miss and self-heals when the api returns. This is a knowingly-accepted
+dependency, the same one the data room gate took on when its override moved to
+the api.
+
+The **create** path is different: it is one authenticated admin, not a public
+redirect, so a store outage there is surfaced loudly (`502`, "try again in a
+moment") rather than silently dropping the link.
 
 ## Slugs and destinations
 
@@ -109,16 +131,21 @@ Once, before the first deploy:
 ```bash
 cd workers/link
 
-# 1. Create the store, then paste the printed id into wrangler.toml.
-npx wrangler kv namespace create LINKS
-
-# 2. The two secrets.
+# The three secrets. There is no `wrangler kv namespace create` step any more —
+# the store is Redis, owned by the api.
+npx wrangler secret put LINK_API_SECRET       # the shared secret the api also holds
 npx wrangler secret put LINK_SESSION_SECRET   # fresh random value, NOT a gate's HMAC_SECRET
 npx wrangler secret put LINK_ADMIN_PASSWORD   # the shared access code
 ```
 
-`LINK_ALLOWED_EMAIL_DOMAINS` is a plain `[vars]` entry in `wrangler.toml`, not a
-secret. Leaving it empty allows any valid address.
+`LINK_API_SECRET` must be the **same** long random string the kernelbot side
+holds as `LINK_API_SECRET` (its `.env` / `.env.enc`), mirroring how the apply
+worker shares its secret. Until it is set, every resolve fails open to the
+uniform miss and every create returns `502`.
+
+`LINK_API_BASE` (the `api.sno.llc` origin) and `LINK_ALLOWED_EMAIL_DOMAINS` are
+plain `[vars]` entries in `wrangler.toml`, not secrets. Leaving the domain list
+empty allows any valid address.
 
 ## Enabling `sno.llc/r/*`
 
@@ -152,8 +179,9 @@ npm test          # from the repo root: node --test over workers/**/*.test.ts
 ```
 
 `src/links.ts` holds every rule with no dependency on the Workers runtime, so
-the validation, expiry and TTL logic is unit-tested without a KV binding;
-`src/index.test.ts` drives the worker's `fetch` against a fake KV.
+the validation and expiry logic is unit-tested without a network round trip;
+`src/store.ts` is the thin HTTP passthrough to the api; `src/index.test.ts`
+drives the worker's `fetch` against a fake api stubbed onto `globalThis.fetch`.
 
 `src/form-page.ts` carries its own stylesheet instead of rendering through
 `workers/shared/gate-page.ts`, whose shell is hardwired to an email + access

@@ -5,9 +5,7 @@ import { test } from "node:test";
 import {
   decodeRecord,
   emailAllowed,
-  expirationTtl,
   isExpired,
-  linkKey,
   normalizeSlug,
   parseExpiry,
   parseTargetUrl,
@@ -20,10 +18,6 @@ test("a slug is lowercased and stripped of surrounding slashes", () => {
   assert.equal(normalizeSlug("/Fund-Two/"), "fund-two");
   assert.equal(normalizeSlug("  DECK  "), "deck");
   assert.equal(normalizeSlug(undefined), "");
-});
-
-test("the key is namespaced so the store can hold other things later", () => {
-  assert.equal(linkKey("deck"), "link:deck");
 });
 
 test("a plain slug is accepted", () => {
@@ -177,35 +171,29 @@ test("expiry is exclusive: the link is dead at the instant it names", () => {
   assert.equal(isExpired(record, NOON), true);
 });
 
-test("a permanent link gets no KV TTL", () => {
-  assert.equal(expirationTtl(null, NOON), undefined);
-});
-
-test("a TTL covers the time left, floored at KV's 60 second minimum", () => {
-  assert.equal(expirationTtl(NOON + 5000, NOON), 60);
-  assert.equal(expirationTtl(NOON + 3_600_000, NOON), 3600);
-});
-
 test("a stored record round-trips", () => {
+  // The api returns the record as parsed JSON, so decodeRecord validates an
+  // object rather than a string.
   const record = {
     url: "https://example.com/",
     expiresAt: NOON,
     createdAt: 1,
     createdBy: "jon@sno.llc",
   };
-  assert.deepEqual(decodeRecord(JSON.stringify(record)), record);
+  assert.deepEqual(decodeRecord({ ...record }), record);
 });
 
 test("an unreadable record decodes to null so it can be treated as a miss", () => {
   assert.equal(decodeRecord(null), null);
-  assert.equal(decodeRecord(""), null);
-  assert.equal(decodeRecord("not json"), null);
-  assert.equal(decodeRecord("{}"), null);
-  assert.equal(decodeRecord('{"url":""}'), null);
+  assert.equal(decodeRecord(undefined), null);
+  assert.equal(decodeRecord("not an object"), null);
+  assert.equal(decodeRecord({}), null);
+  assert.equal(decodeRecord({ url: "" }), null);
+  assert.equal(decodeRecord({ url: 42 }), null);
 });
 
 test("a record missing its expiry is read as permanent", () => {
-  assert.deepEqual(decodeRecord('{"url":"https://example.com/"}'), {
+  assert.deepEqual(decodeRecord({ url: "https://example.com/" }), {
     url: "https://example.com/",
     expiresAt: null,
     createdAt: 0,

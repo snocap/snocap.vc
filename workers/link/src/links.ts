@@ -1,6 +1,7 @@
 // Link-record rules: slug and destination validation, expiry arithmetic, and
-// the KV key. Deliberately free of the Workers runtime so `node --test` can
-// exercise every rule without a KV binding.
+// record decoding. Deliberately free of the Workers runtime so `node --test` can
+// exercise every rule without a network round trip. The store itself (read and
+// write over the kernelbot-api) lives in store.ts.
 
 /**
  * Paths the tool owns for itself. A stored link can never claim one, so a slug
@@ -35,10 +36,6 @@ export interface LinkRecord {
   expiresAt: number | null;
   createdAt: number;
   createdBy: string;
-}
-
-export function linkKey(slug: string): string {
-  return `link:${slug}`;
 }
 
 /** Trims surrounding whitespace and slashes, then lowercases. Slugs are
@@ -136,31 +133,14 @@ export function isExpired(record: LinkRecord, now: number): boolean {
   return record.expiresAt !== null && now >= record.expiresAt;
 }
 
-/**
- * KV's `expirationTtl` is the garbage collector, not the clock — its floor is
- * 60 seconds and deletion is eventual, so a link expiring in the next minute
- * would outlive its date if TTL were the only check. `isExpired` stays
- * authoritative on every read; this just stops dead keys accumulating.
- */
-export function expirationTtl(
-  expiresAt: number | null,
-  now: number,
-): number | undefined {
-  if (expiresAt === null) return undefined;
-  return Math.max(60, Math.ceil((expiresAt - now) / 1000));
-}
-
-/** Parses a stored record, returning null for anything unreadable so the
- * caller can treat corruption exactly like a miss. */
-export function decodeRecord(raw: string | null): LinkRecord | null {
-  if (!raw) return null;
-  let parsed: Partial<LinkRecord>;
-  try {
-    parsed = JSON.parse(raw) as Partial<LinkRecord>;
-  } catch {
-    return null;
-  }
-  if (!parsed || typeof parsed.url !== "string" || !parsed.url) return null;
+/** Validates a record decoded from the api's JSON, returning null for anything
+ * unreadable so the caller can treat corruption exactly like a miss. Takes the
+ * already-parsed value (the api returns JSON, not a raw string), and trusts
+ * nothing about its shape — a bad `url` must never reach a Location header. */
+export function decodeRecord(raw: unknown): LinkRecord | null {
+  const parsed = raw as Partial<LinkRecord> | null;
+  if (!parsed || typeof parsed !== "object") return null;
+  if (typeof parsed.url !== "string" || !parsed.url) return null;
   return {
     url: parsed.url,
     expiresAt: typeof parsed.expiresAt === "number" ? parsed.expiresAt : null,

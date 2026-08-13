@@ -2,17 +2,15 @@ import { renderFormPage } from "./form-page.ts";
 import { renderGatePage } from "./gate-page.ts";
 import {
   RESERVED_SLUGS,
-  decodeRecord,
   emailAllowed,
-  expirationTtl,
   isExpired,
-  linkKey,
   normalizeSlug,
   parseExpiry,
   parseTargetUrl,
   slugError,
 } from "./links.ts";
 import type { LinkRecord } from "./links.ts";
+import { createLink, readLink } from "./store.ts";
 import {
   setCookie,
   signViewerCookie,
@@ -22,7 +20,12 @@ import { timingSafeEqual } from "../../shared/crypto.ts";
 import { isValidEmail, normalizeEmail } from "../../shared/email.ts";
 
 interface Env {
-  LINKS: KVNamespace;
+  /** kernelbot-api origin the store passes through to. Optional — the store
+   * defaults to https://api.sno.llc. */
+  LINK_API_BASE?: string;
+  /** Shared secret the store sends as x-link-secret. Distinct from the gates'
+   * secrets; provisioned as a Worker secret. */
+  LINK_API_SECRET: string;
   /** Signs the admin session cookie. MUST NOT be the value either gate worker
    * uses: an identical secret would let anyone holding a deck or data room
    * cookie re-label it `link_admin` and forge a session here. */
@@ -74,11 +77,11 @@ async function handleRedirect(rawSlug: string, env: Env): Promise<Response> {
   const slug = normalizeSlug(rawSlug);
   if (slugError(slug)) return missResponse();
 
-  const stored = await env.LINKS.get(linkKey(slug));
-  const record = decodeRecord(stored);
-  if (stored && !record) {
-    console.error("link: unreadable record, treating as a miss:", slug);
-  }
+  // readLink returns null for every failure — unknown, expired, unreadable, and
+  // crucially an unreachable / slow / 5xx api — so all of them fold into the one
+  // uniform miss. isExpired stays as a defense-in-depth guard on the returned
+  // record even though the api already drops expired ones server-side.
+  const record = await readLink(env, slug);
   if (!record || isExpired(record, Date.now())) return missResponse();
 
   // Permanent only when nothing can ever retire the link. An expiring link must
@@ -184,28 +187,30 @@ async function handleCreate(
   const expiry = parseExpiry(rawExpires, now);
   if ("error" in expiry) return reject(expiry.error, 400);
 
-  // A live slug is never repointed, only refused: the old link is already in
-  // circulation and its 301 may sit in caches we cannot reach. An EXPIRED slug
-  // is free to claim again. (Check-then-set is not atomic in KV, so two
-  // simultaneous creates of one slug resolve last-writer-wins — acceptable for
-  // a tool with a handful of users behind a shared code.)
-  const existing = decodeRecord(await env.LINKS.get(linkKey(slug)));
-  if (existing && !isExpired(existing, now)) {
-    return reject(`/link/${slug} is already taken — pick another path.`, 409);
-  }
-
   const record: LinkRecord = {
     url: target.url,
     expiresAt: expiry.expiresAt,
     createdAt: now,
     createdBy: email,
   };
-  const ttl = expirationTtl(expiry.expiresAt, now);
-  await env.LINKS.put(
-    linkKey(slug),
-    JSON.stringify(record),
-    ttl === undefined ? {} : { expirationTtl: ttl },
-  );
+
+  // A live slug is never repointed, only refused: the old link is already in
+  // circulation and its 301 may sit in caches we cannot reach. An EXPIRED slug
+  // is free to claim again. The api owns this check-then-set atomically against
+  // Redis (a strict improvement on KV's last-writer-wins), answering 409 when a
+  // live record already holds the slug.
+  const stored = await createLink(env, slug, record);
+  if (stored === "conflict") {
+    return reject(`/link/${slug} is already taken — pick another path.`, 409);
+  }
+  if (stored === "error") {
+    // The create path has no safe silent fallback: refusing loudly is better
+    // than dropping the link on the floor. Tell the admin to retry.
+    return reject(
+      "The link store is unavailable right now — try again in a moment.",
+      502,
+    );
+  }
 
   // The slug and its author, never the destination: a short link often exists
   // precisely because the URL behind it is not public.
