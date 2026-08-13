@@ -3,10 +3,24 @@ name: Deploy Data Room Gate Worker
 # deck gate had a workflow and this one did not, so a shared-module change went
 # live on the deck within two minutes while the data room kept serving the old
 # worker until someone ran wrangler by hand.
+#
+# TEMPORARILY DISARMED for the dealroom-gate → dataroom-gate rename. The `push`
+# trigger is commented out, not deleted, so restoring it is a one-line revert.
+#
+# Why: this workflow deploys whatever `name` wrangler.toml declares. The moment a
+# `name` change merges, it publishes a BRAND-NEW Worker with none of the five
+# secrets bound — no HMAC_SECRET, no DEALROOM_SA_KEY — and the data room breaks
+# for every LP at merge time with no human in the loop. The rename therefore has
+# to merge while nothing can auto-deploy it, so the secrets can be uploaded to
+# the new Worker before it ever serves a request.
+#
+# RE-ARM as the last step of the migration, after the new Worker is verified and
+# the old one deleted. Until then deploys are manual: `workflow_dispatch`, or
+# `npx wrangler deploy` from workers/dataroom-gate.
 on:
-  push:
-    branches: [main]
-    paths: ["workers/dataroom-gate/**", "workers/shared/**"]
+  # push:
+  #   branches: [main]
+  #   paths: ["workers/dataroom-gate/**", "workers/shared/**"]
   workflow_dispatch:
 
 jobs:
