@@ -1,0 +1,29 @@
+name = "link"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+routes = [
+  { pattern = "snocap.vc/link*", zone_name = "snocap.vc" }
+  # The sno.llc/r/* surface is written and tested but NOT enabled here, because
+  # two things must be true first and neither can be done from this repo:
+  #   1. The CLOUDFLARE_API_TOKEN used by CI needs edit rights on the sno.llc
+  #      zone. Adding the route without them fails the deploy.
+  #   2. sno.llc currently 301s every path (including /r/anything) to
+  #      snocap.vc, and Redirect Rules run BEFORE Workers — so the route would
+  #      be inert until that catch-all excludes /r/*.
+  # See README.md → "Enabling sno.llc/r/*".
+  # ,{ pattern = "sno.llc/r/*", zone_name = "sno.llc" }
+]
+
+[vars]
+# Who may sign in, on top of the shared access code. Not a secret — it is a
+# coarse second factor on the account, not the credential. Empty allows any
+# valid address.
+LINK_ALLOWED_EMAIL_DOMAINS = "sno.llc,snocap.vc"
+
+[[kv_namespaces]]
+binding = "LINKS"
+# PLACEHOLDER — replace with the id printed by:
+#   npx wrangler kv namespace create LINKS
+# The first deploy fails until this is a real id.
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
