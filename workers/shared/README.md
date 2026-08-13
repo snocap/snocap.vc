@@ -20,10 +20,16 @@ differences are the point:
 
 |             | deck-gate                      | dataroom-gate                                      |
 | ----------- | ------------------------------ | -------------------------------------------------- |
-| Access code | one shared `DECK_PASSWORD`     | derived per (email, ref) from a secret             |
+| Access code | one shared `DECK_PASSWORD`     | derived from the email alone, via a secret         |
 | Ref bypass  | yes — a ref skips the code     | no — the cookie is the only way in                 |
 | Cookie      | `snocap_viewer`, 30d, `Path=/` | `dataroom_viewer`, 24h, `Path=/dataroom`, HttpOnly |
-| D1          | `deck-viewers`                 | `dataroom-viewers`                                 |
+| D1          | `deck-viewers`                 | `dealroom-viewers`                                 |
+
+The data room's D1 database is `dealroom-viewers`, not `dataroom-viewers`: the
+Worker was renamed, the database was not. Renaming it would be a second
+migration with no upside — `database_id`, not the name, is what binds — and it
+would strand the viewer history. So `wrangler d1 …` against the data room wants
+`dealroom-viewers`.
 
 Nothing about routes, bindings, secrets or migrations is shared. Each worker
 declares its own in its `wrangler.toml`.
@@ -42,6 +48,8 @@ stripping, built in since 22.18), which is also what lets
 Imports carry the `.ts` extension so Node can resolve them; wrangler bundles
 with esbuild, which resolves them the same way.
 
-**Editing anything here redeploys `deck-gate`** — `.github/workflows/deploy-worker.yml`
-watches this directory. `dataroom-gate` has no deploy workflow and is deployed
-by hand.
+**Editing anything here redeploys BOTH gates** — `deploy-worker.yml` (deck) and
+`deploy-dataroom-worker.yml` (data room) both watch this directory, so a shared
+change goes live on both within a couple of minutes of the merge. Editing
+`dataroom-gate/` alone redeploys only the data room gate. Nothing here is
+deployed by hand any more.

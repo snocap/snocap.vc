@@ -1,10 +1,22 @@
-# The Cloudflare worker name and the D1 database name below intentionally keep
-# the old spelling. Renaming the worker would deploy a NEW one with none of the
-# four secrets bound, taking the room down until they were re-added by hand; the
-# D1 name is likewise cosmetic and its id is what actually binds. URLs, which
-# are what people see, are /dataroom. Renaming the infrastructure is a separate,
-# deliberate migration.
-name = "dealroom-gate"
+# This Worker was called `dealroom-gate` until the 2026-08-13 migration. It is
+# now `dataroom-gate`, matching this directory, the routes, the workflow and the
+# product. The rename was not an edit: a new Worker had to be created, all five
+# secrets re-uploaded to it (they cannot be read back off the platform — there is
+# no `wrangler secret get`), both routes moved, and the old Worker deleted. The
+# auto-deploy workflow was disarmed for the duration so a merge could not publish
+# a secretless Worker ahead of those steps.
+#
+# The D1 database below KEEPS the old spelling, `dealroom-viewers`. That is not an
+# oversight: `database_id` is what binds, the name is cosmetic, and renaming it
+# would be a second migration that strands the viewer history for nothing. So
+# `wrangler d1 …` against this gate still wants `dealroom-viewers`.
+#
+# The five secrets live on the Worker, not here: HMAC_SECRET (signs the viewer
+# cookie), DEALROOM_PW_SECRET (derives the access code), DEALROOM_SA_KEY (the
+# Drive service-account key), DATAROOM_OVERRIDE_SECRET (authenticates the
+# override call-out), ADMIN_TOKEN (guards /dataroom/admin). Every wrangler
+# command run in this directory now acts on `dataroom-gate`.
+name = "dataroom-gate"
 main = "src/index.ts"
 compatibility_date = "2025-04-01"
 
