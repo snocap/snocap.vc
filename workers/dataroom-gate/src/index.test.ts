@@ -9,6 +9,7 @@ import { signViewerCookie } from "../../shared/cookie.ts";
 
 const HMAC_SECRET = "test-hmac-secret";
 const PW_SECRET = "test-pw-secret";
+const OVERRIDE_SECRET = "test-dataroom-secret";
 
 function fakeDb() {
   return {
@@ -39,6 +40,29 @@ function env(overrides: Record<string, unknown> = {}) {
     DRIVE_ROOT_FOLDER_ID: "root-folder",
     ...overrides,
   } as never;
+}
+
+// Stub globalThis.fetch to stand in for the kernelbot-api override endpoint. The
+// responder receives the parsed {email, password} body and returns the endpoint's
+// JSON verdict; anything else (the origin passthrough) gets a plain response. Set
+// `throwIt` to simulate the endpoint being unreachable (fail-open path). Restored
+// by the existing afterEach.
+function stubOverrideEndpoint(
+  responder: (body: {
+    email: string;
+    password: string;
+  }) => { override: false } | { override: true; match: boolean },
+  opts: { throwIt?: boolean } = {},
+) {
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.includes("/dataroom/override-check")) {
+      if (opts.throwIt) throw new Error("endpoint down");
+      const body = JSON.parse(String(init?.body ?? "{}"));
+      return Response.json(responder(body));
+    }
+    return new Response("origin");
+  }) as typeof fetch;
 }
 
 function post(body: Record<string, string>): Request {
@@ -313,4 +337,106 @@ test("an empty code is refused rather than matched against a derivation", async 
     env(),
   );
   assert.equal(res.status, 400);
+});
+
+// ── TEMPORARY per-email override (override.ts) ────────────────────────────────
+// A GP can shadow the derived default for one LP. The gate POSTs to the
+// kernelbot-api endpoint (mocked here); the verdict is checked before the derived
+// code and is authoritative when the endpoint reports override:true.
+
+// env with the override secret set, so checkEmailOverride actually calls out.
+function overrideEnv(overrides: Record<string, unknown> = {}) {
+  return env({ DATAROOM_OVERRIDE_SECRET: OVERRIDE_SECRET, ...overrides });
+}
+
+test("a per-email override opens the gate (endpoint says match)", async () => {
+  stubOverrideEndpoint(() => ({ override: true, match: true }));
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "MANUALPW" }),
+    overrideEnv(),
+  );
+  assert.equal(res.status, 302);
+});
+
+test("an override shadows the derived code: the old derived code stops working", async () => {
+  // Endpoint reports an override is set but this (derived) password does not
+  // match it → authoritative deny, with NO fallback to the derived check.
+  stubOverrideEndpoint(() => ({ override: true, match: false }));
+  const derived = await derivePassword("jon@sno.llc", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: derived }),
+    overrideEnv(),
+  );
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /Invalid access code/);
+});
+
+test("an email with no override still uses the derived code", async () => {
+  stubOverrideEndpoint(() => ({ override: false }));
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code }),
+    overrideEnv(),
+  );
+  assert.equal(res.status, 302);
+});
+
+test("a wrong password against a set override is refused (no derived fallback)", async () => {
+  stubOverrideEndpoint(() => ({ override: true, match: false }));
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "TOTALLYWRONG" }),
+    overrideEnv(),
+  );
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /Invalid access code/);
+});
+
+test("the gate passes the submitted email+password through to the endpoint", async () => {
+  let seen: { email: string; password: string } | null = null;
+  stubOverrideEndpoint((body) => {
+    seen = body;
+    return { override: false };
+  });
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+  await worker.fetch(
+    post({ email: " JON@sno.llc ", password: code }),
+    overrideEnv(),
+  );
+  // The email is normalized before the gate calls out.
+  assert.deepEqual(seen, { email: "jon@sno.llc", password: code });
+});
+
+test("with no override secret the endpoint is never called; derived code still works", async () => {
+  let called = false;
+  stubOverrideEndpoint(() => {
+    called = true;
+    return { override: false };
+  });
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code }),
+    env(), // no DATAROOM_OVERRIDE_SECRET
+  );
+  assert.equal(res.status, 302);
+  assert.equal(called, false);
+});
+
+test("a down endpoint fails open: the derived code still opens the gate", async () => {
+  stubOverrideEndpoint(() => ({ override: false }), { throwIt: true });
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code }),
+    overrideEnv(),
+  );
+  assert.equal(res.status, 302);
+});
+
+test("a down endpoint fails open: a wrong code is still refused", async () => {
+  stubOverrideEndpoint(() => ({ override: false }), { throwIt: true });
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "NOPENOPE" }),
+    overrideEnv(),
+  );
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /Invalid access code/);
 });
