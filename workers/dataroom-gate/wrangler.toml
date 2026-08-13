@@ -1,9 +1,22 @@
-# The Cloudflare worker name and the D1 database name below intentionally keep
-# the old spelling. Renaming the worker would deploy a NEW one with none of the
-# four secrets bound, taking the room down until they were re-added by hand; the
-# D1 name is likewise cosmetic and its id is what actually binds. URLs, which
-# are what people see, are /dataroom. Renaming the infrastructure is a separate,
-# deliberate migration.
+# The deployed Worker is called `dealroom-gate`, NOT `dataroom-gate` like this
+# directory. Everything a person sees says dataroom — the product, the /dataroom
+# route, this directory, the "Deploy Data Room Gate Worker" workflow — and only
+# the Worker's own name and its D1 database keep the pre-rename spelling. So
+# every wrangler command run here (`secret list`, `secret put`, `d1 execute`,
+# `tail`) acts on `dealroom-gate`, and that is the name to look for in the
+# Cloudflare dashboard.
+#
+# Do not "fix" this by editing `name` below. That is not a rename, it is an
+# unannounced production migration: deploy-dataroom-worker.yml deploys this
+# directory on every push to main, so merging the edit would immediately publish
+# a BRAND-NEW Worker with none of the five secrets this one holds (ADMIN_TOKEN,
+# DATAROOM_OVERRIDE_SECRET, DEALROOM_PW_SECRET, DEALROOM_SA_KEY, HMAC_SECRET)
+# and move both live routes onto it. Without HMAC_SECRET no access code
+# verifies; without DEALROOM_SA_KEY the Drive listing fails — the data room is
+# down for every LP. A real rename means uploading all five secrets under the
+# new name FIRST, then deploying, then verifying both routes and one real login,
+# then deleting the old Worker. `database_name` is cosmetic (`database_id` is
+# what binds), but renaming the D1 database is a separate risk with no payoff.
 name = "dealroom-gate"
 main = "src/index.ts"
 compatibility_date = "2025-04-01"

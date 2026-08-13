@@ -5,6 +5,14 @@ Code used by both gate workers, `deck-gate` (`snocap.vc/deck*`) and
 email, check an access code, set a signed cookie, log the viewer to D1 — with
 different policies on top.
 
+**Directory names are not Worker names here.** `workers/dataroom-gate` deploys a
+Cloudflare Worker named `dealroom-gate`, and its D1 database is
+`dealroom-viewers` — the pre-rename spelling, kept on purpose. Anything you run
+against that gate (`wrangler secret …`, `wrangler d1 …`, the dashboard) wants
+`dealroom-gate`. The reasons, and why renaming it is a production migration
+rather than an edit, are at the top of `dataroom-gate/wrangler.toml`.
+`deck-gate` matches its directory.
+
 | Module         | What it holds                                                             |
 | -------------- | ------------------------------------------------------------------------- |
 | `crypto.ts`    | HMAC-SHA256 signing, constant-time compare, base32                        |
@@ -18,12 +26,12 @@ different policies on top.
 Each gate keeps its own policy in its own `src/index.ts`, because those
 differences are the point:
 
-|             | deck-gate                      | dataroom-gate                                      |
+|             | deck-gate                      | dataroom-gate (Worker `dealroom-gate`)             |
 | ----------- | ------------------------------ | -------------------------------------------------- |
 | Access code | one shared `DECK_PASSWORD`     | derived per (email, ref) from a secret             |
 | Ref bypass  | yes — a ref skips the code     | no — the cookie is the only way in                 |
 | Cookie      | `snocap_viewer`, 30d, `Path=/` | `dataroom_viewer`, 24h, `Path=/dataroom`, HttpOnly |
-| D1          | `deck-viewers`                 | `dataroom-viewers`                                 |
+| D1          | `deck-viewers`                 | `dealroom-viewers`                                 |
 
 Nothing about routes, bindings, secrets or migrations is shared. Each worker
 declares its own in its `wrangler.toml`.
@@ -42,6 +50,8 @@ stripping, built in since 22.18), which is also what lets
 Imports carry the `.ts` extension so Node can resolve them; wrangler bundles
 with esbuild, which resolves them the same way.
 
-**Editing anything here redeploys `deck-gate`** — `.github/workflows/deploy-worker.yml`
-watches this directory. `dataroom-gate` has no deploy workflow and is deployed
-by hand.
+**Editing anything here redeploys BOTH gates** — `deploy-worker.yml` (deck) and
+`deploy-dataroom-worker.yml` (data room) both watch this directory, so a shared
+change goes live on both within a couple of minutes of the merge. Editing
+`dataroom-gate/` alone redeploys only the data room gate. Nothing here is
+deployed by hand any more.
