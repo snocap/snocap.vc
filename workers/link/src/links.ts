@@ -4,30 +4,21 @@
 // write over the kernelbot-api) lives in store.ts.
 
 /**
- * Paths the tool owns for itself. A stored link can never claim one, so a slug
- * cannot shadow the sign-in page or the create endpoint.
+ * Paths the tool owns for itself. Only the ones the router actually serves
+ * belong here: `create` is a live endpoint (`POST /link/create`), so a link
+ * named `create` would shadow it. The sign-in and form live at the bare `/link`
+ * root, which has no slug, so nothing else needs reserving — a slug is otherwise
+ * free to be anything (see `slugError`).
  */
-export const RESERVED_SLUGS = new Set([
-  "admin",
-  "api",
-  "create",
-  "login",
-  "logout",
-  "new",
-]);
+export const RESERVED_SLUGS = new Set(["create"]);
 
-// Conservative on purpose: no dots and no slashes, so `..` and any traversal
-// shape fail the pattern outright rather than relying on path normalization.
-const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MS_PER_DAY = 86_400_000;
 
 /** Hostname + path prefix of each surface this shortener answers on. */
 const SHORTENER_SURFACES: [string, string][] = [
   ["snocap.vc", "/link"],
-  ["www.snocap.vc", "/link"],
   ["sno.llc", "/r"],
-  ["www.sno.llc", "/r"],
 ];
 
 export interface LinkRecord {
@@ -47,11 +38,22 @@ export function normalizeSlug(raw: unknown): string {
     .toLowerCase();
 }
 
-/** The reason a slug is unusable, or null when it is fine. */
+/**
+ * The reason a slug is unusable, or null when it is fine. A slug may be almost
+ * anything — letters, numbers, unicode, punctuation — so long as it survives a
+ * URL round trip; it is escaped wherever it is rendered and percent-encoded
+ * wherever it goes into a URL. Only two things are refused: a slash, because the
+ * slug must be a single path segment (a slash would split it and reintroduce the
+ * `..` traversal shapes), and a value `encodeURIComponent` cannot represent at
+ * all (a lone surrogate) — the literal meaning of "can we urlencode it".
+ */
 export function slugError(slug: string): string | null {
   if (!slug) return "Choose a short path for the link.";
-  if (!SLUG_PATTERN.test(slug)) {
-    return "Use 1-64 characters — letters, numbers, hyphens or underscores, starting with a letter or number.";
+  if (slug.includes("/")) return "A short path cannot contain a slash.";
+  try {
+    encodeURIComponent(slug);
+  } catch {
+    return "That short path has characters that cannot go in a URL.";
   }
   if (RESERVED_SLUGS.has(slug)) return `"${slug}" is reserved.`;
   return null;

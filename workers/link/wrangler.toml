@@ -2,6 +2,14 @@ name = "link"
 main = "src/index.ts"
 compatibility_date = "2025-04-01"
 
+# The page templates are external .html files (src/form-page*.html), imported as
+# their text so the code passes values in rather than interpolating markup. This
+# rule tells wrangler's bundler to inline a .html import as a string; node --test
+# does the same through the workers/html.mjs loader (root `test` script).
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+
 routes = [
   { pattern = "snocap.vc/link*", zone_name = "snocap.vc" }
   # The sno.llc/r/* surface is written and tested but NOT enabled here, because

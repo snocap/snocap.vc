@@ -95,11 +95,13 @@ moment") rather than silently dropping the link.
 
 ## Slugs and destinations
 
-- A slug matches `^[a-z0-9][a-z0-9_-]{0,63}$`, lowercased on both write and
-  read. No dots and no slashes, so traversal shapes fail the pattern outright
-  rather than depending on path normalization.
-- `admin`, `api`, `create`, `login`, `logout` and `new` are reserved, so a link
-  can never shadow the tool's own paths.
+- A slug may be almost anything, lowercased on both write and read. The only
+  bars are a slash (it must be a single path segment, which also rules out the
+  `..` traversal shapes) and a value `encodeURIComponent` cannot represent — so
+  the rule is simply "anything we can urlencode". Slugs are escaped where
+  rendered and percent-encoded where they enter a URL.
+- `create` is reserved, because it is a live endpoint (`POST /link/create`); no
+  other path is, since the sign-in and form sit at the bare `/link` root.
 - A destination must parse and must be `http:` or `https:`. The scheme
   allowlist is load-bearing: a redirector that echoes `javascript:` or `data:`
   into a `Location` header is an XSS vector, not just a bad link.
@@ -183,7 +185,12 @@ the validation and expiry logic is unit-tested without a network round trip;
 `src/store.ts` is the thin HTTP passthrough to the api; `src/index.test.ts`
 drives the worker's `fetch` against a fake api stubbed onto `globalThis.fetch`.
 
-`src/form-page.ts` carries its own stylesheet instead of rendering through
+`src/form-page.ts` renders external `.html` templates (`src/form-page*.html`)
+through `workers/shared/template.ts` rather than interpolating markup in code —
+the markup stays in a file prettier and an HTML linter can see. A `.html` import
+resolves to the file's text: wrangler inlines it via `[[rules]] type = "Text"`,
+and `node --test` via the `workers/html.mjs` loader (wired up by the root `test`
+script). It carries its own stylesheet instead of rendering through
 `workers/shared/gate-page.ts`, whose shell is hardwired to an email + access
 code pair. Teaching that shell arbitrary fields would mean editing a module both
 LP-facing gates render from, for no benefit to them.

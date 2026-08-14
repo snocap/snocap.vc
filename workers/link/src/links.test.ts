@@ -30,25 +30,43 @@ test("an empty slug is rejected", () => {
   assert.match(slugError("") ?? "", /Choose a short path/);
 });
 
-test("a slug with traversal or path separators is rejected", () => {
-  for (const slug of ["..", "../etc", "a/b", "a.b", "a%2fb", "a b", "a?b"]) {
-    assert.ok(slugError(slug), `${slug} should be rejected`);
+test("a slug may be almost anything that survives a URL round trip", () => {
+  // Dropped the old `^[a-z0-9][a-z0-9_-]{0,63}$` corset: dots, leading hyphens,
+  // spaces, percent literals, unicode, and long values are all fine now — they
+  // are escaped where rendered and percent-encoded where they enter a URL.
+  for (const slug of [
+    "..",
+    "a.b",
+    "a%2fb",
+    "a b",
+    "a?b",
+    "-lead",
+    "_lead",
+    "café",
+    "a".repeat(200),
+  ]) {
+    assert.equal(slugError(slug), null, `${slug} should be accepted`);
   }
 });
 
-test("a slug over 64 characters is rejected", () => {
-  assert.equal(slugError("a".repeat(64)), null);
-  assert.ok(slugError("a".repeat(65)));
+test("a slug with a slash is rejected — it must be one path segment", () => {
+  for (const slug of ["a/b", "../etc", "nested/deep/slug"]) {
+    assert.match(slugError(slug) ?? "", /slash/, slug);
+  }
 });
 
-test("a slug may not start with a hyphen or underscore", () => {
-  assert.ok(slugError("-lead"));
-  assert.ok(slugError("_lead"));
+test("a slug that cannot be urlencoded is rejected", () => {
+  // A lone surrogate makes encodeURIComponent throw — the literal boundary of
+  // "anything we can urlencode".
+  assert.ok(slugError("\uD800"));
 });
 
-test("the tool's own paths are reserved", () => {
-  for (const slug of ["create", "admin", "login", "logout", "new", "api"]) {
-    assert.match(slugError(slug) ?? "", /reserved/, slug);
+test("only the tool's live endpoint is reserved", () => {
+  // `create` is a real route (POST /link/create), so a slug cannot shadow it.
+  assert.match(slugError("create") ?? "", /reserved/);
+  // The rest were hypothetical — no route serves them, so they are ordinary slugs.
+  for (const slug of ["admin", "login", "logout", "new", "api"]) {
+    assert.equal(slugError(slug), null, `${slug} should be accepted`);
   }
 });
 
@@ -93,7 +111,7 @@ test("a destination pointing back at the shortener is rejected", () => {
   // Otherwise a link can be aimed at itself and loop.
   for (const value of [
     "https://snocap.vc/link/foo",
-    "https://www.snocap.vc/link",
+    "https://snocap.vc/link",
     "https://sno.llc/r/foo",
     "https://SNO.LLC/r/foo",
   ]) {

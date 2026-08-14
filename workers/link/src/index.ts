@@ -69,8 +69,7 @@ function redirectTo(location: string): Response {
 
 /** True for the short domain, which carries redirects only and no tool UI. */
 function isShortHost(hostname: string): boolean {
-  const host = hostname.toLowerCase();
-  return host === "sno.llc" || host === "www.sno.llc";
+  return hostname.toLowerCase() === "sno.llc";
 }
 
 async function handleRedirect(rawSlug: string, env: Env): Promise<Response> {
