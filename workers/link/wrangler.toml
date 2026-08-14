@@ -1,0 +1,51 @@
+name = "link"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+# The page templates are external .html files (src/form-page*.html), imported as
+# their text so the code passes values in rather than interpolating markup. This
+# rule tells wrangler's bundler to inline a .html import as a string; node --test
+# does the same through the workers/html.mjs loader (root `test` script).
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+
+routes = [
+  { pattern = "snocap.vc/link*", zone_name = "snocap.vc" }
+  # The sno.llc/r/* surface is written and tested but NOT enabled here, because
+  # two things must be true first and neither can be done from this repo:
+  #   1. The CLOUDFLARE_API_TOKEN used by CI needs edit rights on the sno.llc
+  #      zone. Adding the route without them fails the deploy.
+  #   2. sno.llc currently 301s every path (including /r/anything) to
+  #      snocap.vc, and Redirect Rules run BEFORE Workers — so the route would
+  #      be inert until that catch-all excludes /r/*.
+  # See README.md → "Enabling sno.llc/r/*".
+  # ,{ pattern = "sno.llc/r/*", zone_name = "sno.llc" }
+]
+
+[vars]
+# Who may sign in, on top of the shared access code. Not a secret — it is a
+# coarse second factor on the account, not the credential. Empty allows any
+# valid address.
+LINK_ALLOWED_EMAIL_DOMAINS = "sno.llc,snocap.vc"
+
+# The store now lives in the kernelbot-host Redis, reached through the
+# kernelbot-api (src/store.ts). This is the existing api.sno.llc (kernelbot-api
+# :3010 via the cloudflared-web tunnel, already live for /apply and the data
+# room override) — no new tunnel/hostname/proxy worker. Not secret; useless
+# without LINK_API_SECRET below.
+LINK_API_BASE = "https://api.sno.llc"
+
+# ONE-TIME SETUP before deploying: the store authenticates to the api with a
+# shared secret, provisioned as a Worker secret (NOT in this file):
+#   cd workers/link && npx wrangler secret put LINK_API_SECRET
+# Paste the same long random string the kernelbot side holds as LINK_API_SECRET
+# (its .env / .env.enc), mirroring how the apply worker shares its secret.
+#
+# The other two secrets, unchanged by the KV→Redis move:
+#   npx wrangler secret put LINK_SESSION_SECRET   # signs the session cookie —
+#                                                 # NOT a gate's HMAC_SECRET
+#   npx wrangler secret put LINK_ADMIN_PASSWORD   # the shared access code
+#
+# There is no longer a `wrangler kv namespace create` step: the store is Redis,
+# owned by the api, so the KV namespace binding is gone.

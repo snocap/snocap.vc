@@ -11,7 +11,7 @@
     "pdf": "node scripts/generate-pdf.mjs && node scripts/compress-pdf.mjs",
     "check:deck": "node scripts/check-deck-budget.mjs",
     "verify-deck": "node scripts/verify-deck-assets.mjs",
-    "test": "node --test \"workers/**/*.test.ts\"",
+    "test": "node --import ./workers/html-register.mjs --test \"workers/**/*.test.ts\"",
     "format": "prettier --write .",
     "prepare": "husky"
   },
