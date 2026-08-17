@@ -9,6 +9,7 @@ import { afterEach, test } from "node:test";
 import worker from "./index.ts";
 import type { LinkRecord } from "./links.ts";
 import { signViewerCookie } from "../../shared/cookie.ts";
+import { renderQrPng } from "../../shared/qr-png.ts";
 
 const SESSION_SECRET = "test-session-secret";
 const ADMIN_PASSWORD = "test-admin-password";
@@ -690,6 +691,20 @@ test("a pathname colliding with the create endpoint is rejected", async () => {
   assert.match(await res.text(), /reserved/);
 });
 
+test("a pathname colliding with the QR endpoint is rejected", async () => {
+  // /link/qr/<slug>.png is a live route, so a link named `qr` would shadow it.
+  installApi();
+  const res = await worker.fetch(
+    createRequest(
+      { url: "https://example.com/", pathname: "qr" },
+      await session(),
+    ),
+    env(),
+  );
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /reserved/);
+});
+
 test("an expiry date in the past is rejected", async () => {
   installApi();
   const res = await worker.fetch(
@@ -774,6 +789,155 @@ test("the destination URL never reaches the logs", async () => {
     assert.doesNotMatch(line, /secret\.example\.com/);
     assert.doesNotMatch(line, /private-doc/);
   }
+});
+
+// ── the QR image, at a URL other documents can point at ───────────────────────
+
+test("the QR endpoint serves a PNG of the slug's short URL", async () => {
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/qr/fund-two.png"),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("Content-Type"), "image/png");
+  const body = new Uint8Array(await res.arrayBuffer());
+  assert.deepEqual(
+    [...body.subarray(0, 8)],
+    [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    "PNG signature",
+  );
+  // The payload is the short URL and nothing else — qr-png.test.ts proves the
+  // encoder turns that string into the right symbol.
+  assert.deepEqual(
+    [...body],
+    [...renderQrPng("https://snocap.vc/link/fund-two", { scale: 8 })],
+  );
+});
+
+test("the QR image is cached forever, because its bytes cannot change", async () => {
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/qr/deck.png"),
+    env(),
+  );
+  const cacheControl = res.headers.get("Cache-Control") ?? "";
+  assert.match(cacheControl, /public/);
+  assert.match(cacheControl, /max-age=31536000/);
+  assert.match(cacheControl, /immutable/);
+});
+
+test("the QR image needs no session, since an embedded img carries none", async () => {
+  // The reason the endpoint exists: an <img> in a Google Doc or an email sends no
+  // cookie, so a gated image would be a broken image everywhere it is useful.
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/qr/fund-two.png"),
+    env(),
+  );
+  assert.equal(res.status, 200);
+});
+
+test("the QR image does not depend on the slug existing", async () => {
+  // It encodes a URL; whether that URL resolves is the redirect path's business.
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/qr/never-created.png"),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("Content-Type"), "image/png");
+});
+
+test("the QR image never reads the store", async () => {
+  const api = installApi({
+    deck: { url: "https://example.com/", expiresAt: null },
+  });
+  await worker.fetch(new Request("https://snocap.vc/link/qr/deck.png"), env());
+  assert.deepEqual(api.calls, []);
+});
+
+test("a QR request for an unusable slug gets the uniform miss", async () => {
+  installApi();
+  for (const path of [
+    "/link/qr/.png", // no slug at all
+    "/link/qr/%E0%A4%A.png", // a malformed percent-escape
+    "/link/qr/create.png", // a reserved name, which can never be a link
+    "/link/qr/fund-two", // no .png, so not this endpoint
+    "/link/qr", // the prefix on its own
+  ]) {
+    const res = await worker.fetch(
+      new Request(`https://snocap.vc${path}`),
+      env(),
+    );
+    assert.equal(res.status, 302, path);
+    assert.equal(res.headers.get("Location"), HOME, path);
+  }
+});
+
+test("the QR endpoint answers only GET", async () => {
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/qr/fund-two.png", { method: "POST" }),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("Location"), HOME);
+});
+
+test("the QR path is case-insensitive about the slug, like every other path", async () => {
+  installApi();
+  const upper = await worker.fetch(
+    new Request("https://snocap.vc/link/qr/Fund-Two.PNG"),
+    env(),
+  );
+  const lower = await worker.fetch(
+    new Request("https://snocap.vc/link/qr/fund-two.png"),
+    env(),
+  );
+  assert.deepEqual(
+    [...new Uint8Array(await upper.arrayBuffer())],
+    [...new Uint8Array(await lower.arrayBuffer())],
+  );
+});
+
+// ── the success banner ────────────────────────────────────────────────────────
+
+test("the created banner embeds the QR image from its durable URL", async () => {
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link?created=fund-two", {
+      headers: { Cookie: await session() },
+    }),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.match(html, /<img[^>]+src="\/link\/qr\/fund-two\.png"/);
+  // A real <img>, not an inline SVG: right-click → Copy Image needs image bytes.
+  assert.doesNotMatch(html, /<svg/);
+  assert.match(
+    html,
+    /alt="QR code for the short link snocap\.vc\/link\/fund-two"/,
+  );
+});
+
+test("the created banner links to the short URL, and shows it in full", async () => {
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link?created=fund-two", {
+      headers: { Cookie: await session() },
+    }),
+    env(),
+  );
+  const html = await res.text();
+  assert.match(
+    html,
+    /<a href="https:\/\/snocap\.vc\/link\/fund-two"[^>]*target="_blank"[^>]*rel="noopener"[^>]*>\s*<code>https:\/\/snocap\.vc\/link\/fund-two<\/code>/,
+    "the visible text is the whole URL, so selecting it still copies the URL",
+  );
+  // A new tab, because the banner sits on top of the form the person is using.
+  assert.doesNotMatch(html, /target="_self"/);
 });
 
 // ── everything else belongs to the origin ─────────────────────────────────────

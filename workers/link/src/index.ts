@@ -7,6 +7,7 @@ import {
   normalizeSlug,
   parseExpiry,
   parseTargetUrl,
+  shortUrlFor,
   slugError,
 } from "./links.ts";
 import type { LinkRecord } from "./links.ts";
@@ -18,6 +19,7 @@ import {
 } from "../../shared/cookie.ts";
 import { timingSafeEqual } from "../../shared/crypto.ts";
 import { isValidEmail, normalizeEmail } from "../../shared/email.ts";
+import { renderQrPng } from "../../shared/qr-png.ts";
 
 interface Env {
   /** kernelbot-api origin the store passes through to. Optional — the store
@@ -39,6 +41,11 @@ const COOKIE_MAX_AGE = 60 * 60 * 12; // 12h — a tool session, not a reading se
 const HOME = "https://snocap.vc/";
 const TOOL_PATH = "/link";
 const SHORT_PREFIX = "/r";
+const QR_PREFIX = `${TOOL_PATH}/qr`;
+const QR_SUFFIX = ".png";
+/** Pixels per QR module. 8 keeps a ~300px image: big enough to paste into a doc
+ * at full size, small enough to embed without thinking about it. */
+const QR_SCALE = 8;
 
 function htmlResponse(body: string, status: number): Response {
   return new Response(body, {
@@ -94,6 +101,49 @@ async function handleRedirect(rawSlug: string, env: Env): Promise<Response> {
       // which would make a mistyped destination unfixable for those visitors.
       // An hour keeps the permanent semantics and still lets a correction land.
       "Cache-Control": permanent ? "public, max-age=3600" : "no-store",
+    },
+  });
+}
+
+/**
+ * GET /link/qr/<slug>.png — the slug's short URL, as a QR code image at a URL
+ * durable enough to paste into an `<img src>` anywhere and to right-click → Copy
+ * Image out of the page.
+ *
+ * DELIBERATELY UNAUTHENTICATED, and that is the endpoint's whole reason to exist
+ * rather than an oversight: an `<img>` in a Google Doc, an email, or a Slack
+ * unfurl carries no session cookie, so a gated image would render as a broken one
+ * in every place it is useful. It discloses nothing — the only thing it can ever
+ * encode is `https://snocap.vc/link/<slug>`, a URL on our own domain that whoever
+ * has the image already holds, and it never reads the store, so it cannot even
+ * confirm whether a slug exists.
+ *
+ * Which is also why an unknown slug still gets an image: the QR encodes a URL,
+ * and whether that URL resolves is the redirect path's business. A slug that
+ * cannot be a slug at all is the one refusal, and it gets the uniform miss.
+ */
+function handleQrImage(request: Request, name: string): Response {
+  // Wrong method falls through to the same miss as any other unmatched request.
+  if (request.method !== "GET") return missResponse();
+  if (!name.toLowerCase().endsWith(QR_SUFFIX)) return missResponse();
+
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(name.slice(0, -QR_SUFFIX.length));
+  } catch {
+    return missResponse(); // a malformed percent-escape is not a slug
+  }
+  const slug = normalizeSlug(decoded);
+  if (slugError(slug)) return missResponse();
+
+  return new Response(renderQrPng(shortUrlFor(slug), { scale: QR_SCALE }), {
+    status: 200,
+    headers: {
+      "Content-Type": "image/png",
+      // The bytes are a pure function of the slug, so they can never go stale:
+      // a year is the longest lifetime caches honour, and immutable stops a
+      // reload from revalidating one that is already on disk.
+      "Cache-Control": "public, max-age=31536000, immutable",
     },
   });
 }
@@ -244,6 +294,17 @@ export default {
     const onToolPath =
       url.pathname === TOOL_PATH || url.pathname.startsWith(`${TOOL_PATH}/`);
     if (!onToolPath) return fetch(request);
+
+    // The QR image sits above the resolve branch because its path has two
+    // segments (`qr/<slug>.png`) where a slug has exactly one, so the resolve
+    // branch below would only ever see it as an invalid slug and miss. Above the
+    // session check too — see handleQrImage on why it is unauthenticated.
+    if (
+      url.pathname === QR_PREFIX ||
+      url.pathname.startsWith(`${QR_PREFIX}/`)
+    ) {
+      return handleQrImage(request, url.pathname.slice(QR_PREFIX.length + 1));
+    }
 
     // /link/<slug> resolves a link, unless the tail is one of the tool's own
     // reserved paths, which fall through to the UI routing below.

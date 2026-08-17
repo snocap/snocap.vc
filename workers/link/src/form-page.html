@@ -118,6 +118,29 @@
         font-family: "Fira Mono", monospace;
         word-break: break-all;
       }
+      .banner a {
+        color: #f15800;
+      }
+      /* The white plate matters: the QR is black on white so it scans, and a
+         white block on the dark card is also what gets pasted elsewhere. */
+      .qr-frame {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 8px;
+        background: #fff;
+        line-height: 0;
+      }
+      .qr-frame img {
+        display: block;
+        width: 160px;
+        height: 160px;
+      }
+      .qr-caption {
+        font-size: 12px;
+        color: #8a8a8a;
+        margin-top: 8px;
+        line-height: 1.5;
+      }
       .error {
         color: #f15800;
         font-size: 13px;

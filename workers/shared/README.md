@@ -12,6 +12,7 @@ log the viewer to D1; `link` does not.
 | `cookie.ts`      | The signed viewer cookie: read, sign, verify, and the `Set-Cookie` header |
 | `email.ts`       | Normalizing, validating, and the default referral slug                    |
 | `gate-page.ts`   | The gate page shell — chrome and CSS, with the copy passed in             |
+| `qr-png.ts`      | A QR code as PNG bytes: the vendored encoder plus a PNG writer            |
 | `viewers.ts`     | The `viewers` D1 write and the token-gated admin table                    |
 | `deny-report.ts` | The other half: a REJECTED sign-in, reported to the kernelbot-api         |
 | `vendor/`        | Third-party sources copied in, because the workers take no dependencies   |

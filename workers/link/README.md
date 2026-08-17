@@ -9,6 +9,7 @@ The short-link tool behind `snocap.vc/link`.
 | `GET /link` (session)         | The create form: destination URL, short path, optional date |
 | `POST /link/create` (session) | Stores the link, then redirects back with a confirmation    |
 | `GET /link/<path>`            | `301` to the destination, or `302` if the link expires      |
+| `GET /link/qr/<path>.png`     | The link's QR code as a PNG — no session, cached forever    |
 | `GET /r/<path>` on `sno.llc`  | The same lookup on the short domain (see below)             |
 | Anything else under `/link`   | `302` to `https://snocap.vc/` — never a 404                 |
 
@@ -100,8 +101,10 @@ moment") rather than silently dropping the link.
   `..` traversal shapes) and a value `encodeURIComponent` cannot represent — so
   the rule is simply "anything we can urlencode". Slugs are escaped where
   rendered and percent-encoded where they enter a URL.
-- `create` is reserved, because it is a live endpoint (`POST /link/create`); no
-  other path is, since the sign-in and form sit at the bare `/link` root.
+- `create` and `qr` are reserved, because both are live endpoints
+  (`POST /link/create`, `GET /link/qr/<slug>.png`) that a slug of the same name
+  would shadow; nothing else is, since the sign-in and form sit at the bare
+  `/link` root.
 - A destination must parse and must be `http:` or `https:`. The scheme
   allowlist is load-bearing: a redirector that echoes `javascript:` or `data:`
   into a `Location` header is an XSS vector, not just a bad link.
@@ -109,6 +112,32 @@ moment") rather than silently dropping the link.
 - **A live slug is refused, not repointed** (`409`). The old link is already in
   circulation and its `301` may sit in caches we cannot reach. An **expired**
   slug is free to claim again.
+
+## The QR code
+
+`GET /link/qr/<slug>.png` returns the QR code for `https://snocap.vc/link/<slug>`
+as a PNG. The success banner embeds it as an `<img>`, but the endpoint is the
+point: it is a durable URL, so the same code can be dropped into a Google Doc, an
+email or a deck by `<img src>`, or copied straight off the page with right-click →
+Copy Image.
+
+Three decisions worth knowing:
+
+- **Unauthenticated, deliberately.** An `<img>` in a doc or an email carries no
+  cookie, so a gated image would render as a broken one everywhere it is useful.
+  It discloses nothing: the only thing it can ever encode is a `snocap.vc` URL
+  that whoever holds the image already has.
+- **It never reads the store**, so an unknown slug still gets an image. The QR
+  encodes a URL; whether that URL resolves is the redirect path's business. Only a
+  slug that could never be a slug gets the uniform miss. It also means the
+  endpoint cannot be probed to learn whether a slug exists.
+- **PNG, not SVG**, because a raster image is what pastes into Docs, Slack and
+  mail clients. Workers have no canvas and no `node:zlib`, so
+  `workers/shared/qr-png.ts` writes the bytes by hand: a 1-bit greyscale image
+  whose IDAT is a zlib stream of _stored_ (uncompressed) DEFLATE blocks, which
+  leaves only the CRC-32 and Adler-32 checksums to compute. Output is a pure
+  function of the slug, which is what lets the response claim
+  `max-age=31536000, immutable`.
 
 ## Auth
 

@@ -8,6 +8,7 @@
 // arbitrary fields would mean editing a module the two LP-facing gates render
 // from, for no benefit to them.
 
+import { qrPathFor, shortUrlFor } from "./links.ts";
 import { renderTemplate } from "../../shared/template.ts";
 import bannerTemplate from "./form-page.banner.html";
 import errorTemplate from "./form-page.error.html";
@@ -35,9 +36,14 @@ export function renderFormPage({
   error,
   values = {},
 }: FormPageOptions): string {
+  // The banner carries the short URL three ways, because each one gets used:
+  // clickable text (open it), the same text verbatim (select and copy it), and a
+  // QR image at its own durable URL (scan it, embed it, or copy the image).
   const banner = created
     ? renderTemplate(bannerTemplate, {
-        shortUrl: `https://snocap.vc/link/${created}`,
+        shortUrl: shortUrlFor(created),
+        qrUrl: qrPathFor(created),
+        slug: created,
       })
     : "";
   const errorBlock = error
