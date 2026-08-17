@@ -1,4 +1,7 @@
-import { renderGatePage as renderShell } from "../../shared/gate-page.ts";
+import {
+  renderGatePage as renderShell,
+  renderSuccessPage as renderSuccessShell,
+} from "../../shared/gate-page.ts";
 
 // The deck gate is a public, shareable link, so it carries full share-card
 // metadata. The deal room gate deliberately does not.
@@ -37,5 +40,19 @@ export function renderGatePage(
     returnTo,
     ref,
     requirePassword,
+  });
+}
+
+// Shown after a successful submit — password-checked or ref-bypassed alike —
+// instead of the old instant redirect, so a viewer on a laptop can hand off
+// to their phone via the QR code.
+export function renderSuccessPage(continueUrl: string): string {
+  return renderSuccessShell({
+    title: "SNØCAP US II, LP — Pitch Deck",
+    headExtra: HEAD_EXTRA,
+    subtitle: "US II, LP — Pitch Deck",
+    message: "You're in.",
+    continueUrl,
+    continueLabel: "View the deck",
   });
 }

@@ -1,4 +1,4 @@
-import { renderGatePage } from "./gate-page.ts";
+import { renderGatePage, renderSuccessPage } from "./gate-page.ts";
 import {
   readCookie,
   setCookie,
@@ -123,7 +123,10 @@ export default {
 
       await logViewer(env.DB, { email, ref, request });
 
-      const headers = new Headers({ Location: safeReturn });
+      const headers = new Headers({
+        "Content-Type": "text/html",
+        "Cache-Control": "no-store",
+      });
       headers.append(
         "Set-Cookie",
         setCookie({
@@ -134,7 +137,11 @@ export default {
         }),
       );
       headers.append("Set-Cookie", makeRefCookie(ref));
-      return new Response(null, { status: 302, headers });
+      const continueUrl = new URL(safeReturn, url).toString();
+      return new Response(renderSuccessPage(continueUrl), {
+        status: 200,
+        headers,
+      });
     }
 
     // GET: email cookie is the only bypass

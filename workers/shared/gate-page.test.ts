@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { renderGatePage } from "./gate-page.ts";
+import { renderGatePage, renderSuccessPage } from "./gate-page.ts";
 
 const base = {
   title: "Test Gate",
@@ -90,4 +90,76 @@ test("escapes a ref that tries to break out of its attribute", () => {
 test("escapes a return_to that tries to break out of its attribute", () => {
   const html = renderGatePage({ ...base, returnTo: `/deck"><img src=x>` });
   assert.ok(!html.includes("<img src=x>"));
+});
+
+// ── renderSuccessPage ─────────────────────────────────────────────────────
+// Shown after a successful gate submission: a short message, an inline
+// server-generated QR code encoding continueUrl, and a link to go there
+// directly on the current device.
+
+const successBase = {
+  title: "Test Success",
+  subtitle: "Subtitle",
+  message: "You're in.",
+  continueUrl: "https://snocap.vc/deck",
+};
+
+test("renders the title, subtitle and message", () => {
+  const html = renderSuccessPage(successBase);
+  assert.match(html, /<title>Test Success<\/title>/);
+  assert.match(html, /<div class="subtitle">Subtitle<\/div>/);
+  assert.match(html, /You're in\./);
+});
+
+test("links continue to the given URL, defaulting the label to Continue", () => {
+  const html = renderSuccessPage(successBase);
+  assert.match(
+    html,
+    /<a class="button-link" href="https:\/\/snocap\.vc\/deck">Continue<\/a>/,
+  );
+});
+
+test("uses a custom continue label when given one", () => {
+  const html = renderSuccessPage({
+    ...successBase,
+    continueLabel: "View the deck",
+  });
+  assert.match(html, />View the deck<\/a>/);
+});
+
+test("renders an inline SVG QR code", () => {
+  const html = renderSuccessPage(successBase);
+  assert.match(html, /<div class="qr"><svg/);
+});
+
+test("splices head extras in verbatim", () => {
+  const html = renderSuccessPage({
+    ...successBase,
+    headExtra: `  <meta name="robots" content="noindex,nofollow" />`,
+  });
+  assert.match(html, /<meta name="robots" content="noindex,nofollow" \/>/);
+});
+
+// message and continueUrl land in HTML text/attribute positions, so both
+// must be escaped — message comes from a fixed per-gate string today, but
+// continueUrl is derived from the request's return_to field.
+test("escapes a message that tries to break out into markup", () => {
+  const html = renderSuccessPage({
+    ...successBase,
+    message: `<script>alert(1)</script>`,
+  });
+  assert.ok(!html.includes("<script>alert(1)</script>"));
+  assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+});
+
+test("escapes a continueUrl that tries to break out of its href attribute", () => {
+  const html = renderSuccessPage({
+    ...successBase,
+    continueUrl: `https://snocap.vc/deck"><script>alert(1)</script>`,
+  });
+  assert.ok(!html.includes("<script>alert(1)</script>"));
+  assert.match(
+    html,
+    /href="https:\/\/snocap\.vc\/deck&quot;&gt;&lt;script&gt;/,
+  );
 });

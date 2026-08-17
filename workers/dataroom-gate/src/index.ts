@@ -1,4 +1,4 @@
-import { renderGatePage } from "./gate-page.ts";
+import { renderGatePage, renderSuccessPage } from "./gate-page.ts";
 import { derivePassword } from "./password.ts";
 import { checkEmailOverride } from "./override.ts";
 import { listFolder, streamFile } from "./drive.ts";
@@ -205,7 +205,10 @@ export default {
         request,
       });
 
-      const headers = new Headers({ Location: safeReturn });
+      const headers = new Headers({
+        "Content-Type": "text/html",
+        "Cache-Control": "no-store",
+      });
       headers.append(
         "Set-Cookie",
         setCookie({
@@ -216,7 +219,11 @@ export default {
           httpOnly: true,
         }),
       );
-      return new Response(null, { status: 302, headers });
+      const continueUrl = new URL(safeReturn, url).toString();
+      return new Response(renderSuccessPage(continueUrl), {
+        status: 200,
+        headers,
+      });
     }
 
     // Cookie is the sole bypass past this point — no ref/password shortcut.
