@@ -6,13 +6,22 @@ Code used by the workers that put a sign-in in front of something: `deck-gate`
 code, set a signed cookie — with different policies on top. The two gates also
 log the viewer to D1; `link` does not.
 
-| Module         | What it holds                                                             |
-| -------------- | ------------------------------------------------------------------------- |
-| `crypto.ts`    | HMAC-SHA256 signing, constant-time compare, base32                        |
-| `cookie.ts`    | The signed viewer cookie: read, sign, verify, and the `Set-Cookie` header |
-| `email.ts`     | Normalizing, validating, and the default referral slug                    |
-| `gate-page.ts` | The gate page shell — chrome and CSS, with the copy passed in             |
-| `viewers.ts`   | The `viewers` D1 write and the token-gated admin table                    |
+| Module           | What it holds                                                             |
+| ---------------- | ------------------------------------------------------------------------- |
+| `crypto.ts`      | HMAC-SHA256 signing, constant-time compare, base32                        |
+| `cookie.ts`      | The signed viewer cookie: read, sign, verify, and the `Set-Cookie` header |
+| `email.ts`       | Normalizing, validating, and the default referral slug                    |
+| `gate-page.ts`   | The gate page shell — chrome and CSS, with the copy passed in             |
+| `viewers.ts`     | The `viewers` D1 write and the token-gated admin table                    |
+| `deny-report.ts` | The other half: a REJECTED sign-in, reported to the kernelbot-api         |
+
+`viewers.ts` and `deny-report.ts` are a pair. D1 records who got in; a rejection
+is not a row anywhere, and a Worker's only native log sink is Cloudflare's
+ephemeral tail stream — so before `deny-report.ts` a visitor who bounced off a
+gate left no trace and "it won't let me in" was undiagnosable. It POSTs the
+email, the gate, the reason and the ref (never the submitted code) to
+`api.sno.llc/gate/denied`, fire-and-forget through `ctx.waitUntil`, so the gate's
+own response is never delayed or changed by it.
 
 ## What is not shared
 

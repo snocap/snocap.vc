@@ -13,6 +13,7 @@ import {
   refFromEmail,
 } from "../../shared/email.ts";
 import { handleViewerAdmin, logViewer } from "../../shared/viewers.ts";
+import { reportDenial } from "../../shared/deny-report.ts";
 
 interface Env {
   DB: D1Database;
@@ -28,6 +29,12 @@ interface Env {
   // falls through to the derived code for everyone.
   OVERRIDE_API_BASE?: string;
   DATAROOM_OVERRIDE_SECRET?: string;
+  // Denial reporting (see ../../shared/deny-report.ts). Same kernelbot-api,
+  // separate secret from the override above so either can be rotated alone.
+  // Both optional — absent until provisioned, in which case a denial is logged
+  // to `wrangler tail` and nowhere else, as before.
+  GATE_API_BASE?: string;
+  GATE_DENIAL_SECRET?: string;
 }
 
 const COOKIE_NAME = "dataroom_viewer";
@@ -93,7 +100,11 @@ async function handleApi(
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const url = new URL(request.url);
 
     // The room used to live at /dealroom. Links to the old path are already in
@@ -180,16 +191,13 @@ export default {
         }
       }
       if (!matched) {
-        // Only successful logins reach the viewers table, so a rejection left
-        // no trace at all and "it won't let me in" was undiagnosable. Record
-        // enough to tell a wrong code from a missing one — never the code.
-        console.warn(
-          JSON.stringify({
-            event: "dataroom_gate_denied",
-            email,
-            submittedRef: refField || null,
-            reason,
-          }),
+        // Only successful logins reach the viewers table, so a rejection would
+        // otherwise leave no trace at all. Enough to tell a wrong code from a
+        // missing one — never the code itself. Never blocks this response.
+        reportDenial(
+          env,
+          { gate: "dataroom", email, reason, ref: refField || null },
+          ctx,
         );
         return gateResponse(
           renderGatePage("Invalid access code.", returnTo, refField),

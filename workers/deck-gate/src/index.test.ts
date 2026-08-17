@@ -227,3 +227,107 @@ test("the admin table lives at /deck/admin and needs the admin token", async () 
   );
   assert.match(await ok.text(), /<h1>Deck Viewers<\/h1>/);
 });
+
+// ── denial reporting ─────────────────────────────────────────────────────────
+// Only successful logins reach D1, so a rejection is invisible unless the gate
+// says so out loud (workers/shared/deny-report.ts). What matters here is that
+// the report carries the diagnosis and not the password, and that it can never
+// change what the visitor gets.
+
+const DENIAL_ENV = {
+  GATE_API_BASE: "https://api.example.com",
+  GATE_DENIAL_SECRET: "test-gate-secret",
+};
+
+/** Collects denial reports; anything else gets the plain origin response. */
+function stubDenialEndpoint(opts: { throwIt?: boolean } = {}) {
+  const reports: Record<string, unknown>[] = [];
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (String(input).includes("/gate/denied")) {
+      if (opts.throwIt) throw new Error("api unreachable");
+      reports.push(JSON.parse(String(init?.body ?? "{}")));
+      return Response.json({ ok: true });
+    }
+    return new Response("origin");
+  }) as typeof fetch;
+  return reports;
+}
+
+/** Keeps the promises the platform would keep alive past the response. */
+function fakeCtx() {
+  const pending: Promise<unknown>[] = [];
+  return {
+    waitUntil: (p: Promise<unknown>) => void pending.push(p),
+    settle: () => Promise.all(pending),
+  };
+}
+
+test("a wrong password is reported with the email and the reason, never the password", async () => {
+  const reports = stubDenialEndpoint();
+  const ctx = fakeCtx();
+
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "hunter2" }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+
+  assert.equal(res.status, 400);
+  assert.deepEqual(reports, [
+    {
+      gate: "deck",
+      email: "jon@sno.llc",
+      reason: "password-mismatch",
+      ref: null,
+    },
+  ]);
+});
+
+test("a blank password and an unset DECK_PASSWORD report different reasons", async () => {
+  let reports = stubDenialEndpoint();
+  let ctx = fakeCtx();
+  await worker.fetch(
+    post({ email: "jon@sno.llc", password: "" }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+  assert.equal(reports[0].reason, "password-missing");
+
+  reports = stubDenialEndpoint();
+  ctx = fakeCtx();
+  await worker.fetch(
+    post({ email: "jon@sno.llc", password: "anything" }),
+    env({ ...DENIAL_ENV, DECK_PASSWORD: "" }),
+    ctx as never,
+  );
+  await ctx.settle();
+  assert.equal(reports[0].reason, "password-unset");
+});
+
+test("a ref bypass is not a denial — nothing is reported", async () => {
+  const reports = stubDenialEndpoint();
+  const ctx = fakeCtx();
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", ref: "jon" }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+  assert.equal(res.status, 302);
+  assert.deepEqual(reports, []);
+});
+
+test("an unreachable api changes nothing the visitor sees", async () => {
+  stubDenialEndpoint({ throwIt: true });
+  const ctx = fakeCtx();
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "hunter2" }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /Invalid access code\./);
+});
