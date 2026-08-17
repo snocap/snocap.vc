@@ -25,24 +25,56 @@ function jsonResponse(body: unknown, status: number): Response {
 
 /**
  * A fake of the kernelbot-api's two link routes over a fetch stub. Models the
- * server-side rules the worker now delegates: resolve drops an expired record
+ * server-side rules the worker delegates: resolve drops an expired record
  * (found:false), and create is an atomic check-then-set that answers 409 only
  * when a LIVE record already holds the slug.
+ *
+ * It speaks the api's REAL vocabulary — a FLAT create body and records keyed on
+ * `destination`, not this worker's `url`. That fidelity is the entire point.
+ * The previous version of this fake accepted a nested `{ slug, record }` and
+ * echoed `url` back, i.e. it mirrored the worker instead of the server; the
+ * suite stayed green for weeks while every real create was rejected 400 and
+ * every real resolve decoded to null. A mock that agrees with the code it is
+ * mocking tests nothing. If you touch this, keep it matching
+ * src/local/api/routes/link.ts in kernelbot, not store.ts next door.
  */
+type ApiRecord = {
+  destination: string;
+  slug: string;
+  createdBy: string;
+  createdAt: number;
+  expiresAt: number | null;
+};
+
 function fakeApi(seed: Record<string, Partial<LinkRecord>> = {}) {
-  const store = new Map<string, LinkRecord>();
+  // Stored api-side, in api field names.
+  const store = new Map<string, ApiRecord>();
   for (const [slug, record] of Object.entries(seed)) {
-    store.set(slug, record as LinkRecord);
+    store.set(slug, {
+      destination: record.url as string,
+      slug,
+      createdBy: record.createdBy ?? "",
+      createdAt: record.createdAt ?? 0,
+      expiresAt: record.expiresAt ?? null,
+    });
   }
-  const live = (record: LinkRecord | undefined): record is LinkRecord =>
+  const live = (record: ApiRecord | undefined): record is ApiRecord =>
     Boolean(
       record && (record.expiresAt === null || Date.now() < record.expiresAt),
     );
   const api = {
     store,
     calls: [] as { url: string; secret: string | null; body: unknown }[],
+    /** Translated back into the worker's vocabulary for test assertions. */
     read(slug: string): LinkRecord | null {
-      return store.get(slug) ?? null;
+      const record = store.get(slug);
+      if (!record) return null;
+      return {
+        url: record.destination,
+        expiresAt: record.expiresAt,
+        createdAt: record.createdAt,
+        createdBy: record.createdBy,
+      };
     },
     fetchImpl: (async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
@@ -55,11 +87,29 @@ function fakeApi(seed: Record<string, Partial<LinkRecord>> = {}) {
         return jsonResponse({ found: true, record }, 200);
       }
       if (url.endsWith("/link/create")) {
-        if (live(store.get(body.slug))) {
-          return jsonResponse({ ok: false }, 409);
+        // Reject exactly as the api does, so a malformed body can never look
+        // like a success here while 400ing in production.
+        if (typeof body.destination !== "string" || !body.destination) {
+          return jsonResponse(
+            { created: false, error: "invalid_destination" },
+            400,
+          );
         }
-        store.set(body.slug, body.record);
-        return jsonResponse({ ok: true }, 201);
+        if (live(store.get(body.slug))) {
+          return jsonResponse(
+            { created: false, error: "slug already taken" },
+            409,
+          );
+        }
+        const record: ApiRecord = {
+          destination: body.destination,
+          slug: body.slug,
+          createdBy: body.createdBy ?? "",
+          createdAt: Date.now(),
+          expiresAt: body.expiresAt ?? null,
+        };
+        store.set(body.slug, record);
+        return jsonResponse({ created: true, record }, 200);
       }
       throw new Error(`unexpected url ${url}`);
     }) as typeof fetch,
@@ -510,8 +560,17 @@ test("the create call carries the shared secret and the slugged record", async (
   const call = api.calls.at(-1);
   assert.ok(call?.url.startsWith(`${API_BASE}/link/create`));
   assert.equal(call?.secret, API_SECRET);
-  assert.equal(call?.body.slug, "keyed");
-  assert.equal(call?.body.record.url, "https://example.com/");
+  // Assert the LITERAL wire shape, not just that some field survived: flat,
+  // `destination` not `url`, and no nested `record` envelope. This is the
+  // assertion whose absence let the two repos drift apart unnoticed.
+  assert.deepEqual(call?.body, {
+    slug: "keyed",
+    destination: "https://example.com/",
+    createdBy: "jon@sno.llc",
+    expiresAt: null,
+  });
+  assert.equal(call?.body.record, undefined);
+  assert.equal(call?.body.url, undefined);
 });
 
 test("a permanent link is stored with no expiry", async () => {

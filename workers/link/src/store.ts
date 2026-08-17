@@ -13,11 +13,22 @@
 //   POST ${LINK_API_BASE}/link/resolve   header x-link-secret: <LINK_API_SECRET>
 //     body   { slug }
 //     200 { found: false }                 → no live record (unknown OR expired)
-//     200 { found: true, record: {...} }   → the stored LinkRecord
+//     200 { found: true, record: {...} }   → the stored record (see field names below)
 //   POST ${LINK_API_BASE}/link/create     header x-link-secret: <LINK_API_SECRET>
-//     body   { slug, record }
-//     200/201 { ok: true }                 → stored
+//     body   { slug, destination, createdBy, expiresAt }
+//     200/201 { created: true }            → stored
 //     409                                  → a LIVE record already holds the slug
+//
+// FIELD NAMES. The api is the owner of this vocabulary: a record is FLAT and its
+// target is `destination`. This worker calls the same thing `url` internally, so
+// the translation happens HERE, at the one boundary, rather than leaking either
+// name into the other codebase. That split is not academic — the two repos
+// shipped for weeks disagreeing about it (this worker sent a NESTED
+// `{ slug, record: { url } }`), so every create was rejected 400 and every
+// resolve decoded to null. Both test suites were green the whole time, because
+// each mocked the other with its OWN shape. If you change a field name here,
+// change src/local/api/routes/link.ts in kernelbot in the same breath, and make
+// at least one test assert the literal bytes on the wire.
 //
 // Expiry is authoritative server-side: the api's resolve route drops a record
 // whose expiresAt has passed (returning found:false) and enforces the
@@ -66,6 +77,20 @@ function authHeaders(secret: string): HeadersInit {
 }
 
 /**
+ * Translate an api record into this worker's vocabulary: `destination` is the
+ * api's name for the target, `url` is ours. Returns the input untouched when it
+ * isn't an object, so decodeRecord still owns every validity decision and a
+ * malformed body stays a plain miss.
+ */
+function fromApiRecord(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const record = raw as Record<string, unknown>;
+  // Prefer our own name if the api ever sends both (it did during the
+  // compatibility window), so this keeps working from either side.
+  return { ...record, url: record.url ?? record.destination };
+}
+
+/**
  * Resolve a slug to its record. Returns null for EVERY failure mode — not-found,
  * an expired record the api has already dropped, a malformed body, a timeout, a
  * network error, any non-2xx — so the caller can render the one uniform miss.
@@ -97,7 +122,7 @@ export async function readLink(
 
   if (!data || data.found !== true) return null;
 
-  const record = decodeRecord(data.record);
+  const record = decodeRecord(fromApiRecord(data.record));
   if (!record) {
     // found:true but the record does not parse — a real anomaly (bad write),
     // not an ordinary miss. Log it, then treat it as a miss like the KV version
@@ -132,7 +157,14 @@ export async function createLink(
     res = await fetch(apiBase(env) + CREATE_PATH, {
       method: "POST",
       headers: authHeaders(env.LINK_API_SECRET),
-      body: JSON.stringify({ slug, record }),
+      // FLAT, and `destination` not `url` — the api's vocabulary. `createdAt` is
+      // deliberately not sent: the api stamps it, so there is one clock.
+      body: JSON.stringify({
+        slug,
+        destination: record.url,
+        createdBy: record.createdBy,
+        expiresAt: record.expiresAt,
+      }),
       signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
     });
   } catch {
