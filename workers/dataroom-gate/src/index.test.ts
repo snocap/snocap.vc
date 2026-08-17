@@ -112,7 +112,27 @@ test("the derived per-viewer code opens the gate", async () => {
     post({ email: "jon@sno.llc", password: code }),
     env(),
   );
-  assert.equal(res.status, 302);
+  assert.equal(res.status, 200);
+});
+
+test("a successful submit shows the success page with a QR handoff, not an instant redirect", async () => {
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code }),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("Location"), null);
+  const html = await res.text();
+  assert.match(html, /You're in\./);
+  assert.match(html, /re-enter your access code/);
+  assert.match(html, /<svg/);
+  assert.match(html, /href="https:\/\/snocap\.vc\/dataroom"/);
+  // The HttpOnly session cookie must still be set on the 200.
+  const cookie = res.headers
+    .getSetCookie()
+    .find((c) => c.startsWith("dataroom_viewer="));
+  assert.ok(cookie);
 });
 
 test("another viewer's code does not work", async () => {
@@ -167,7 +187,10 @@ test("a return_to outside /dataroom is ignored", async () => {
     }),
     env(),
   );
-  assert.equal(res.headers.get("Location"), "/dataroom");
+  assert.equal(res.headers.get("Location"), null);
+  const html = await res.text();
+  assert.match(html, /href="https:\/\/snocap\.vc\/dataroom"/);
+  assert.ok(!html.includes("evil.com"));
 });
 
 test("the Drive API is unreachable without a signed cookie", async () => {
@@ -310,7 +333,7 @@ test("the email's code opens the gate whatever ref the form carries", async () =
     );
     assert.equal(
       res.status,
-      302,
+      200,
       `ref=${ref ?? "(none)"} should open the gate`,
     );
   }
@@ -355,7 +378,7 @@ test("a per-email override opens the gate (endpoint says match)", async () => {
     post({ email: "jon@sno.llc", password: "MANUALPW" }),
     overrideEnv(),
   );
-  assert.equal(res.status, 302);
+  assert.equal(res.status, 200);
 });
 
 test("an override shadows the derived code: the old derived code stops working", async () => {
@@ -378,7 +401,7 @@ test("an email with no override still uses the derived code", async () => {
     post({ email: "jon@sno.llc", password: code }),
     overrideEnv(),
   );
-  assert.equal(res.status, 302);
+  assert.equal(res.status, 200);
 });
 
 test("a wrong password against a set override is refused (no derived fallback)", async () => {
@@ -417,7 +440,7 @@ test("with no override secret the endpoint is never called; derived code still w
     post({ email: "jon@sno.llc", password: code }),
     env(), // no DATAROOM_OVERRIDE_SECRET
   );
-  assert.equal(res.status, 302);
+  assert.equal(res.status, 200);
   assert.equal(called, false);
 });
 
@@ -428,7 +451,7 @@ test("a down endpoint fails open: the derived code still opens the gate", async 
     post({ email: "jon@sno.llc", password: code }),
     overrideEnv(),
   );
-  assert.equal(res.status, 302);
+  assert.equal(res.status, 200);
 });
 
 test("a down endpoint fails open: a wrong code is still refused", async () => {

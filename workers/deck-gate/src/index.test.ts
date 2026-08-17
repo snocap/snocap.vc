@@ -94,13 +94,26 @@ test("submitting the right password sets a 30-day site-wide viewer cookie", asyn
     post({ email: "jon@sno.llc", password: DECK_PASSWORD }),
     env(),
   );
-  assert.equal(res.status, 302);
+  assert.equal(res.status, 200);
   const viewer = setCookies(res).find((c) => c.startsWith("snocap_viewer="));
   assert.ok(viewer);
   assert.match(viewer!, /Max-Age=2592000/);
   assert.match(viewer!, /Path=\/;/);
   // Readable by deck-tracker.js, so deliberately not HttpOnly.
   assert.ok(!viewer!.includes("HttpOnly"));
+});
+
+test("a successful submit shows the success page with a QR handoff, not an instant redirect", async () => {
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: DECK_PASSWORD }),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("Location"), null);
+  const html = await res.text();
+  assert.match(html, /You're in\./);
+  assert.match(html, /<svg/);
+  assert.match(html, /href="https:\/\/snocap\.vc\/deck"/);
 });
 
 test("submitting the wrong password is rejected", async () => {
@@ -117,7 +130,7 @@ test("no password is needed when a ref is supplied", async () => {
     post({ email: "jon@sno.llc", ref: "jon" }),
     env(),
   );
-  assert.equal(res.status, 302);
+  assert.equal(res.status, 200);
 });
 
 test("an unset DECK_PASSWORD locks everyone out rather than letting them in", async () => {
@@ -146,7 +159,10 @@ test("a return_to outside /deck is ignored", async () => {
     }),
     env(),
   );
-  assert.equal(res.headers.get("Location"), "/deck");
+  assert.equal(res.headers.get("Location"), null);
+  const html = await res.text();
+  assert.match(html, /href="https:\/\/snocap\.vc\/deck"/);
+  assert.ok(!html.includes("evil.com"));
 });
 
 test("a return_to inside /deck is honoured", async () => {
@@ -158,7 +174,8 @@ test("a return_to inside /deck is honoured", async () => {
     }),
     env(),
   );
-  assert.equal(res.headers.get("Location"), "/deck/appendix");
+  const html = await res.text();
+  assert.match(html, /href="https:\/\/snocap\.vc\/deck\/appendix"/);
 });
 
 test("a ref already taken by someone else gets a suffix", async () => {
