@@ -440,3 +440,114 @@ test("a down endpoint fails open: a wrong code is still refused", async () => {
   assert.equal(res.status, 400);
   assert.match(await res.text(), /Invalid access code/);
 });
+
+// ── denial reporting ─────────────────────────────────────────────────────────
+// The gate already built this line; it went to console.warn, whose only
+// destination is Cloudflare's uncollected tail stream, so in practice a
+// rejection was recorded nowhere (workers/shared/deny-report.ts). These pin the
+// two properties that matter: the report carries the diagnosis and not the
+// code, and it can never change what the visitor gets.
+
+const DENIAL_ENV = {
+  GATE_API_BASE: "https://api.example.com",
+  GATE_DENIAL_SECRET: "test-gate-secret",
+};
+
+/** Collects denial reports; the override call-out and the origin get a plain
+ * response, which checkEmailOverride reads as "no override" and falls through. */
+function stubDenialEndpoint(opts: { throwIt?: boolean } = {}) {
+  const reports: Record<string, unknown>[] = [];
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (String(input).includes("/gate/denied")) {
+      if (opts.throwIt) throw new Error("api unreachable");
+      reports.push(JSON.parse(String(init?.body ?? "{}")));
+      return Response.json({ ok: true });
+    }
+    return new Response("origin");
+  }) as typeof fetch;
+  return reports;
+}
+
+/** Keeps the promises the platform would keep alive past the response. */
+function fakeCtx() {
+  const pending: Promise<unknown>[] = [];
+  return {
+    waitUntil: (p: Promise<unknown>) => void pending.push(p),
+    settle: () => Promise.all(pending),
+  };
+}
+
+test("a wrong code is reported with the email, the ref and the reason — never the code", async () => {
+  const reports = stubDenialEndpoint();
+  const ctx = fakeCtx();
+
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "NOTITNOW", ref: "someonelse" }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+
+  assert.equal(res.status, 400);
+  assert.deepEqual(reports, [
+    {
+      gate: "dataroom",
+      email: "jon@sno.llc",
+      reason: "code-mismatch",
+      ref: "someonelse",
+    },
+  ]);
+});
+
+test("no code and an unset DEALROOM_PW_SECRET report different reasons", async () => {
+  let reports = stubDenialEndpoint();
+  let ctx = fakeCtx();
+  await worker.fetch(
+    post({ email: "jon@sno.llc", password: "" }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+  assert.equal(reports[0].reason, "code-missing");
+
+  reports = stubDenialEndpoint();
+  ctx = fakeCtx();
+  await worker.fetch(
+    post({ email: "jon@sno.llc", password: "anything" }),
+    env({ ...DENIAL_ENV, DEALROOM_PW_SECRET: "" }),
+    ctx as never,
+  );
+  await ctx.settle();
+  assert.equal(reports[0].reason, "secret-unset");
+});
+
+test("a successful sign-in reports nothing", async () => {
+  const reports = stubDenialEndpoint();
+  const ctx = fakeCtx();
+  const code = await derivePassword("jon@sno.llc", PW_SECRET);
+
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: code }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+
+  assert.equal(res.status, 302);
+  assert.deepEqual(reports, []);
+});
+
+test("an unreachable api changes nothing the visitor sees", async () => {
+  stubDenialEndpoint({ throwIt: true });
+  const ctx = fakeCtx();
+
+  const res = await worker.fetch(
+    post({ email: "jon@sno.llc", password: "NOTITNOW" }),
+    env(DENIAL_ENV),
+    ctx as never,
+  );
+  await ctx.settle();
+
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /Invalid access code\./);
+});

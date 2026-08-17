@@ -42,6 +42,11 @@ DRIVE_ROOT_FOLDER_ID = "1pkCOx6pM__kgD6Ho6RwSsptYQYGwaKc-"
 # cloudflared-web tunnel) — no new tunnel/hostname/proxy worker.
 OVERRIDE_API_BASE = "https://api.sno.llc"
 
+# Where a rejected sign-in is reported (see ../shared/deny-report.ts) — the same
+# kernelbot-api as above, named separately so retiring the override does not take
+# denial logging with it.
+GATE_API_BASE = "https://api.sno.llc"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "dealroom-viewers"
@@ -54,3 +59,9 @@ database_id = "48a6eda4-4cd3-4bf7-b965-6639476e42ca"
 # DATAROOM_OVERRIDE_SECRET (its .env / .env.enc), mirroring how the apply worker
 # shares APPLY_SHARED_SECRET. Until it is set, checkEmailOverride() fails open and
 # the gate falls through to the derived code for everyone.
+#
+# Denial reporting needs its own secret, provisioned the same way:
+#   cd workers/dataroom-gate && npx wrangler secret put GATE_DENIAL_SECRET
+# Same value as the kernelbot side's GATE_DENIAL_SECRET and the deck gate's. Until
+# it is set, a denial is logged to `wrangler tail` and nowhere else — the gate
+# itself behaves identically either way.

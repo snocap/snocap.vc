@@ -6,7 +6,22 @@ routes = [
   { pattern = "snocap.vc/deck*", zone_name = "snocap.vc" }
 ]
 
+[vars]
+# Where a rejected sign-in is reported (see ../shared/deny-report.ts). This is
+# the existing api.sno.llc (kernelbot-api :3010 via the cloudflared-web tunnel,
+# already live for /apply, the data room override, and /link) — no new tunnel,
+# hostname, or proxy worker. Not secret; useless without the secret below.
+GATE_API_BASE = "https://api.sno.llc"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "deck-viewers"
 database_id = "8a93ec28-acf4-434d-9b4c-33c2b44ba7bd"
+
+# ONE-TIME SETUP: reporting authenticates with a shared secret, provisioned as a
+# Worker secret (NOT in this file):
+#   cd workers/deck-gate && npx wrangler secret put GATE_DENIAL_SECRET
+# Paste the same long random string the kernelbot side holds as
+# GATE_DENIAL_SECRET (its .env / .env.enc) and the data room gate holds under the
+# same name. Until it is set, a denial is logged to `wrangler tail` and nowhere
+# else — the gate itself behaves identically either way.

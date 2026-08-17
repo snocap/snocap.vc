@@ -11,6 +11,7 @@ import {
   refFromEmail,
 } from "../../shared/email.ts";
 import { handleViewerAdmin, logViewer } from "../../shared/viewers.ts";
+import { reportDenial } from "../../shared/deny-report.ts";
 
 interface Env {
   DB: D1Database;
@@ -18,6 +19,11 @@ interface Env {
   ADMIN_TOKEN: string;
   POSTHOG_API_KEY: string;
   DECK_PASSWORD: string;
+  // Denial reporting (see ../../shared/deny-report.ts). Both optional — absent
+  // until provisioned, in which case a rejection is logged to `wrangler tail`
+  // and nowhere else.
+  GATE_API_BASE?: string;
+  GATE_DENIAL_SECRET?: string;
 }
 
 const COOKIE_NAME = "snocap_viewer";
@@ -60,7 +66,11 @@ function htmlResponse(body: string, status: number): Response {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const url = new URL(request.url);
 
     const adminResponse = await handleViewerAdmin(request, {
@@ -104,6 +114,24 @@ export default {
       const password = (formData.get("password") as string) || "";
       if (requirePassword) {
         if (!env.DECK_PASSWORD || password !== env.DECK_PASSWORD) {
+          // Only successful logins reach the viewers table, so a rejection
+          // would otherwise leave no trace at all. The reason separates the
+          // three cases that need different answers — never the password
+          // itself. Never blocks this response.
+          reportDenial(
+            env,
+            {
+              gate: "deck",
+              email,
+              reason: !env.DECK_PASSWORD
+                ? "password-unset"
+                : password
+                  ? "password-mismatch"
+                  : "password-missing",
+              ref: refField,
+            },
+            ctx,
+          );
           return htmlResponse(
             renderGatePage(
               "Invalid access code.",
