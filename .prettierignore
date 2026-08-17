@@ -1,0 +1,3 @@
+# Vendored third-party sources are kept byte-for-byte as upstream ships them so
+# they stay diffable when re-vendored. See workers/shared/vendor/ for the why.
+workers/shared/vendor/

@@ -332,7 +332,8 @@ test("a ref bypass is not a denial — nothing is reported", async () => {
     ctx as never,
   );
   await ctx.settle();
-  assert.equal(res.status, 302);
+  // A successful submit renders the QR success page, not the old instant 302.
+  assert.equal(res.status, 200);
   assert.deepEqual(reports, []);
 });
 

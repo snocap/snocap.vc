@@ -14,6 +14,7 @@ log the viewer to D1; `link` does not.
 | `gate-page.ts`   | The gate page shell — chrome and CSS, with the copy passed in             |
 | `viewers.ts`     | The `viewers` D1 write and the token-gated admin table                    |
 | `deny-report.ts` | The other half: a REJECTED sign-in, reported to the kernelbot-api         |
+| `vendor/`        | Third-party sources copied in, because the workers take no dependencies   |
 
 `viewers.ts` and `deny-report.ts` are a pair. D1 records who got in; a rejection
 is not a row anywhere, and a Worker's only native log sink is Cloudflare's
@@ -61,6 +62,18 @@ stripping, built in since 22.18), which is also what lets
 
 Imports carry the `.ts` extension so Node can resolve them; wrangler bundles
 with esbuild, which resolves them the same way.
+
+**Nothing here may import a bare module specifier.** The workers take no
+dependencies, and two separate things enforce it: `test-workers.yml` runs
+`npm test` with no install step, and each worker's own `package.json` declares
+nothing but wrangler. So an `import x from "some-package"` fails the test run
+with `ERR_MODULE_NOT_FOUND` and fails `wrangler deploy` with "Could not
+resolve", even when the package is in the root `package.json` — the root install
+only ever backs the Astro site. When shared code genuinely needs a library, copy
+its source into `vendor/` and import it by relative path, as `gate-page.ts` does
+for its QR encoder. `vendor/` is listed in `.prettierignore` so those copies stay
+diffable against upstream, and each one carries a header saying what it is, which
+version, and how to re-vendor it.
 
 **Editing anything here redeploys every worker that imports it** — `deck-gate`,
 `dataroom-gate` and `link` each watch this directory in their own workflow

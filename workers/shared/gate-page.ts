@@ -3,7 +3,7 @@
 // — is one design; only the copy, the form target and the head metadata differ
 // per gate.
 
-import qrcode from "qrcode-generator";
+import qrcode from "./vendor/qrcode-generator.js";
 import { escapeHtml } from "./viewers.ts";
 
 // Shared <head> boilerplate: charset/viewport/theme-color, plus the Google
@@ -258,8 +258,9 @@ export interface SuccessPageOptions {
 // Shown in place of the old instant 302 after a successful gate submission, so
 // a viewer who opened the gate on a laptop can scan a QR code to pick the
 // session back up on their phone instead of re-typing the URL. The QR is
-// generated server-side (Workers have no DOM/canvas) via the pure-JS
-// `qrcode-generator` package.
+// generated server-side (Workers have no DOM/canvas) by the pure-JS
+// qrcode-generator, vendored under ./vendor/ so the workers keep needing no
+// install — see the header of that file.
 export function renderSuccessPage({
   title,
   headExtra = "",
