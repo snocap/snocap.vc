@@ -5,12 +5,13 @@
 
 /**
  * Paths the tool owns for itself. Only the ones the router actually serves
- * belong here: `create` is a live endpoint (`POST /link/create`), so a link
- * named `create` would shadow it. The sign-in and form live at the bare `/link`
- * root, which has no slug, so nothing else needs reserving — a slug is otherwise
- * free to be anything (see `slugError`).
+ * belong here: `create` is a live endpoint (`POST /link/create`) and `qr` is the
+ * QR image endpoint (`GET /link/qr/<slug>.png`), so a link named either would
+ * shadow one of them. The sign-in and form live at the bare `/link` root, which
+ * has no slug, so nothing else needs reserving — a slug is otherwise free to be
+ * anything (see `slugError`).
  */
-export const RESERVED_SLUGS = new Set(["create"]);
+export const RESERVED_SLUGS = new Set(["create", "qr"]);
 
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MS_PER_DAY = 86_400_000;
@@ -129,6 +130,25 @@ export function parseExpiry(
     return { error: "That expiration date has already passed." };
   }
   return { expiresAt };
+}
+
+/**
+ * The public short URL for a slug. One definition, because three places need to
+ * agree on it: the success banner's text, the QR image the banner embeds, and the
+ * payload encoded INTO that QR. If they ever drifted, a scan would land somewhere
+ * other than the URL printed next to it.
+ */
+export function shortUrlFor(slug: string): string {
+  return `https://snocap.vc/link/${slug}`;
+}
+
+/**
+ * The durable URL of the slug's QR image. Percent-encoded because this one is
+ * consumed as an `<img src>`, and a slug may legitimately contain characters that
+ * would otherwise be read as URL syntax.
+ */
+export function qrPathFor(slug: string): string {
+  return `/link/qr/${encodeURIComponent(slug)}.png`;
 }
 
 export function isExpired(record: LinkRecord, now: number): boolean {

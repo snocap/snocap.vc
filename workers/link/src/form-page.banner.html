@@ -1,1 +1,25 @@
-<div class="banner">Created <code>{{ shortUrl }}</code></div>
+<div class="banner">
+  <div>
+    Created
+    <a href="{{ shortUrl }}" target="_blank" rel="noopener"
+      ><code>{{ shortUrl }}</code></a
+    >
+  </div>
+  <!-- A real <img> at its own URL, not an inline SVG: this is what makes
+  right-click → Copy Image put the code on the clipboard, and the same src works
+  in a Google Doc or an email. The anchor around it is a convenience for clicking
+  through; the context menu still offers Copy Image on a linked image. -->
+  <a class="qr-frame" href="{{ shortUrl }}" target="_blank" rel="noopener">
+    <img
+      class="qr"
+      src="{{ qrUrl }}"
+      width="160"
+      height="160"
+      alt="QR code for the short link snocap.vc/link/{{ slug }}"
+    />
+  </a>
+  <div class="qr-caption">
+    Scan it, embed it from
+    <code>{{ qrUrl }}</code>, or right-click to copy the image.
+  </div>
+</div>
