@@ -11,7 +11,11 @@
  * has no slug, so nothing else needs reserving — a slug is otherwise free to be
  * anything (see `slugError`).
  */
-export const RESERVED_SLUGS = new Set(["create", "qr"]);
+export const RESERVED_SLUGS = new Set(["create", "qr", "peek"]);
+
+/** How many `/`-separated segments a slug may carry. Mirrors MAX_SLUG_SEGMENTS
+ * in kernelbot's src/local/api/link-store.ts, which is the store that enforces it. */
+export const MAX_SLUG_SEGMENTS = 4;
 
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MS_PER_DAY = 86_400_000;
@@ -43,20 +47,38 @@ export function normalizeSlug(raw: unknown): string {
  * The reason a slug is unusable, or null when it is fine. A slug may be almost
  * anything — letters, numbers, unicode, punctuation — so long as it survives a
  * URL round trip; it is escaped wherever it is rendered and percent-encoded
- * wherever it goes into a URL. Only two things are refused: a slash, because the
- * slug must be a single path segment (a slash would split it and reintroduce the
- * `..` traversal shapes), and a value `encodeURIComponent` cannot represent at
- * all (a lone surrogate) — the literal meaning of "can we urlencode it".
+ * wherever it goes into a URL.
+ *
+ * A slug MAY nest: `deck/fund2` serves at snocap.vc/link/deck/fund2. Nesting is
+ * spelled as segments joined by single slashes and checked SEGMENT BY SEGMENT,
+ * which is what preserves the old no-slash rule's actual purpose — keeping `..`
+ * and every traversal shape unrepresentable — now that the slash itself is legal.
+ * An empty segment (a `//`, a trailing slash) is a missing segment, not a
+ * permitted one, and `.`/`..` are refused by name.
+ *
+ * Only the FIRST segment is reserved-checked: the reserved names exist so a link
+ * cannot shadow a path the tool serves itself, and those all root at the first
+ * segment (`/link/create`, `/link/qr/<slug>.png`, `/link/peek`). `deck/create`
+ * shadows nothing.
  */
 export function slugError(slug: string): string | null {
   if (!slug) return "Choose a short path for the link.";
-  if (slug.includes("/")) return "A short path cannot contain a slash.";
-  try {
-    encodeURIComponent(slug);
-  } catch {
-    return "That short path has characters that cannot go in a URL.";
+  const segments = slug.split("/");
+  if (segments.length > MAX_SLUG_SEGMENTS) {
+    return `A short path can be at most ${MAX_SLUG_SEGMENTS} segments deep.`;
   }
-  if (RESERVED_SLUGS.has(slug)) return `"${slug}" is reserved.`;
+  for (const segment of segments) {
+    if (!segment) return "A short path cannot have an empty segment.";
+    if (segment === "." || segment === "..") {
+      return 'A short path segment cannot be "." or "..".';
+    }
+    try {
+      encodeURIComponent(segment);
+    } catch {
+      return "That short path has characters that cannot go in a URL.";
+    }
+  }
+  if (RESERVED_SLUGS.has(segments[0])) return `"${segments[0]}" is reserved.`;
   return null;
 }
 
@@ -145,7 +167,9 @@ export function shortUrlFor(slug: string): string {
 /**
  * The durable URL of the slug's QR image. Percent-encoded because this one is
  * consumed as an `<img src>`, and a slug may legitimately contain characters that
- * would otherwise be read as URL syntax.
+ * would otherwise be read as URL syntax — a nested slug's own slashes included,
+ * which is what keeps the QR path exactly two segments (`qr/<encoded>.png`) no
+ * matter how deep the slug is.
  */
 export function qrPathFor(slug: string): string {
   return `/link/qr/${encodeURIComponent(slug)}.png`;

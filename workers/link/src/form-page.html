@@ -82,6 +82,34 @@
         outline: none;
         transition: border-color 150ms ease;
       }
+      .lookup {
+        margin-top: 0.4rem;
+        font-size: 0.85rem;
+        min-height: 1.1rem;
+      }
+      .lookup.taken {
+        color: #b45309;
+      }
+      .lookup.free {
+        color: #15803d;
+      }
+      .replace {
+        margin-top: 0.6rem;
+      }
+      .replace.hidden {
+        display: none;
+      }
+      .replace label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+      .replace input {
+        width: auto;
+        margin: 0;
+      }
       input::placeholder {
         color: #666;
       }
@@ -178,7 +206,31 @@
           />
           <div class="hint">
             Becomes snocap.vc/link/&lt;path&gt;. Almost anything works — it is
-            case-insensitive and cannot contain a slash.
+            case-insensitive, and slashes are allowed, so
+            <code>deck/fund2</code> is a path (up to 4 segments deep).
+          </div>
+          <div
+            class="lookup"
+            id="lookup"
+            role="status"
+            aria-live="polite"
+          ></div>
+          <div class="replace{{ replaceHidden }}" id="replace-row">
+            <label for="replace">
+              <input
+                id="replace"
+                type="checkbox"
+                name="replace"
+                {{
+                replaceChecked
+                }}
+              />
+              Replace the existing link
+            </label>
+            <div class="hint">
+              The old destination stops working immediately. A permanent link
+              can stay in a visitor's browser cache for up to an hour.
+            </div>
           </div>
         </div>
         <div>
@@ -197,5 +249,69 @@
         <button type="submit">Create Link</button>
       </form>
     </div>
+    <script>
+      // Ask the server what a short path currently holds, as it is typed, so
+      // "already taken" arrives before the submission instead of as a rejected
+      // form — and so the replace confirmation can name what it would overwrite.
+      // Progressive enhancement only: with no JS the box stays hidden until a 409
+      // renders it, and the server re-checks the box either way.
+      (function () {
+        var path = document.getElementById("pathname");
+        var lookup = document.getElementById("lookup");
+        var row = document.getElementById("replace-row");
+        var box = document.getElementById("replace");
+        if (!path || !lookup || !row || !box) return;
+        var timer = null;
+        var seq = 0;
+
+        function show(state, message, taken) {
+          lookup.className = "lookup" + (state ? " " + state : "");
+          lookup.textContent = message;
+          // Never hide a ticked box out from under someone: unticking is their
+          // decision, and a stale keystroke must not silently withdraw consent.
+          if (taken || box.checked) row.classList.remove("hidden");
+          else row.classList.add("hidden");
+        }
+
+        function check() {
+          var slug = path.value
+            .trim()
+            .replace(/^\/+|\/+$/g, "")
+            .toLowerCase();
+          if (!slug) return show("", "", false);
+          var mine = ++seq;
+          fetch("/link/peek?slug=" + encodeURIComponent(slug), {
+            headers: { accept: "application/json" },
+          })
+            .then(function (res) {
+              return res.ok ? res.json() : null;
+            })
+            .then(function (data) {
+              // A slower earlier request must not overwrite a later answer.
+              if (mine !== seq || !data) return;
+              if (data.invalid) return show("", data.invalid, false);
+              if (data.taken) {
+                show(
+                  "taken",
+                  "/link/" + data.slug + " is taken — points at " + data.url,
+                  true,
+                );
+              } else {
+                show("free", "/link/" + data.slug + " is free.", false);
+              }
+            })
+            .catch(function () {
+              // The lookup is a convenience; the create path reports for real.
+              if (mine === seq) show("", "", false);
+            });
+        }
+
+        path.addEventListener("input", function () {
+          clearTimeout(timer);
+          timer = setTimeout(check, 250);
+        });
+        if (path.value) check();
+      })();
+    </script>
   </body>
 </html>

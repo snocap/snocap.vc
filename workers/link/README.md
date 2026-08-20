@@ -29,10 +29,16 @@ Two routes:
 
 - `POST /link/resolve` `{ slug }` → `{ found: false }` for an unknown **or
   expired** slug, or `{ found: true, record }` for a live one.
-- `POST /link/create` `{ slug, record }` → `2xx` on store, or `409` when a
-  **live** record already holds the slug (an expired one is claimable). The
-  check-then-set is atomic server-side against Redis — a strict improvement on
-  KV's last-writer-wins.
+- `POST /link/create` `{ slug, destination, createdBy, expiresAt, replace? }` →
+  `2xx` on store (with `replaced` naming the displaced record, if any), or `409`
+  **carrying the live `record`** when one already holds the slug and `replace`
+  is absent (an expired one is claimable without ceremony). The check-then-set is
+  atomic server-side against Redis — a strict improvement on KV's
+  last-writer-wins.
+- `GET /link/peek?slug=<slug>` is this worker's own, not the api's: the form calls
+  it as the admin types so "already taken" arrives before the submission. Behind
+  the session cookie, because it answers precisely the question the public
+  redirect refuses to.
 
 What this buys over the previous KV design: **short links are now visible to the
 agent stack** — kernelbot can list or create one through the api — instead of
@@ -96,22 +102,36 @@ moment") rather than silently dropping the link.
 
 ## Slugs and destinations
 
-- A slug may be almost anything, lowercased on both write and read. The only
-  bars are a slash (it must be a single path segment, which also rules out the
-  `..` traversal shapes) and a value `encodeURIComponent` cannot represent — so
-  the rule is simply "anything we can urlencode". Slugs are escaped where
-  rendered and percent-encoded where they enter a URL.
-- `create` and `qr` are reserved, because both are live endpoints
-  (`POST /link/create`, `GET /link/qr/<slug>.png`) that a slug of the same name
-  would shadow; nothing else is, since the sign-in and form sit at the bare
-  `/link` root.
+- A slug may be almost anything `encodeURIComponent` can represent, lowercased on
+  both write and read, and it **may nest**: `deck/fund2` serves at
+  `snocap.vc/link/deck/fund2`, up to four `/`-separated segments. Slugs are escaped
+  where rendered and percent-encoded where they enter a URL.
+- Nesting is validated SEGMENT BY SEGMENT, which is what preserves the point of
+  the old no-slash rule now that the slash is legal: `.` and `..` are refused by
+  name, and an empty segment (`a//b`, a trailing slash) is a missing segment
+  rather than a permitted one. The URL parser also normalizes `..` away before
+  routing sees it, so the segment check is the second line of defence, not the
+  only one.
+- `create`, `qr` and `peek` are reserved as the **first** segment, because each is
+  a live endpoint (`POST /link/create`, `GET /link/qr/<slug>.png`,
+  `GET /link/peek`) that a slug rooted at the same name would shadow. Deeper down
+  they shadow nothing, so `deck/create` is a fine path.
 - A destination must parse and must be `http:` or `https:`. The scheme
   allowlist is load-bearing: a redirector that echoes `javascript:` or `data:`
   into a `Location` header is an XSS vector, not just a bad link.
 - A destination may not point back at `snocap.vc/link*` or `sno.llc/r/*`.
-- **A live slug is refused, not repointed** (`409`). The old link is already in
-  circulation and its `301` may sit in caches we cannot reach. An **expired**
-  slug is free to claim again.
+- **A live slug is refused, not repointed** (`409`) — unless the admin confirms
+  the replacement. The default holds because the old link is already in
+  circulation and a permanent one's `301` sits in browser caches for up to an hour
+  (see the `max-age` on the redirect), so a silent repoint would strand visitors
+  on a destination nobody chose. An **expired** slug is free to claim again with
+  no confirmation at all.
+- The confirmation is a **ticked checkbox**, revealed by the form's live
+  `/link/peek` lookup as the short path is typed — so the admin sees what the path
+  currently points at _before_ submitting, and the refusal message names that
+  destination too. The box is re-checked server-side on every create: the lookup
+  is a convenience, not the gate, and a page with JavaScript off still gets the
+  `409` and the same checkbox on the way back.
 
 ## The QR code
 
