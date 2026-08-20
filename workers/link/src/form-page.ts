@@ -18,6 +18,8 @@ export interface FormValues {
   url?: string;
   pathname?: string;
   expires?: string;
+  /** Whether the replace box was ticked on a submission being echoed back. */
+  replace?: boolean;
 }
 
 export interface FormPageOptions {
@@ -28,6 +30,13 @@ export interface FormPageOptions {
   error?: string;
   /** Echoed back on a rejected submission so a typo does not clear the form. */
   values?: FormValues;
+  /**
+   * Render the replace confirmation as already visible. The page reveals it by
+   * itself once its live lookup says the path is taken; this is for the render
+   * AFTER a 409, where the server already knows and the admin should not have to
+   * trigger the lookup again to see the box.
+   */
+  taken?: boolean;
 }
 
 export function renderFormPage({
@@ -35,6 +44,7 @@ export function renderFormPage({
   created,
   error,
   values = {},
+  taken = false,
 }: FormPageOptions): string {
   // The banner carries the short URL three ways, because each one gets used:
   // clickable text (open it), the same text verbatim (select and copy it), and a
@@ -56,5 +66,9 @@ export function renderFormPage({
     url: values.url ?? "",
     pathname: values.pathname ?? "",
     expires: values.expires ?? "",
+    // Class rather than markup, so the confirmation block is in the template
+    // where a formatter can see it and the server only decides its visibility.
+    replaceHidden: taken ? "" : " hidden",
+    replaceChecked: values.replace ? " checked" : "",
   });
 }

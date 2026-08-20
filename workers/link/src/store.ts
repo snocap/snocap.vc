@@ -15,9 +15,12 @@
 //     200 { found: false }                 → no live record (unknown OR expired)
 //     200 { found: true, record: {...} }   → the stored record (see field names below)
 //   POST ${LINK_API_BASE}/link/create     header x-link-secret: <LINK_API_SECRET>
-//     body   { slug, destination, createdBy, expiresAt }
-//     200/201 { created: true }            → stored
-//     409                                  → a LIVE record already holds the slug
+//     body   { slug, destination, createdBy, expiresAt, replace? }
+//     200/201 { created: true, replaced?: {...} } → stored (replaced = displaced record)
+//     409 { record: {...} }                → a LIVE record already holds the slug.
+//       `replace: true` is a CONFIRMATION the admin has already given (the ticked
+//       box); without it a live slug is refused, and the 409's record is what the
+//       refusal shows them so the confirmation is an informed one.
 //
 // FIELD NAMES. The api is the owner of this vocabulary: a record is FLAT and its
 // target is `destination`. This worker calls the same thing `url` internally, so
@@ -136,9 +139,16 @@ export async function readLink(
   return record;
 }
 
-/** The outcome of a create: stored, refused because the slug is live, or the
- * store could not be reached / errored. */
-export type CreateResult = "ok" | "conflict" | "error";
+/**
+ * The outcome of a create. `conflict` carries the live record (when the api sends
+ * one) so the refusal can name the destination the admin would be replacing —
+ * asking "are you sure" without saying what you are about to overwrite is not a
+ * confirmation. `ok` carries the displaced record on a confirmed replace.
+ */
+export type CreateResult =
+  | { status: "ok"; replaced: LinkRecord | null }
+  | { status: "conflict"; record: LinkRecord | null }
+  | { status: "error" };
 
 /**
  * Store a record for a slug. The api owns the check-then-set: it answers 409
@@ -151,6 +161,7 @@ export async function createLink(
   env: StoreEnv,
   slug: string,
   record: LinkRecord,
+  options: { replace?: boolean } = {},
 ): Promise<CreateResult> {
   let res: Response;
   try {
@@ -164,14 +175,48 @@ export async function createLink(
         destination: record.url,
         createdBy: record.createdBy,
         expiresAt: record.expiresAt,
+        // Only ever a literal `true`, and only when a human ticked the box: the
+        // api treats anything else as absent consent, so an accidental truthy
+        // value cannot repoint a circulating link.
+        ...(options.replace === true ? { replace: true } : {}),
       }),
       signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
     });
   } catch {
-    return "error";
+    return { status: "error" };
   }
 
-  if (res.status === 409) return "conflict";
-  if (res.ok) return "ok";
-  return "error";
+  if (res.status === 409) {
+    return {
+      status: "conflict",
+      record: decodeRecord(fromApiRecord(await liveRecord(res))),
+    };
+  }
+  if (res.ok) {
+    return {
+      status: "ok",
+      replaced: decodeRecord(fromApiRecord(await replacedRecord(res))),
+    };
+  }
+  return { status: "error" };
+}
+
+/** The `record` off a 409 body, or null if the body is missing/unreadable — the
+ * refusal still stands, it just cannot name what is there. */
+async function liveRecord(res: Response): Promise<unknown> {
+  try {
+    return ((await res.json()) as { record?: unknown }).record;
+  } catch {
+    return null;
+  }
+}
+
+/** The `replaced` record off a 200 body, or null when nothing was displaced (the
+ * ordinary create) or the body cannot be read. */
+async function replacedRecord(res: Response): Promise<unknown> {
+  try {
+    return ((await res.json()) as { replaced?: unknown }).replaced;
+  } catch {
+    return null;
+  }
 }

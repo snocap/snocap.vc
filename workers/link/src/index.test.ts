@@ -96,9 +96,14 @@ function fakeApi(seed: Record<string, Partial<LinkRecord>> = {}) {
             400,
           );
         }
-        if (live(store.get(body.slug))) {
+        const existing = store.get(body.slug);
+        // A live slug is refused UNLESS the body carries the confirmation, and
+        // only a literal `true` counts. The 409 carries the live record so the
+        // caller can name what a replace would overwrite.
+        const displaced = live(existing) ? existing : null;
+        if (displaced && body.replace !== true) {
           return jsonResponse(
-            { created: false, error: "slug already taken" },
+            { created: false, error: "slug already taken", record: displaced },
             409,
           );
         }
@@ -110,7 +115,14 @@ function fakeApi(seed: Record<string, Partial<LinkRecord>> = {}) {
           expiresAt: body.expiresAt ?? null,
         };
         store.set(body.slug, record);
-        return jsonResponse({ created: true, record }, 200);
+        return jsonResponse(
+          {
+            created: true,
+            record,
+            ...(displaced ? { replaced: displaced } : {}),
+          },
+          200,
+        );
       }
       throw new Error(`unexpected url ${url}`);
     }) as typeof fetch,
@@ -955,4 +967,227 @@ test("a path merely starting with the tool's name is left alone", async () => {
     env(),
   );
   assert.equal(await res.text(), "origin");
+});
+
+// ── nested slugs ──────────────────────────────────────────────────────────────
+
+test("a nested slug resolves like any other", async () => {
+  installApi({
+    "deck/fund2": { url: "https://example.com/f2", expiresAt: null },
+  });
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/deck/fund2"),
+    env(),
+  );
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get("Location"), "https://example.com/f2");
+});
+
+test("a nested slug resolves on the short domain too", async () => {
+  installApi({
+    "deck/fund2": { url: "https://example.com/f2", expiresAt: null },
+  });
+  const res = await worker.fetch(
+    new Request("https://sno.llc/r/deck/fund2"),
+    env(),
+  );
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get("Location"), "https://example.com/f2");
+});
+
+test("the tool's own paths are never read as a nested slug", async () => {
+  // Before the first-segment check, /link/create/anything would have looked
+  // exactly like a two-segment slug.
+  const api = installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/create/anything"),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("Location"), HOME);
+  assert.equal(api.calls.length, 0); // never even asked the store
+});
+
+test("an empty segment is the uniform miss, not a lookup", async () => {
+  const api = installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/a//b"),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("Location"), HOME);
+  assert.equal(api.calls.length, 0); // never reached the store
+});
+
+test("a dot-dot path never reaches a lookup at all — the URL parser eats it first", async () => {
+  // "/link/deck/.." normalizes to "/link/" before any of our routing sees it, so
+  // the traversal cannot even be expressed as a slug. Asserted because it is the
+  // reason the old no-slash rule could be relaxed: the segment check is the
+  // second line of defence here, not the only one.
+  const api = installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/deck/.."),
+    env(),
+  );
+  assert.equal(new URL("https://snocap.vc/link/deck/..").pathname, "/link/");
+  assert.equal(api.calls.length, 0);
+  // Unauthenticated at the tool root: the sign-in gate, not a redirect.
+  assert.equal(res.status, 200);
+});
+
+test("a nested slug can be created through the form", async () => {
+  const api = installApi();
+  const res = await worker.fetch(
+    createRequest(
+      { url: "https://example.com/f2", pathname: "Deck/Fund2" },
+      await session(),
+    ),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  // Lowercased on the way in, and stored under the path it will serve at.
+  assert.equal(api.read("deck/fund2")?.url, "https://example.com/f2");
+});
+
+// ── replacing a live link, on an explicit confirmation ───────────────────────
+
+test("a live slug is refused, and the refusal names what it points at", async () => {
+  const api = installApi({
+    deck: { url: "https://example.com/old", expiresAt: null },
+  });
+  const res = await worker.fetch(
+    createRequest(
+      { url: "https://example.com/new", pathname: "deck" },
+      await session(),
+    ),
+    env(),
+  );
+  assert.equal(res.status, 409);
+  const body = await res.text();
+  assert.match(body, /already taken/);
+  // A confirmation that cannot say what it would overwrite is not a confirmation.
+  assert.match(body, /https:\/\/example\.com\/old/);
+  assert.match(body, /replace the existing link/i);
+  // And nothing was repointed.
+  assert.equal(api.read("deck")?.url, "https://example.com/old");
+});
+
+test("the refused form comes back with the replace box visible", async () => {
+  installApi({ deck: { url: "https://example.com/old", expiresAt: null } });
+  const res = await worker.fetch(
+    createRequest(
+      { url: "https://example.com/new", pathname: "deck" },
+      await session(),
+    ),
+    env(),
+  );
+  const body = await res.text();
+  // Not hidden: the fix is one click, not a retype.
+  assert.match(body, /class="replace"/);
+  assert.doesNotMatch(body, /class="replace hidden"/);
+});
+
+test("a ticked confirmation repoints the live link and sends replace:true", async () => {
+  const api = installApi({
+    deck: { url: "https://example.com/old", expiresAt: null },
+  });
+  const res = await worker.fetch(
+    createRequest(
+      { url: "https://example.com/new", pathname: "deck", replace: "on" },
+      await session(),
+    ),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  assert.equal(api.read("deck")?.url, "https://example.com/new");
+  const create = api.calls.find((call) => call.url.endsWith("/link/create"));
+  // The literal byte on the wire, since the api treats anything else as no consent.
+  assert.equal((create?.body as { replace?: unknown }).replace, true);
+});
+
+test("an ordinary create sends no replace field at all", async () => {
+  const api = installApi();
+  await worker.fetch(
+    createRequest(
+      { url: "https://example.com/x", pathname: "fresh" },
+      await session(),
+    ),
+    env(),
+  );
+  const create = api.calls.find((call) => call.url.endsWith("/link/create"));
+  assert.equal("replace" in (create?.body as object), false);
+});
+
+test("the form renders with the replace box hidden until something says otherwise", async () => {
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link", {
+      headers: { Cookie: await session() },
+    }),
+    env(),
+  );
+  assert.match(await res.text(), /class="replace hidden"/);
+});
+
+// ── peek: the live lookup behind the form ───────────────────────────────────
+
+test("peek says a taken path is taken, and what it points at", async () => {
+  installApi({ deck: { url: "https://example.com/deck", expiresAt: null } });
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/peek?slug=Deck", {
+      headers: { Cookie: await session() },
+    }),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), {
+    taken: true,
+    slug: "deck",
+    url: "https://example.com/deck",
+    createdBy: "",
+    expiresAt: null,
+  });
+});
+
+test("peek says a free path is free, and treats an expired one as free", async () => {
+  installApi({
+    gone: { url: "https://example.com/gone", expiresAt: Date.now() - 1000 },
+  });
+  const cookie = await session();
+  for (const slug of ["nobody-home", "gone"]) {
+    const res = await worker.fetch(
+      new Request(`https://snocap.vc/link/peek?slug=${slug}`, {
+        headers: { Cookie: cookie },
+      }),
+      env(),
+    );
+    assert.deepEqual(await res.json(), { taken: false, slug });
+  }
+});
+
+test("peek explains a malformed path instead of erroring — the field is mid-typing", async () => {
+  installApi();
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/peek?slug=a//b", {
+      headers: { Cookie: await session() },
+    }),
+    env(),
+  );
+  assert.equal(res.status, 200);
+  const body = (await res.json()) as { taken: boolean; invalid?: string };
+  assert.equal(body.taken, false);
+  assert.match(body.invalid ?? "", /empty segment/);
+});
+
+test("peek is unreachable without a session — it answers what the public miss refuses to", async () => {
+  const api = installApi({
+    deck: { url: "https://example.com/deck", expiresAt: null },
+  });
+  const res = await worker.fetch(
+    new Request("https://snocap.vc/link/peek?slug=deck"),
+    env(),
+  );
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("Location"), HOME);
+  assert.equal(api.calls.length, 0);
 });

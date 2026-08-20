@@ -35,7 +35,6 @@ test("a slug may be almost anything that survives a URL round trip", () => {
   // spaces, percent literals, unicode, and long values are all fine now — they
   // are escaped where rendered and percent-encoded where they enter a URL.
   for (const slug of [
-    "..",
     "a.b",
     "a%2fb",
     "a b",
@@ -49,10 +48,32 @@ test("a slug may be almost anything that survives a URL round trip", () => {
   }
 });
 
-test("a slug with a slash is rejected — it must be one path segment", () => {
-  for (const slug of ["a/b", "../etc", "nested/deep/slug"]) {
-    assert.match(slugError(slug) ?? "", /slash/, slug);
+test("a slug may nest, up to MAX_SLUG_SEGMENTS", () => {
+  for (const slug of ["a/b", "deck/fund2", "nested/deep/slug", "a/b/c/d"]) {
+    assert.equal(slugError(slug), null, `${slug} should be accepted`);
   }
+  assert.match(slugError("a/b/c/d/e") ?? "", /segments deep/);
+});
+
+test("the traversal shapes stay refused, which is what the old no-slash rule was for", () => {
+  // Validation is per segment, so "." and ".." cannot appear as one — the reason
+  // the slash ban existed in the first place. An empty segment is a missing
+  // segment, not a permitted one.
+  for (const slug of ["..", ".", "../etc", "deck/..", "deck/."]) {
+    assert.match(slugError(slug) ?? "", /cannot be|empty segment/, slug);
+  }
+  for (const slug of ["a//b", "a/b//c"]) {
+    assert.match(slugError(slug) ?? "", /empty segment/, slug);
+  }
+});
+
+test("only the FIRST segment is reserved — deeper down it shadows nothing", () => {
+  assert.match(slugError("create") ?? "", /reserved/);
+  assert.match(slugError("create/deck") ?? "", /reserved/);
+  assert.match(slugError("qr/x") ?? "", /reserved/);
+  assert.match(slugError("peek/x") ?? "", /reserved/);
+  assert.equal(slugError("deck/create"), null);
+  assert.equal(slugError("fund2/qr"), null);
 });
 
 test("a slug that cannot be urlencoded is rejected", () => {

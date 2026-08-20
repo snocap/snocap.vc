@@ -215,14 +215,21 @@ async function handleCreate(
   const rawUrl = String(form.get("url") ?? "");
   const rawExpires = String(form.get("expires") ?? "");
   const slug = normalizeSlug(form.get("pathname"));
+  // The checkbox. Its presence in the body is the confirmation — a browser omits
+  // an unticked box entirely — and it is re-checked HERE rather than trusted from
+  // the page: the live lookup that revealed it is a convenience, not the gate.
+  const replace = form.get("replace") !== null;
   const now = Date.now();
 
-  const reject = (error: string, status: number): Response =>
+  const reject = (error: string, status: number, taken?: boolean): Response =>
     htmlResponse(
       renderFormPage({
         email,
         error,
-        values: { url: rawUrl, pathname: slug, expires: rawExpires },
+        values: { url: rawUrl, pathname: slug, expires: rawExpires, replace },
+        // Keeps the replace box on screen (and ticked, if it was) after a
+        // rejection, so the fix is one click and not a retype.
+        taken,
       }),
       status,
     );
@@ -243,16 +250,29 @@ async function handleCreate(
     createdBy: email,
   };
 
-  // A live slug is never repointed, only refused: the old link is already in
-  // circulation and its 301 may sit in caches we cannot reach. An EXPIRED slug
-  // is free to claim again. The api owns this check-then-set atomically against
-  // Redis (a strict improvement on KV's last-writer-wins), answering 409 when a
-  // live record already holds the slug.
-  const stored = await createLink(env, slug, record);
-  if (stored === "conflict") {
-    return reject(`/link/${slug} is already taken — pick another path.`, 409);
+  // A live slug is repointed ONLY on an explicit confirmation. The default is
+  // still refuse-don't-repoint: the old link is already in circulation and a
+  // permanent one's 301 sits in browser caches for up to an hour (see
+  // handleRedirect's max-age), so a silent repoint would strand visitors on a
+  // destination nobody chose. An EXPIRED slug is free to claim with no ceremony.
+  // The api owns the check-then-set atomically against Redis, answering 409 when a
+  // live record holds the slug and the confirmation is absent.
+  const stored = await createLink(env, slug, record, { replace });
+  if (stored.status === "conflict") {
+    // Name the destination being replaced — a confirmation that does not say what
+    // it is overwriting is not one. The api sends the live record with its 409;
+    // if it could not, the refusal still stands, just less specific.
+    const pointsAt = stored.record
+      ? ` It currently points at ${stored.record.url}.`
+      : "";
+    return reject(
+      `/link/${slug} is already taken.${pointsAt} Tick "replace the existing link" to repoint it, ` +
+        "or pick another path.",
+      409,
+      true,
+    );
   }
-  if (stored === "error") {
+  if (stored.status === "error") {
     // The create path has no safe silent fallback: refusing loudly is better
     // than dropping the link on the floor. Tell the admin to retry.
     return reject(
@@ -262,10 +282,11 @@ async function handleCreate(
   }
 
   // The slug and its author, never the destination: a short link often exists
-  // precisely because the URL behind it is not public.
+  // precisely because the URL behind it is not public. That a live link was
+  // repointed is logged as a flag for the same reason.
   console.log(
     JSON.stringify({
-      event: "link_created",
+      event: stored.replaced ? "link_replaced" : "link_created",
       slug,
       createdBy: email,
       expiresAt: expiry.expiresAt,
@@ -275,6 +296,44 @@ async function handleCreate(
   // Redirect rather than render, so a refresh does not resubmit the form.
   return redirectTo(`${TOOL_PATH}?created=${encodeURIComponent(slug)}`);
 }
+
+/**
+ * GET /link/peek?slug=<slug> — is this short path free? The form calls it as the
+ * admin types, so the "already taken" answer arrives BEFORE the submission rather
+ * than as a rejected form, and the replace confirmation can name what it would
+ * overwrite.
+ *
+ * Authenticated: it is reached only after the session check below, because it
+ * answers a question the uniform public miss deliberately refuses to
+ * (handleRedirect makes unknown and expired indistinguishable so a probe learns
+ * nothing). A signed-in admin may already create and replace links, so telling
+ * them what a slug holds reveals nothing they cannot already reach.
+ *
+ * A malformed slug is `{ taken: false }` with the reason, not an error: the field
+ * is mid-typing on every keystroke, and half a slug is not a failure.
+ */
+async function handlePeek(url: URL, env: Env): Promise<Response> {
+  const slug = normalizeSlug(url.searchParams.get("slug"));
+  const invalid = slugError(slug);
+  if (invalid)
+    return Response.json({ taken: false, invalid }, { headers: NO_STORE });
+  const record = await readLink(env, slug);
+  if (!record || isExpired(record, Date.now())) {
+    return Response.json({ taken: false, slug }, { headers: NO_STORE });
+  }
+  return Response.json(
+    {
+      taken: true,
+      slug,
+      url: record.url,
+      createdBy: record.createdBy,
+      expiresAt: record.expiresAt,
+    },
+    { headers: NO_STORE },
+  );
+}
+
+const NO_STORE = { "Cache-Control": "no-store" };
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -306,10 +365,13 @@ export default {
       return handleQrImage(request, url.pathname.slice(QR_PREFIX.length + 1));
     }
 
-    // /link/<slug> resolves a link, unless the tail is one of the tool's own
-    // reserved paths, which fall through to the UI routing below.
+    // /link/<slug> resolves a link, unless the tail STARTS with one of the tool's
+    // own reserved paths, which fall through to the UI routing below. The check is
+    // on the first segment, not the whole tail, now that a slug may nest: without
+    // that, /link/create/anything would be read as a slug rather than as the
+    // tool's own path.
     const tail = normalizeSlug(url.pathname.slice(TOOL_PATH.length));
-    if (tail && !RESERVED_SLUGS.has(tail)) {
+    if (tail && !RESERVED_SLUGS.has(tail.split("/")[0])) {
       return handleRedirect(tail, env);
     }
 
@@ -340,6 +402,12 @@ export default {
         );
       }
       return missResponse();
+    }
+
+    // Behind the session check, above the form: the answer is for a signed-in
+    // admin only.
+    if (request.method === "GET" && url.pathname === `${TOOL_PATH}/peek`) {
+      return handlePeek(url, env);
     }
 
     if (request.method === "GET" && isToolRoot) {
