@@ -2,7 +2,7 @@
  * Mirror the brand fonts into dist/deck/fonts/ after a build.
  *
  * The deck is an imported Claude Design artifact: everything under public/deck/
- * is overwritten by scripts/pull-deck.sh on every sync, so nothing we author can
+ * is overwritten by the next DesignSync pull, so nothing we author can
  * live there and be relied upon. Design's own stylesheet asks for the fonts
  * relatively —
  *

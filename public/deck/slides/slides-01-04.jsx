@@ -130,7 +130,7 @@ function Slide02_Disclaimer() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
+          background: "url('assets/cloud-bg-opt.jpg') center/cover no-repeat",
           opacity: 0.5,
         }}
       />
@@ -161,9 +161,12 @@ function Slide02_Disclaimer() {
 // ============= SLIDE 3: Our Unique Advantages =============
 function Slide03_Manifesto() {
   const photos = [
-    { src: "assets/slide3-field.png", alt: "On-site at a portfolio company" },
-    { src: "assets/slide3-beaker.png", alt: "Lab work — beaker" },
-    { src: "assets/slide3-team.png", alt: "Mars Materials team" },
+    {
+      src: "assets/slide3-field-opt.jpg",
+      alt: "On-site at a portfolio company",
+    },
+    { src: "assets/slide3-beaker-opt.jpg", alt: "Lab work — beaker" },
+    { src: "assets/slide3-team-opt.jpg", alt: "Mars Materials team" },
   ];
 
   return (
@@ -174,7 +177,7 @@ function Slide03_Manifesto() {
           position: "absolute",
           inset: 0,
           background:
-            "url('assets/contour-appalachia.png') center/cover no-repeat",
+            "url('assets/contour-appalachia-opt.jpg') center/cover no-repeat",
           opacity: 0.55,
         }}
       />
@@ -303,7 +306,7 @@ const ADVANTAGES = [
   {
     n: "1",
     title: "Over $700M in\nvalue creation",
-    img: "assets/result-1-incubator.jpg",
+    img: "assets/result-1-incubator-opt.jpg",
     objectPosition: "center 18%",
     objectFit: "cover",
   },
@@ -317,28 +320,28 @@ const ADVANTAGES = [
   {
     n: "3",
     title: "Direct political\nexperience and connections",
-    img: "assets/result-3-political-crop.jpg",
+    img: "assets/result-3-political-crop-opt.jpg",
     objectPosition: "center 27%",
     objectFit: "cover",
   },
   {
     n: "4",
     title: "50K+ professionals\nacross private networks",
-    img: "assets/result-4-talent-crop.png",
+    img: "assets/result-4-talent-crop-opt.jpg",
     objectPosition: "center",
     objectFit: "cover",
   },
   {
     n: "5",
     title: "GP track venture program,\nmultiple fellowship cohorts",
-    img: "assets/result-5-bench.jpg",
+    img: "assets/result-5-bench-opt.jpg",
     objectPosition: "center",
     objectFit: "cover",
   },
   {
     n: "6",
     title: "A platform for founder\nstorytelling and mass media",
-    img: "assets/result-6-storytelling.jpg",
+    img: "assets/result-6-storytelling-opt.jpg",
     objectPosition: "center 45%",
     objectFit: "cover",
   },
@@ -352,7 +355,7 @@ function Slide04_HomegrownAdvantages() {
           position: "absolute",
           inset: 0,
           background:
-            "url('assets/contour-appalachia.png') center/cover no-repeat",
+            "url('assets/contour-appalachia-opt.jpg') center/cover no-repeat",
           opacity: 0.45,
         }}
       />

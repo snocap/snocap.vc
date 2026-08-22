@@ -17,13 +17,12 @@ the rest are run directly.
 | `generate-pdf.mjs`         | `pdf` (with `compress-pdf.mjs`)      | Serves the built `dist/` and prints the `/deck` route to `deck.pdf` in headless Chrome using the deck's `@media print` styles.                                                                                                                                                                                    |
 | `compress-pdf.mjs`         | `pdf` (after `generate-pdf.mjs`)     | Re-encodes the images Chrome embeds in `deck.pdf`. Chrome rasterises every composited slide layer losslessly at 300 DPI, which alone made this deck a 35MB PDF; ghostscript downsamples each image to the density it is displayed at (96 DPI = 1:1 on the 1920x1080 page) and JPEGs it, for ~3MB. Needs `gs`.     |
 | `check-deck-budget.mjs`    | `check:deck`                         | Size guard, run in CI after `npm run pdf`: fails the build if `deck.pdf`, any single asset, the `/deck` page load, or the total deck image weight goes over budget. Every budget is env-overridable — see the header.                                                                                             |
-| `pull-deck.sh`             | —                                    | Pulls an updated fundraising deck from a Claude Design handoff bundle (browser-minted token → gzip tar) and copies the deck files into `public/deck/`. See the header comment for how to mint a fresh token.                                                                                                      |
 | `verify-deck-assets.mjs`   | `verify-deck`                        | Integrity gate for deck images. Flags any image in `public/deck` (or a dir passed as argv) that is exactly 262144 bytes (DesignSync's silent-truncation boundary) or fails a full `sharp` decode, and exits non-zero. Runs in CI before the build so truncated/corrupt images never ship.                         |
 
 ### The deck pipeline
 
-`public/deck/` holds the deck exactly as `pull-deck.sh` pulled it from Claude
-Design — pristine, and never optimized in place, because the next pull would
+`public/deck/` holds the deck exactly as the DesignSync pull brought it out of
+Claude Design — pristine, and never optimized in place, because the next pull would
 clobber any hand-editing. Everything that makes the deck small happens on the
 way to `dist/`, in this order:
 

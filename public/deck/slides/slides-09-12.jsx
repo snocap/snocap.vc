@@ -1,4 +1,14 @@
-// Slides 9-12: Team, Who We Work With, Where Breakthroughs Happen, Case Study SoFab
+// Slides 9-13: Team, Who We Work With, Where Breakthroughs Happen, Case
+// Studies Mothership + LazeraH
+// 2026-08-19: SoFab's case study (formerly slide 12 here) moved to the
+// SNØCAP Appendix Deck project as A05 — replaced here with Mothership
+// (12) and LazeraH (13) so the fewer, top-of-mind case studies live in the
+// narrative deck while the appendix keeps growing as the case-study
+// "database". TriMagnetix/At-a-Glance/Thank You renumbered down in
+// slides-13-16.jsx to close the gap.
+// 2026-08-20: LazeraH's stage copy corrected per Nate's own feedback — see
+// slides-case-studies.jsx in the Appendix project for the full note; same
+// text applied here since this slide is a copy of that one.
 
 // ============= SLIDE 9: The SNØCAP Team =============
 const TEAM = [
@@ -6,7 +16,7 @@ const TEAM = [
     name: "Shrina Kurani",
     role: "Portfolio and Ecosystem",
     tagline: "Over $1B facilitated into companies and funds",
-    photo: "assets/team/headshot-shrina.jpeg",
+    photo: "assets/team/headshot-shrina-opt.jpg",
     linkedin: "https://www.linkedin.com/in/shrina-kurani-94a88b56",
     bio: "Mechanical engineer and sustainability scientist with a decade of experience building, investing in, and advocating for frontier climate tech. Invested in early-stage, mission-driven companies on a $9B portfolio at Republic, and across the entire $135B in assets under management at the State of California. She has overseen approximately $1B in cumulative direct and fund investments.",
   },
@@ -14,7 +24,7 @@ const TEAM = [
     name: "Nate Salpeter",
     role: "Fundraising and Diligence",
     tagline: "0 to 1 in nuclear, three times over",
-    photo: "assets/team/headshot-nate.jpeg",
+    photo: "assets/team/headshot-nate-opt.jpg",
     linkedin: "https://www.linkedin.com/in/nate-salpeter-77145712/",
     bio: "Software engineering leader with over 15 years of experience across a wide array of sectors (social, gaming, real estate, fitness, logistics, fintech) and two notable exits in the past five years (Disney, Coinbase). He brings a deep understanding of building Silicon Valley companies, with two prior exits and IPOs at Zillow and Disney.",
   },
@@ -22,7 +32,7 @@ const TEAM = [
     name: "Jonathan Azoff",
     role: "Sourcing and Operations",
     tagline: "20 years, 5 companies, 3 exits",
-    photo: "assets/team/headshot-jon.jpeg",
+    photo: "assets/team/headshot-jon-opt.jpg",
     linkedin: "https://www.linkedin.com/in/jazoff/",
     bio: "Ph.D. Mechanical Engineer with 18 years experience in the climate tech space, including being the first fluid dynamicist at both TerraPower and KairosPower. Co-founder of Sweet Farm, a non-profit incubator that has launched companies with $700M in downstream value. Currently CTO of Quantum Leap Energy.",
   },
@@ -482,7 +492,7 @@ function Slide11_BreakthroughsHappening() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "url('assets/slide8-bg.png') center/cover no-repeat",
+          background: "url('assets/slide8-bg-opt.jpg') center/cover no-repeat",
           opacity: 0.4,
         }}
       />
@@ -550,8 +560,8 @@ function Slide11_BreakthroughsHappening() {
   );
 }
 
-// ============= SLIDE 12: Case Study — SoFab =============
-function Slide12_CaseStudy_SoFab() {
+// ============= SLIDE 12: Case Study — Mothership Materials =============
+function Slide12_CaseStudy_Mothership() {
   return (
     <SlideFrame page={12} bg={COLORS.snow}>
       {/* eyebrow */}
@@ -587,13 +597,13 @@ function Slide12_CaseStudy_SoFab() {
           textTransform: "uppercase",
         }}
       >
-        SoFab
+        Mothership
       </div>
 
       <div
         style={{
           position: "absolute",
-          left: 480,
+          left: 840,
           top: 188,
           fontFamily: FONT.sans,
           fontSize: 26,
@@ -603,9 +613,9 @@ function Slide12_CaseStudy_SoFab() {
           maxWidth: 1100,
         }}
       >
-        High-performance electrochemical inputs
+        Decentralized bio-manufacturing that turns waste streams
         <br />
-        for next-gen solar and sensor applications
+        into materials companies already buy.
       </div>
 
       {/* Grid of journey cards + 2 photos */}
@@ -613,28 +623,29 @@ function Slide12_CaseStudy_SoFab() {
         stages={[
           {
             stage: "Discovery",
-            body: "With industry experts highlighting perovskites as the next generation of solar materials, SoFab emerged from our research as the only company addressing key constraints in the emerging category.",
+            body: "Kelci Zile, one of our venture partners, surfaced Mothership for us while Jo Marini and the team were still going through SOSV and IndieBio's ninth cohort.",
           },
           {
             stage: "Analysis",
-            body: "Their chemicals unlock record-breaking efficiency and durability in perovskite solar while reducing cost pressures, with process technology adaptable to catalysts and advanced sensors.",
+            body: "The draw wasn't the science alone. Jo takes feedback and pivots fast, and AB InBev's spent grain gave the waste-to-material thesis a real customer today, not eventually.",
           },
           {
             stage: "Conviction",
-            body: "Customer validation from leading perovskite developers testing SoFab on record-breaking lines. Reinforced by LOIs & MOUs from global manufacturers, with interest advancing to paid trials & POs.",
+            body: "We introduced Jo to the founder of Khepra. Their sonic IP turned out to be the piece that unblocked Mothership's process, and that single introduction changed the company's trajectory.",
           },
           {
             stage: "Negotiation",
-            body: "Without an existing technical or Silicon Valley seasoned investor on the cap table, we invested under the agreement that we had a board observer role. We invested at a $6M post-money valuation.",
+            body: "We stayed disciplined on valuation even as Asahi pushed hard for the round, and held our price despite a CVC partner leaning on its commercial relationship for better terms.",
           },
           {
             stage: "Syndication",
-            body: "Supported strategic pre-seed fundraise decisions and seed round narrative.",
+            body: "Mothership won Grow-NY, taking home $500K in non-dilutive competition funding. Downstream funds now reach out to us directly for reference checks, and Asahi, who led the last round, has already committed to the next one at a 5x valuation.",
           },
         ]}
-        photoTopRight="assets/case/sofab-top.png"
-        photoBottomLeft="assets/case/sofab-bottom.png"
-        placeholder="lab"
+        photoBottomLeft="assets/case/mothership-1.jpg"
+        photoBottomLeftAspect="16 / 9"
+        photoTopRight="assets/case/mothership-2.jpg"
+        placeholder="Mothership"
       />
 
       <div
@@ -664,12 +675,131 @@ function Slide12_CaseStudy_SoFab() {
   );
 }
 
-// Linear case-study flow: 5 stages → with arrows + photo strip below
+// ============= SLIDE 13: Case Study — LazeraH =============
+function Slide13_CaseStudy_LazeraH() {
+  return (
+    <SlideFrame page={13} bg={COLORS.snow}>
+      {/* eyebrow */}
+      <div
+        style={{
+          position: "absolute",
+          left: 96,
+          top: 96,
+          fontFamily: FONT.mono,
+          fontSize: 22,
+          letterSpacing: "-0.04em",
+          background: COLORS.orange,
+          color: COLORS.white,
+          padding: "4px 12px",
+          textTransform: "uppercase",
+        }}
+      >
+        Case Study
+      </div>
+
+      {/* Title */}
+      <div
+        style={{
+          position: "absolute",
+          left: 96,
+          top: 160,
+          fontFamily: FONT.mono,
+          fontSize: 96,
+          fontWeight: 400,
+          lineHeight: 1.0,
+          letterSpacing: "-0.05em",
+          color: COLORS.ink,
+          textTransform: "uppercase",
+        }}
+      >
+        LazeraH
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          left: 620,
+          top: 188,
+          fontFamily: FONT.sans,
+          fontSize: 26,
+          fontWeight: 500,
+          color: COLORS.ink,
+          lineHeight: 1.3,
+          maxWidth: 1100,
+        }}
+      >
+        Independent, third-party validation for a fusion signature
+        <br />
+        nobody else could replicate.
+      </div>
+
+      {/* Grid of journey cards + 2 photos */}
+      <CaseStudyGrid
+        stages={[
+          {
+            stage: "Discovery",
+            body: "Nate met LazeraH in 2021, early in the company's life, and stayed close as a supportive, informal advisor ever since. That relationship, plus his credibility in the nuclear space, earned us real access when the physics was promising but still far from investable on its own.",
+          },
+          {
+            stage: "Analysis",
+            body: "Four months of diligence, including an experiment Nate co-designed with the team to test the core physics claim directly instead of taking the literature at face value.",
+          },
+          {
+            stage: "Conviction",
+            body: "That experiment produced over 180 replications of fusion's signature, taking LazeraH from a promising claim to a fundable one.",
+          },
+          {
+            stage: "Negotiation",
+            body: "We priced the $500K pre-seed at a $6M post-money, quickly filled the round with other family offices, and took a board seat.",
+          },
+          {
+            stage: "Syndication",
+            body: "The planned seed round already has a verbal commitment for the full target at 3x our entry price, with room to bring in additional American investors. We connected the team with counsel on a US IP flip ahead of the raise, and most recently Nate introduced LazeraH to executives at Paragon and Mirion.",
+          },
+        ]}
+        photoBottomLeft="assets/case/lazerah-1.jpg"
+        photoTopRight="assets/case/lazerah-2.png"
+        placeholder="LazeraH"
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          left: 96,
+          right: 96,
+          bottom: 56,
+          textAlign: "center",
+          fontFamily: FONT.sans,
+          fontSize: 11,
+          lineHeight: 1.4,
+          color: COLORS.graphite,
+        }}
+      >
+        The case study presented herein relates solely to an investment made by
+        Fund I and is included for illustrative purposes only. This investment
+        may not be representative of the investments of Fund II, and no
+        assurance can be given that Fund II will identify, access, or achieve
+        investments or results comparable to those described herein. A complete
+        list of all portfolio companies of Fund I, together with information
+        similar to the information provided on this slide, will be made
+        available upon request. Past performance is not indicative of future
+        results.
+      </div>
+    </SlideFrame>
+  );
+}
+
+// Linear case-study flow: 5 stages → with arrows + photo strip below.
+// `photoBottomLeftAspect` (e.g. "16 / 9") overrides the bottom-left slot's
+// default fixed 662px width with a CSS aspect-ratio matched to the photo's
+// native ratio, so `cover` doesn't crop it — only set this when a photo's
+// crop has actually been flagged (round: Mothership's prize photo).
 function CaseStudyGrid({
   stages,
   photoTopRight,
   photoBottomLeft,
   placeholder,
+  photoBottomLeftAspect,
 }) {
   const Arrow = () => (
     <div
@@ -801,7 +931,13 @@ function CaseStudyGrid({
           gap: 48,
         }}
       >
-        <div style={{ flex: "0 0 662px", display: "flex" }}>
+        <div
+          style={{
+            flex: photoBottomLeftAspect ? "0 0 auto" : "0 0 662px",
+            aspectRatio: photoBottomLeftAspect || undefined,
+            display: "flex",
+          }}
+        >
           {photo(photoBottomLeft, placeholder)}
         </div>
         <div style={{ flex: "1 1 auto", display: "flex" }}>
@@ -817,5 +953,6 @@ function CaseStudyGrid({
 window.Slide09_Team = Slide09_Team;
 window.Slide10_WhoWeWorkWith = Slide10_WhoWeWorkWith;
 window.Slide11_BreakthroughsHappening = Slide11_BreakthroughsHappening;
-window.Slide12_CaseStudy_SoFab = Slide12_CaseStudy_SoFab;
+window.Slide12_CaseStudy_Mothership = Slide12_CaseStudy_Mothership;
+window.Slide13_CaseStudy_LazeraH = Slide13_CaseStudy_LazeraH;
 window.CaseStudyGrid = CaseStudyGrid;

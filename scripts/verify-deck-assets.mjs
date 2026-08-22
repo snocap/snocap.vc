@@ -98,9 +98,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`  ✗ ${relative(process.cwd(), file)} — ${reason}`);
   }
   console.error(
-    "\nThese assets are corrupt or truncated. If they changed in Claude Design, a\n" +
-      "headless DesignSync pull cannot carry them (256 KiB cap). Re-pull this update\n" +
-      "with the browser-minted tar: ./scripts/pull-deck.sh <handoff-token>",
+    "\nThese assets are corrupt or truncated: DesignSync get_file caps every file\n" +
+      "at 256 KiB. Re-derive the asset from the full-res original in public/deck if\n" +
+      "there is one (sharp, matching the widths of its -opt siblings); otherwise ask\n" +
+      "a human to supply the file directly. The browser handoff-token path is gone.",
   );
   process.exit(1);
 }

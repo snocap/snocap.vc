@@ -1,9 +1,15 @@
-// Slides 13-16: TriMagnetix case, Sparxell case, At-a-glance key terms, Thank You
+// Slides 14-16: TriMagnetix case, At-a-glance key terms, Thank You
+// 2026-08-19: Sparxell's case study (formerly slide 14 here) moved to the
+// SNØCAP Appendix Deck project — it's now part of the growing case-study
+// "database" instead of the narrative pitch. Slide numbers here bumped up
+// one more slot (13→14, 14→15, 15→16) since Mothership (12) and LazeraH
+// (13) now sit ahead of TriMagnetix in slides-09-12.jsx, replacing SoFab
+// (also moved to the appendix); content unchanged otherwise.
 
-// ============= SLIDE 13: Case Study — TriMagnetix =============
-function Slide13_CaseStudy_TriMagnetix() {
+// ============= SLIDE 14: Case Study — TriMagnetix =============
+function Slide14_CaseStudy_TriMagnetix() {
   return (
-    <SlideFrame page={13} bg={COLORS.snow}>
+    <SlideFrame page={14} bg={COLORS.snow}>
       <div
         style={{
           position: "absolute",
@@ -79,120 +85,9 @@ function Slide13_CaseStudy_TriMagnetix() {
             body: "Once we invested, we brought in several firms and angel investors that helped to smooth operating capital for lab work.",
           },
         ]}
-        photoTopRight="assets/case/trimag-right.png"
-        photoBottomLeft="assets/case/trimag-bottom.png"
+        photoTopRight="assets/case/trimag-right-opt.jpg"
+        photoBottomLeft="assets/case/trimag-starcloud.jpg"
         placeholder="chip"
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: 96,
-          right: 96,
-          bottom: 56,
-          textAlign: "center",
-          fontFamily: FONT.sans,
-          fontSize: 11,
-          lineHeight: 1.4,
-          color: COLORS.graphite,
-        }}
-      >
-        The case study presented herein relates solely to an investment made by
-        Fund I and is included for illustrative purposes only. This investment
-        may not be representative of the investments of Fund II, and no
-        assurance can be given that Fund II will identify, access, or achieve
-        investments or results comparable to those described herein. A complete
-        list of all portfolio companies of Fund I, together with information
-        similar to the information provided on this slide, will be made
-        available upon request. Past performance is not indicative of future
-        results.
-      </div>
-    </SlideFrame>
-  );
-}
-
-// ============= SLIDE 14: Case Study — Sparxell =============
-function Slide14_CaseStudy_Sparxell() {
-  return (
-    <SlideFrame page={14} bg={COLORS.snow}>
-      <div
-        style={{
-          position: "absolute",
-          left: 96,
-          top: 96,
-          fontFamily: FONT.mono,
-          fontSize: 22,
-          letterSpacing: "-0.04em",
-          background: COLORS.orange,
-          color: COLORS.white,
-          padding: "4px 12px",
-          textTransform: "uppercase",
-        }}
-      >
-        Case Study
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          left: 96,
-          top: 160,
-          fontFamily: FONT.mono,
-          fontSize: 96,
-          fontWeight: 400,
-          lineHeight: 1.0,
-          letterSpacing: "-0.05em",
-          color: COLORS.ink,
-          textTransform: "uppercase",
-        }}
-      >
-        Sparxell
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          left: 720,
-          top: 188,
-          fontFamily: FONT.sans,
-          fontSize: 26,
-          fontWeight: 500,
-          color: COLORS.ink,
-          lineHeight: 1.3,
-          maxWidth: 1000,
-        }}
-      >
-        Plant-based, biodegradable colors and films,
-        <br />
-        with a drop-in fit into existing manufacturing.
-      </div>
-
-      <CaseStudyGrid
-        stages={[
-          {
-            stage: "Discovery",
-            body: "Sparxell was sent to us when peer investors realized they were unable to value the company. From here, we developed a key relationship with founder Ben.",
-          },
-          {
-            stage: "Analysis",
-            body: "Our analysis showed the technology's applicability across cosmetics, textiles, automotive, and industrial coatings — all categories where regulators are forcing exits.",
-          },
-          {
-            stage: "Conviction",
-            body: "Founder Ben demonstrated talent attraction, off-the-shelf manufacturing, and Cambridge IP. Customer pull from LVMH, Hugo Boss, and H&M validated the technology.",
-          },
-          {
-            stage: "Negotiation",
-            body: "We secured a board observer seat alongside L'Oréal's strategic Circular Innovation Fund. Invested at a $15M post-money valuation in the seed round.",
-          },
-          {
-            stage: "Syndication",
-            body: "We brought in Future Communities Capital for the round, supplementing existing strategic investors with patient growth capital.",
-          },
-        ]}
-        photoTopRight="assets/case/sparxell-rainbow.png"
-        photoBottomLeft="assets/case/sparxell-tile.png"
-        placeholder="iridescence"
       />
 
       <div
@@ -298,13 +193,19 @@ function Slide15_AtAGlance() {
   );
 
   return (
-    <SlideFrame page={15} dark={true} bg={COLORS.black}>
+    <SlideFrame
+      page={15}
+      dark={true}
+      bg={COLORS.black}
+      pageLabel="FUND II"
+      yearLabel="2026"
+    >
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "url('assets/contour-appalachia.png') center/cover no-repeat",
+            "url('assets/contour-appalachia-opt.jpg') center/cover no-repeat",
           opacity: 0.45,
         }}
       />
@@ -430,7 +331,7 @@ function Slide16_ThankYou() {
           position: "absolute",
           inset: 0,
           background:
-            "url('assets/contour-appalachia.png') center/cover no-repeat",
+            "url('assets/contour-appalachia-opt.jpg') center/cover no-repeat",
           opacity: 0.45,
         }}
       />
@@ -496,7 +397,6 @@ function Slide16_ThankYou() {
   );
 }
 
-window.Slide13_CaseStudy_TriMagnetix = Slide13_CaseStudy_TriMagnetix;
-window.Slide14_CaseStudy_Sparxell = Slide14_CaseStudy_Sparxell;
+window.Slide14_CaseStudy_TriMagnetix = Slide14_CaseStudy_TriMagnetix;
 window.Slide15_AtAGlance = Slide15_AtAGlance;
 window.Slide16_ThankYou = Slide16_ThankYou;

@@ -2,7 +2,7 @@
  * Optimize deck images in dist/ after build, before PDF generation.
  *
  * Runs on dist/deck/ only — public/deck/ holds the pristine assets pulled from
- * Claude Design (scripts/pull-deck.sh), so every optimization here is
+ * Claude Design (via DesignSync), so every optimization here is
  * repeatable and a re-pull can never clobber it. Nothing in public/ is touched.
  *
  * Two jobs:

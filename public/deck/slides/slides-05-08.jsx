@@ -160,7 +160,7 @@ function Slide05_ScientificIP() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
+          background: "url('assets/cloud-bg-opt.jpg') center/cover no-repeat",
           opacity: 0.55,
         }}
       />
@@ -634,7 +634,7 @@ function Slide07_FundI() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
+          background: "url('assets/cloud-bg-opt.jpg') center/cover no-repeat",
           opacity: 0.45,
         }}
       />
@@ -733,7 +733,7 @@ function Slide08_FundI_Page2() {
       <div style={{
         position: "absolute",
         inset: 0,
-        background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
+        background: "url('assets/cloud-bg-opt.jpg') center/cover no-repeat",
         opacity: 0.45,
       }} />
       <SlideTitle style={{ fontSize: 90 }}>Fund I</SlideTitle>
@@ -894,7 +894,7 @@ function Slide05b_ScientificIP_FourPoints() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "url('assets/cloud-bg.jpg') center/cover no-repeat",
+          background: "url('assets/cloud-bg-opt.jpg') center/cover no-repeat",
           opacity: 0.55,
         }}
       />
