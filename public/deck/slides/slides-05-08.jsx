@@ -155,7 +155,7 @@ function ScientificCard({ badge, logo, logoH, date, body }) {
 
 function Slide05_ScientificIP() {
   return (
-    <SlideFrame page={5} bg={COLORS.snow}>
+    <SlideFrame page={5} bg={COLORS.snow} label="Scientific IP">
       <div
         style={{
           position: "absolute",
@@ -318,7 +318,7 @@ function FundColumn({
 
 function Slide06_DesignedForOwnership() {
   return (
-    <SlideFrame page={6} bg={COLORS.snow}>
+    <SlideFrame page={6} bg={COLORS.snow} label="Designed For Ownership">
       {/* mountain background — Rainier */}
       <div
         style={{
@@ -629,7 +629,7 @@ function FundITable({ rows }) {
 
 function Slide07_FundI() {
   return (
-    <SlideFrame page={7} bg={COLORS.snow}>
+    <SlideFrame page={7} bg={COLORS.snow} label="Fund I">
       <div
         style={{
           position: "absolute",

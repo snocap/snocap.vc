@@ -10,6 +10,7 @@ function Slide01_Cover() {
       showLeftCaption={false}
       showFooter={false}
       showCorners={false}
+      label="Cover"
     >
       {/* mountain bg */}
       <div
@@ -124,7 +125,7 @@ PAST PERFORMANCE IS NOT INDICATIVE OF, OR A GUARANTEE OF, FUTURE PERFORMANCE. AN
 
 function Slide02_Disclaimer() {
   return (
-    <SlideFrame page={2} bg={COLORS.snow}>
+    <SlideFrame page={2} bg={COLORS.snow} label="Disclaimer">
       {/* faint cloud bg */}
       <div
         style={{
@@ -170,7 +171,7 @@ function Slide03_Manifesto() {
   ];
 
   return (
-    <SlideFrame page={3} dark={true} bg={COLORS.black}>
+    <SlideFrame page={3} dark={true} bg={COLORS.black} label="Manifesto">
       {/* full-bleed dark contour */}
       <div
         style={{
@@ -349,7 +350,7 @@ const ADVANTAGES = [
 
 function Slide04_HomegrownAdvantages() {
   return (
-    <SlideFrame page={4} dark={true} bg={COLORS.black}>
+    <SlideFrame page={4} dark={true} bg={COLORS.black} label="Homegrown Advantages">
       <div
         style={{
           position: "absolute",
