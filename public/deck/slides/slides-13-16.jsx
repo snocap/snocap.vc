@@ -9,7 +9,7 @@
 // ============= SLIDE 14: Case Study — TriMagnetix =============
 function Slide14_CaseStudy_TriMagnetix() {
   return (
-    <SlideFrame page={14} bg={COLORS.snow}>
+    <SlideFrame page={14} label="Case Study: TriMagnetix" bg={COLORS.snow}>
       <div
         style={{
           position: "absolute",
@@ -195,6 +195,7 @@ function Slide15_AtAGlance() {
   return (
     <SlideFrame
       page={15}
+      label="At a Glance"
       dark={true}
       bg={COLORS.black}
       pageLabel="FUND II"
@@ -321,6 +322,7 @@ function Slide16_ThankYou() {
   return (
     <SlideFrame
       page={16}
+      label="Thank You"
       dark={true}
       bg={COLORS.black}
       pageLabel="FUND II"

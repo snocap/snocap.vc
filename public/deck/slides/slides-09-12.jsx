@@ -53,7 +53,7 @@ const TEAM_SPECIALTIES = [
 
 function Slide09_Team() {
   return (
-    <SlideFrame page={9} bg={COLORS.snow}>
+    <SlideFrame page={9} label="Team" bg={COLORS.snow}>
       <SlideTitle>The SNØCAP team</SlideTitle>
       <div
         style={{
@@ -242,7 +242,7 @@ function Slide10_WhoWeWorkWith() {
   );
 
   return (
-    <SlideFrame page={10} bg={COLORS.snow}>
+    <SlideFrame page={10} label="Who We Work With" bg={COLORS.snow}>
       <SlideTitle>Who we work with</SlideTitle>
 
       {/* LEFT — academic */}
@@ -486,7 +486,12 @@ const BREAKTHROUGH_GRID = [
 
 function Slide11_BreakthroughsHappening() {
   return (
-    <SlideFrame page={11} dark={true} bg={COLORS.black}>
+    <SlideFrame
+      page={11}
+      label="Breakthroughs Happening"
+      dark={true}
+      bg={COLORS.black}
+    >
       {/* network background */}
       <div
         style={{
@@ -563,7 +568,7 @@ function Slide11_BreakthroughsHappening() {
 // ============= SLIDE 12: Case Study — Mothership Materials =============
 function Slide12_CaseStudy_Mothership() {
   return (
-    <SlideFrame page={12} bg={COLORS.snow}>
+    <SlideFrame page={12} label="Case Study: Mothership" bg={COLORS.snow}>
       {/* eyebrow */}
       <div
         style={{
@@ -678,7 +683,7 @@ function Slide12_CaseStudy_Mothership() {
 // ============= SLIDE 13: Case Study — LazeraH =============
 function Slide13_CaseStudy_LazeraH() {
   return (
-    <SlideFrame page={13} bg={COLORS.snow}>
+    <SlideFrame page={13} label="Case Study: LazeraH" bg={COLORS.snow}>
       {/* eyebrow */}
       <div
         style={{

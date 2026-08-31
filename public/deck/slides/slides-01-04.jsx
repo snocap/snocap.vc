@@ -5,6 +5,7 @@ function Slide01_Cover() {
   return (
     <SlideFrame
       page={1}
+      label="Cover"
       totalPages={16}
       bg={COLORS.snow}
       showLeftCaption={false}
@@ -124,7 +125,7 @@ PAST PERFORMANCE IS NOT INDICATIVE OF, OR A GUARANTEE OF, FUTURE PERFORMANCE. AN
 
 function Slide02_Disclaimer() {
   return (
-    <SlideFrame page={2} bg={COLORS.snow}>
+    <SlideFrame page={2} label="Disclaimer" bg={COLORS.snow}>
       {/* faint cloud bg */}
       <div
         style={{
@@ -170,7 +171,7 @@ function Slide03_Manifesto() {
   ];
 
   return (
-    <SlideFrame page={3} dark={true} bg={COLORS.black}>
+    <SlideFrame page={3} label="Manifesto" dark={true} bg={COLORS.black}>
       {/* full-bleed dark contour */}
       <div
         style={{
@@ -349,7 +350,12 @@ const ADVANTAGES = [
 
 function Slide04_HomegrownAdvantages() {
   return (
-    <SlideFrame page={4} dark={true} bg={COLORS.black}>
+    <SlideFrame
+      page={4}
+      label="Homegrown Advantages"
+      dark={true}
+      bg={COLORS.black}
+    >
       <div
         style={{
           position: "absolute",

@@ -16,6 +16,7 @@ function SlideFrame({
   showCorners = true,
   bg,
   pageLabel, // override page mono label e.g. "FUND II"
+  label, // content label for tracking, e.g. "Team" (falls back to "SNOCAP")
   yearLabel = currentQuarterLabel(),
   showLeftCaption = true,
 }) {
@@ -23,7 +24,7 @@ function SlideFrame({
   const subInk = dark ? "rgba(255,255,255,0.7)" : "#181818";
   return (
     <section
-      data-screen-label={`${String(page).padStart(2, "0")} SNOCAP`}
+      data-screen-label={`${String(page).padStart(2, "0")} ${label || "SNOCAP"}`}
       style={{
         position: "relative",
         width: 1920,
