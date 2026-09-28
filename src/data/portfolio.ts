@@ -93,4 +93,11 @@ export const portfolio: PortfolioItem[] = [
     sectors: ["Biotechnology", "Life Sciences"],
     website: "https://biowraptor.com/",
   },
+  {
+    id: "lazerah",
+    name: "LazeraH",
+    logo: "/assets/portfolio/logo-lazerah.png",
+    sectors: ["Energy", "Science and Engineering"],
+    website: "https://lazerah.com/",
+  },
 ].sort((a, b) => a.name.localeCompare(b.name));
