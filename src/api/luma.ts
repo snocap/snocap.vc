@@ -169,35 +169,80 @@ export interface SimpleLumaEvent {
   url: string;
 }
 
+const MAX_ATTEMPTS = 4;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Luma rate-limits (429) and occasionally 5xxs. Retry those transient
+// statuses with backoff (honoring Retry-After when present) rather than
+// failing the whole build.
+function isTransient(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+async function fetchLumaEvents(
+  id: LumaCalendarId,
+  pageSize: number,
+): Promise<SimpleLumaEvent[]> {
+  let lastStatus = 0;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const response = await fetch(
+      `https://api.lu.ma/calendar/get-items?calendar_api_id=${id}&period=future&pagination_limit=${pageSize}`,
+      {
+        headers: {
+          accept: "application/json, text/plain, */*",
+          "accept-language": "en",
+        },
+        referrer: "https://lu.ma/",
+      },
+    );
+    if (response.status === 200) {
+      const body = (await response.json()) as LumaResponse;
+      if (!body.entries) {
+        throw new Error(
+          `Error fetching Luma events for calendar ${id}: missing entries`,
+        );
+      }
+      return body.entries.map((entry) => ({
+        start: new Date(entry.start_at ?? entry.event.start_at),
+        title: entry.event.name,
+        org: entry.calendar?.name ?? entry.event.host,
+        url: entry.event.url.startsWith("http")
+          ? entry.event.url
+          : `https://lu.ma/${entry.event.url}`,
+      }));
+    }
+    lastStatus = response.status;
+    if (!isTransient(response.status) || attempt === MAX_ATTEMPTS) {
+      throw new Error(
+        `Error fetching Luma events for calendar ${id}: ${response.status}`,
+      );
+    }
+    const retryAfter = Number(response.headers.get("retry-after"));
+    const delay =
+      Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : 500 * 2 ** (attempt - 1);
+    await sleep(delay);
+  }
+  // Unreachable: the loop either returns or throws.
+  throw new Error(
+    `Error fetching Luma events for calendar ${id}: ${lastStatus}`,
+  );
+}
+
 export async function fetchUpcomingEvents(
   id: LumaCalendarId,
   pageSize = 4,
 ): Promise<SimpleLumaEvent[]> {
-  const response = await fetch(
-    `https://api.lu.ma/calendar/get-items?calendar_api_id=${id}&period=future&pagination_limit=${pageSize}`,
-    {
-      headers: {
-        accept: "application/json, text/plain, */*",
-        "accept-language": "en",
-      },
-      referrer: "https://lu.ma/",
-    },
-  );
-  if (response.status !== 200) {
-    throw new Error(
-      `Error fetching Luma events for calendar ${id}: ${response.status}`,
+  // A transient Luma outage must not fail the static build. Degrade to an
+  // empty event group for this calendar and let the rest of the site render.
+  try {
+    return await fetchLumaEvents(id, pageSize);
+  } catch (error) {
+    console.warn(
+      `Skipping Luma calendar ${id}: ${error instanceof Error ? error.message : error}`,
     );
+    return [];
   }
-  const body = (await response.json()) as LumaResponse;
-  if (!body.entries) {
-    throw new Error(`Error fetching Luma events for calendar ${id}: ${body}`);
-  }
-  return body.entries.map((entry) => ({
-    start: new Date(entry.start_at ?? entry.event.start_at),
-    title: entry.event.name,
-    org: entry.calendar?.name ?? entry.event.host,
-    url: entry.event.url.startsWith("http")
-      ? entry.event.url
-      : `https://lu.ma/${entry.event.url}`,
-  }));
 }
