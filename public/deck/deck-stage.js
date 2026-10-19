@@ -512,7 +512,9 @@
       // not the stale deep-link hash from initial load.
       try {
         history.replaceState(null, "", "#" + (curr + 1));
-      } catch (e) {}
+      } catch (e) {
+        console.warn("[deck-stage] Failed to sync history state:", e);
+      }
       this._slides.forEach((s, i) => {
         if (i === curr) s.setAttribute("data-deck-active", "");
         else s.removeAttribute("data-deck-active");
@@ -523,7 +525,9 @@
         // (1) Legacy: host-window postMessage for speaker-notes renderers.
         try {
           window.postMessage({ slideIndexChanged: curr }, "*");
-        } catch (e) {}
+        } catch (e) {
+          console.warn("[deck-stage] Failed to postMessage slide change:", e);
+        }
 
         // (2) In-page CustomEvent on the <deck-stage> element itself.
         //     Bubbles and composes out of shadow DOM so slide code can listen:

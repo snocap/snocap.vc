@@ -46,7 +46,9 @@
         var email = atob(val.slice(0, dot));
         if (email) posthog.identify(email);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("[deck-tracker] Failed to identify viewer from cookie:", e);
+    }
   }
 
   posthog.register({ deck_id: deckId });
