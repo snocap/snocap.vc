@@ -41,7 +41,11 @@ export class Airtable {
 
   // fetchImpl is resolved at call time, not bound here, so a test that stubs
   // globalThis.fetch after construction still reaches the stub.
-  constructor(token: string, fetchImpl?: typeof fetch, base: string = AIRTABLE.base) {
+  constructor(
+    token: string,
+    fetchImpl?: typeof fetch,
+    base: string = AIRTABLE.base,
+  ) {
     this.token = token;
     this.fetchImpl = fetchImpl ?? ((input, init) => fetch(input, init));
     this.base = base;
