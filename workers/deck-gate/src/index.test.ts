@@ -94,7 +94,7 @@ test("submitting the right password sets a 30-day site-wide viewer cookie", asyn
     post({ email: "jon@sno.llc", password: DECK_PASSWORD }),
     env(),
   );
-  assert.equal(res.status, 200);
+  assert.equal(res.status, 303);
   const viewer = setCookies(res).find((c) => c.startsWith("snocap_viewer="));
   assert.ok(viewer);
   assert.match(viewer!, /Max-Age=2592000/);
@@ -103,17 +103,13 @@ test("submitting the right password sets a 30-day site-wide viewer cookie", asyn
   assert.ok(!viewer!.includes("HttpOnly"));
 });
 
-test("a successful submit shows the success page with a QR handoff, not an instant redirect", async () => {
+test("a successful submit sends the viewer straight to the deck", async () => {
   const res = await worker.fetch(
     post({ email: "jon@sno.llc", password: DECK_PASSWORD }),
     env(),
   );
-  assert.equal(res.status, 200);
-  assert.equal(res.headers.get("Location"), null);
-  const html = await res.text();
-  assert.match(html, /You're in\./);
-  assert.match(html, /<svg/);
-  assert.match(html, /href="https:\/\/snocap\.vc\/deck"/);
+  assert.equal(res.status, 303);
+  assert.equal(res.headers.get("Location"), "https://snocap.vc/deck");
 });
 
 test("submitting the wrong password is rejected", async () => {
@@ -130,7 +126,7 @@ test("no password is needed when a ref is supplied", async () => {
     post({ email: "jon@sno.llc", ref: "jon" }),
     env(),
   );
-  assert.equal(res.status, 200);
+  assert.equal(res.status, 303);
 });
 
 test("an unset DECK_PASSWORD locks everyone out rather than letting them in", async () => {
@@ -159,10 +155,7 @@ test("a return_to outside /deck is ignored", async () => {
     }),
     env(),
   );
-  assert.equal(res.headers.get("Location"), null);
-  const html = await res.text();
-  assert.match(html, /href="https:\/\/snocap\.vc\/deck"/);
-  assert.ok(!html.includes("evil.com"));
+  assert.equal(res.headers.get("Location"), "https://snocap.vc/deck");
 });
 
 test("a return_to inside /deck is honoured", async () => {
@@ -174,8 +167,7 @@ test("a return_to inside /deck is honoured", async () => {
     }),
     env(),
   );
-  const html = await res.text();
-  assert.match(html, /href="https:\/\/snocap\.vc\/deck\/appendix"/);
+  assert.equal(res.headers.get("Location"), "https://snocap.vc/deck/appendix");
 });
 
 test("a ref already taken by someone else gets a suffix", async () => {
@@ -332,8 +324,7 @@ test("a ref bypass is not a denial — nothing is reported", async () => {
     ctx as never,
   );
   await ctx.settle();
-  // A successful submit renders the QR success page, not the old instant 302.
-  assert.equal(res.status, 200);
+  assert.equal(res.status, 303);
   assert.deepEqual(reports, []);
 });
 
