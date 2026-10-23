@@ -6,6 +6,7 @@ import { afterEach, test } from "node:test";
 import worker from "./index.ts";
 import { AIRTABLE, FIELD } from "./config.ts";
 import type { Env } from "./config.ts";
+import { defaultNextTouch } from "./dates.ts";
 import { codeChallenge } from "./oauth.ts";
 import { newSession, sessionCookie } from "./session.ts";
 
@@ -43,6 +44,7 @@ function fakeAirtable(opts: { noAccess?: boolean } = {}) {
         id: CAMPAIGN_B,
         fields: {
           Campaign: "Zeta Partners",
+          Representative: { id: "usrNateNateNate01", name: "Nate" },
           "Limited Partner": ["recLP"],
           "Next Touch Point": "2020-01-01T16:00:00.000Z",
           Interactions: ["recInt1"],
@@ -98,6 +100,7 @@ function fakeAirtable(opts: { noAccess?: boolean } = {}) {
           {
             id: AIRTABLE.campaigns,
             fields: [
+              { name: FIELD.representative, type: "singleCollaborator" },
               {
                 name: FIELD.closedLostReason,
                 options: { choices: [{ name: "Non-Responsive" }] },
@@ -313,12 +316,10 @@ test("a POST without the session's CSRF token, or from another origin, writes no
   const { session, cookie } = await sessionFor();
   const attempts = [
     actionRequest(cookie, {
-      macro: "instruct",
       campaign: CAMPAIGN_A,
       text: "x",
     }),
     actionRequest(cookie, {
-      macro: "instruct",
       campaign: CAMPAIGN_A,
       text: "x",
       csrf: "guess",
@@ -326,7 +327,6 @@ test("a POST without the session's CSRF token, or from another origin, writes no
     actionRequest(
       cookie,
       {
-        macro: "instruct",
         campaign: CAMPAIGN_A,
         text: "x",
         csrf: session.csrf,
@@ -354,44 +354,127 @@ test("a POST without the session's CSRF token, or from another origin, writes no
   );
 });
 
-test("an action writes its field and comment with the user's token", async () => {
+const NATE = { id: "usrNateNateNate01", name: "Nate" };
+
+function writes(fake: { calls: Call[] }) {
+  const patch = fake.calls.filter((c) => c.method === "PATCH");
+  const comments = fake.calls.filter(
+    (c) => c.method === "POST" && c.url.pathname.endsWith("/comments"),
+  );
+  return {
+    patches: patch.map((c) => ({
+      path: c.url.pathname,
+      body: JSON.parse(c.body),
+    })),
+    comments: comments.map((c) => JSON.parse(c.body).text as string),
+    order: fake.calls
+      .filter(
+        (c) => c.method !== "GET" && c.url.hostname === "api.airtable.com",
+      )
+      .map((c) => c.method),
+  };
+}
+
+test("a comment posts exactly what was typed, mentions serialized, and moves Next Touch Point a week", async () => {
   const fake = useAirtable();
   const { session, cookie } = await sessionFor();
   const response = await worker.fetch(
     actionRequest(cookie, {
-      macro: "close-lost",
       campaign: CAMPAIGN_A,
-      reasons: "Non-Responsive",
+      text: "  @Nate commitment is now $250K  ",
+      mentions: JSON.stringify([NATE]),
       csrf: session.csrf,
     }),
     ENV,
   );
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), {
-    ok: true,
-    message: "Reason set to Non-Responsive. KB is closing it.",
-  });
-  const patch = fake.calls.find((c) => c.method === "PATCH");
+  const { message, ok } = await response.json();
+  assert.equal(ok, true);
+  assert.match(message, /^Comment posted\. Next touch \w{3} \d+\.$/);
+  assert.doesNotMatch(message, /KB/);
+
+  const w = writes(fake);
+  assert.deepEqual(
+    w.order,
+    ["PATCH", "POST"],
+    "the date lands before the comment",
+  );
+  assert.deepEqual(w.comments, [`@[${NATE.id}] commitment is now $250K`]);
+  assert.doesNotMatch(w.comments[0], /usrt57orTxVb75I3W/, "no auto @KB");
   assert.equal(
-    patch?.url.pathname,
+    w.patches[0].path,
     `/v0/${AIRTABLE.base}/${AIRTABLE.campaigns}/${CAMPAIGN_A}`,
   );
-  assert.deepEqual(JSON.parse(patch?.body ?? ""), {
-    fields: { [FIELD.closedLostReason]: ["Non-Responsive"] },
+  assert.deepEqual(w.patches[0].body, {
+    fields: {
+      [FIELD.nextTouch]: `${defaultNextTouch(Date.now())}T16:00:00.000Z`,
+    },
     typecast: false,
   });
-  const comment = fake.calls.find(
-    (c) => c.method === "POST" && c.url.pathname.endsWith("/comments"),
-  );
-  assert.match(
-    JSON.parse(comment?.body ?? "").text,
-    /^@\[usrt57orTxVb75I3W\] Close this Campaign as lost/,
-  );
   assert.ok(
     fake.calls
       .filter((c) => c.url.hostname === "api.airtable.com")
       .every((c) => c.auth === "Bearer access-0"),
   );
+});
+
+test("a comment that mentions KB says KB will reply", async () => {
+  const fake = useAirtable();
+  const { session, cookie } = await sessionFor();
+  const response = await worker.fetch(
+    actionRequest(cookie, {
+      campaign: CAMPAIGN_A,
+      text: "@KB close lost: Market Timing",
+      mentions: JSON.stringify([{ id: AIRTABLE.kbUserId, name: "KB" }]),
+      csrf: session.csrf,
+    }),
+    ENV,
+  );
+  assert.match((await response.json()).message, /KB will reply in the thread/);
+  assert.deepEqual(writes(fake).comments, [
+    "@[usrt57orTxVb75I3W] close lost: Market Timing",
+  ]);
+});
+
+test("an empty submit only marks the card handled: the date moves, no comment posts", async () => {
+  const fake = useAirtable();
+  const { session, cookie } = await sessionFor();
+  const response = await worker.fetch(
+    actionRequest(cookie, {
+      campaign: CAMPAIGN_A,
+      text: "  ",
+      csrf: session.csrf,
+    }),
+    ENV,
+  );
+  assert.equal(response.status, 200);
+  assert.match(
+    (await response.json()).message,
+    /^Marked handled\. Next touch /,
+  );
+  const w = writes(fake);
+  assert.deepEqual(w.order, ["PATCH"]);
+  assert.deepEqual(w.comments, []);
+});
+
+test("the deck renders the mention list and each card's macro prefills", async () => {
+  useAirtable();
+  const { cookie } = await sessionFor();
+  const response = await worker.fetch(
+    new Request(ROOT, { headers: { Cookie: cookie } }),
+    ENV,
+  );
+  const body = await response.text();
+  const people = body.match(/data-people="([^"]*)"/)?.[1] ?? "";
+  const list = JSON.parse(people.replaceAll("&quot;", '"'));
+  assert.deepEqual(list, [{ id: AIRTABLE.kbUserId, name: "KB" }, NATE]);
+  assert.match(body, /Comment… use @ to mention KB or a teammate/);
+  assert.match(body, /Mark handled · \w{3} \d+/);
+  assert.match(body, /data-template="@Nate any update here\?"/);
+  assert.match(body, /data-template="@KB close lost: \{reason\}"/);
+  assert.match(body, /<option value="Non-Responsive">/);
+  // Alpha has no Representative, so it gets no Ping rep chip.
+  assert.equal(body.match(/data-macro="ping-rep"/g)?.length, 1);
 });
 
 test("an expired access token is refreshed mid-visit and the new pair re-set", async () => {

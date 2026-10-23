@@ -52,8 +52,8 @@ export const AIRTABLE = {
   interactions: "tbluHbaGVyVA0cNXD",
   limitedPartners: "tblYixL1c36YiVgs3",
   contacts: "tbl2qTorn8YU26o5D",
-  /** KB's collaborator id. A comment carrying `@[<this>]` reaches KB's comment
-   * intake, which acts on the instruction and replies in the thread. */
+  /** KB's collaborator id. A comment carrying `@[<this>]` is an instruction to
+   * KB: its comment intake acts on it and replies in the thread. */
   kbUserId: "usrt57orTxVb75I3W",
 } as const;
 
@@ -68,6 +68,7 @@ export const FIELD = {
   probability: "Probability",
   interactions: "Interactions",
   closedLostReason: "Closed Lost Reason",
+  createdBy: "Created By",
   lpEntity: "Entity",
   lpPrimaryContacts: "Primary Contacts",
   summary: "Summary",

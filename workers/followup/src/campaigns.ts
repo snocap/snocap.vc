@@ -3,7 +3,9 @@
 
 import { FIELD } from "./config.ts";
 import type { AirtableComment, AirtableRecord } from "./airtable.ts";
-import { formatDay } from "./macros.ts";
+import { formatDay } from "./dates.ts";
+import { personOf } from "./mentions.ts";
+import type { Person } from "./mentions.ts";
 
 export interface InteractionLine {
   id: string;
@@ -22,6 +24,8 @@ export interface Card {
   value: string;
   probability: string;
   representative: string;
+  /** The Representative as a mention target, for Ping rep. */
+  rep: Person | null;
   nextTouch: string | null;
   nextTouchLabel: string;
   overdue: boolean;
@@ -113,6 +117,7 @@ export function cardOf(
     value: valueLabel(f[FIELD.dealValue]),
     probability: probabilityLabel(f[FIELD.probability]),
     representative: names(f[FIELD.representative]),
+    rep: personOf(f[FIELD.representative]),
     nextTouch,
     nextTouchLabel: nextTouch ? formatDay(nextTouch) : "Not set",
     overdue: nextTouch !== null && time(nextTouch) < now,
@@ -130,9 +135,7 @@ export interface TimelineEntry {
 
 /** `@[usr…]` in a comment's text, rendered as the mentioned person's name. */
 export function renderMentions(comment: AirtableComment): string {
-  const mentioned =
-    (comment as { mentioned?: Record<string, { displayName?: string }> })
-      .mentioned ?? {};
+  const mentioned = comment.mentioned ?? {};
   return comment.text.replace(/@\[(usr\w+)\]/g, (whole, id: string) => {
     const name = mentioned[id]?.displayName;
     return name ? `@${name}` : whole;

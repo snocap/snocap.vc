@@ -3,7 +3,9 @@
 
 import { OAUTH_PATH, TOOL_PATH } from "./config.ts";
 import type { Card, ContactCard, TimelineEntry } from "./campaigns.ts";
-import { MACROS, formatDay } from "./macros.ts";
+import { formatDay, shortDay, submitLabel } from "./dates.ts";
+import { MACROS, macroEffect } from "./macros.ts";
+import type { Person } from "./mentions.ts";
 import { renderTemplate } from "../../shared/template.ts";
 import cardTemplate from "./templates/card.html";
 import contactLinkTemplate from "./templates/contact-link.html";
@@ -64,24 +66,36 @@ export function renderError(message: string): string {
   return notice("Something went wrong", message, button(TOOL_PATH, "Reload"));
 }
 
-function macroChips(): string {
-  return MACROS.map((macro, i) =>
-    renderTemplate(macroChipTemplate, {
+function macroChips(card: Card, people: Person[]): string {
+  return MACROS.map((macro) => {
+    const effect = macroEffect(macro, {
+      representative: card.rep,
+      people,
+    });
+    if (!effect) return "";
+    return renderTemplate(macroChipTemplate, {
       id: macro.id,
       label: macro.label,
-      input: macro.input,
-      placeholder: macro.placeholder ?? "",
-      checked: i === 0 ? "checked" : "",
-    }),
-  ).join("");
+      text: effect.text,
+      mentions: JSON.stringify(effect.mentions),
+      reason: macro.reason ? "1" : "",
+    });
+  }).join("");
+}
+
+export interface DeckContext {
+  csrf: string;
+  closedLostReasons: string[];
+  people: Person[];
+  /** The day a submit sets Next Touch Point to, YYYY-MM-DD. */
+  nextTouchDay: string;
 }
 
 export function renderCard(
   card: Card,
   position: number,
   total: number,
-  csrf: string,
-  closedLostReasons: string[],
+  deck: DeckContext,
 ): string {
   const latest = card.latest
     ? `Last: ${card.latest.at ? formatDay(card.latest.at) : "undated"} · ${[card.latest.channel, card.latest.summary].filter(Boolean).join(" · ")}`
@@ -100,9 +114,11 @@ export function renderCard(
     touchClass: card.overdue ? "overdue" : "",
     latest,
     actionPath: ACTION_PATH,
-    csrf,
-    macros: macroChips(),
-    reasons: closedLostReasons
+    csrf: deck.csrf,
+    nextTouchDay: shortDay(deck.nextTouchDay),
+    submitLabel: submitLabel("", deck.nextTouchDay),
+    macros: macroChips(card, deck.people),
+    reasons: deck.closedLostReasons
       .map((reason) => renderTemplate(reasonTemplate, { reason }))
       .join(""),
   });
@@ -110,20 +126,12 @@ export function renderCard(
 
 export function renderReview(
   cards: Card[],
-  session: { csrf: string; email: string },
-  closedLostReasons: string[],
+  session: { email: string },
+  deck: DeckContext,
 ): string {
   const body = cards.length
     ? cards
-        .map((card, i) =>
-          renderCard(
-            card,
-            i + 1,
-            cards.length,
-            session.csrf,
-            closedLostReasons,
-          ),
-        )
+        .map((card, i) => renderCard(card, i + 1, cards.length, deck))
         .join("")
     : `<p class="empty">Nothing in the Follow Ups view right now.</p>`;
   return layout(
@@ -131,8 +139,9 @@ export function renderReview(
     renderTemplate(reviewTemplate, {
       total: cards.length,
       cards: body,
-      csrf: session.csrf,
+      csrf: deck.csrf,
       email: session.email,
+      people: JSON.stringify(deck.people),
       signOutPath: SIGN_OUT_PATH,
       detailPath: DETAIL_PATH,
     }),
@@ -143,6 +152,7 @@ export function renderReview(
 export function renderDetail(
   contacts: ContactCard[],
   entries: TimelineEntry[],
+  people: Person[],
 ): string {
   const contactHtml = contacts.length
     ? contacts
@@ -178,5 +188,6 @@ export function renderDetail(
   return renderTemplate(detailTemplate, {
     contacts: contactHtml,
     entries: entryHtml,
+    people: JSON.stringify(people),
   });
 }

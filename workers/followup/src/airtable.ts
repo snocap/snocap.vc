@@ -28,6 +28,17 @@ export interface AirtableComment {
   author: { id: string; email?: string; name?: string };
   text: string;
   createdTime: string;
+  /** The users and groups the text mentions as `@[usr…]`, keyed by id. */
+  mentioned?: Record<
+    string,
+    { id: string; type: string; displayName?: string; email?: string }
+  >;
+}
+
+export interface AirtableField {
+  name: string;
+  type?: string;
+  options?: { choices?: unknown[] };
 }
 
 /** Records per OR(RECORD_ID()=…) lookup; keeps the formula well inside the
@@ -173,20 +184,22 @@ export class Airtable {
     });
   }
 
-  /** A select field's live option names, read from the base schema. */
-  async selectOptions(table: string, fieldName: string): Promise<string[]> {
+  /** A table's fields as the base schema describes them. */
+  async tableFields(table: string): Promise<AirtableField[]> {
     const schema = await this.call<{
-      tables: {
-        id: string;
-        fields: {
-          name: string;
-          options?: { choices?: { name: string }[] };
-        }[];
-      }[];
+      tables: { id: string; fields: AirtableField[] }[];
     }>(`/meta/bases/${this.base}/tables`);
-    const field = schema.tables
-      .find((t) => t.id === table)
-      ?.fields.find((f) => f.name === fieldName);
-    return field?.options?.choices?.map((c) => c.name) ?? [];
+    return schema.tables.find((t) => t.id === table)?.fields ?? [];
   }
+}
+
+/** A select field's live option names. */
+export function selectOptions(
+  fields: AirtableField[],
+  fieldName: string,
+): string[] {
+  const choices = fields.find((f) => f.name === fieldName)?.options?.choices;
+  return (choices ?? [])
+    .map((c) => (c as { name?: unknown }).name)
+    .filter((n): n is string => typeof n === "string");
 }

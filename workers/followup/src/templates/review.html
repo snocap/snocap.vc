@@ -8,7 +8,12 @@
   </form>
 </div>
 <div class="progress"><span data-bar style="width: 0"></span></div>
-<div data-deck data-detail-path="{{ detailPath }}" data-csrf="{{ csrf }}">
+<div
+  data-deck
+  data-detail-path="{{ detailPath }}"
+  data-csrf="{{ csrf }}"
+  data-people="{{ people }}"
+>
   {{{ cards }}}
 </div>
 <div class="nav">
@@ -72,6 +77,7 @@
           const id = more.closest(".card").dataset.id;
           const res = await fetch(deck.dataset.detailPath + "/" + id);
           slot.innerHTML = await res.text();
+          slot.dispatchEvent(new Event("detail-loaded", { bubbles: true }));
         } catch {
           slot.textContent = "Could not load the history. Try again.";
           delete more.dataset.loaded;
@@ -79,23 +85,161 @@
       });
     });
 
-    function syncInputs(form) {
-      const picked = form.querySelector("input[name=macro]:checked");
-      const kind = picked ? picked.dataset.input : "text";
-      form.querySelectorAll("[data-for]").forEach((el) => {
-        el.hidden = !el.dataset.for.split(" ").includes(kind);
-      });
-      const text = form.querySelector("textarea");
-      text.placeholder = picked ? picked.dataset.placeholder : "";
+    // Mentionable people, cached for the browser session. The page brings the
+    // Campaigns' collaborators; each opened thread adds its authors and mentions.
+    const PEOPLE_KEY = "followup-people";
+    let people = [];
+    function addPeople(list) {
+      const byId = new Map(people.map((p) => [p.id, p]));
+      for (const p of list || []) {
+        if (p && p.id && p.name && !byId.has(p.id)) byId.set(p.id, p);
+      }
+      people = [...byId.values()];
+      try {
+        sessionStorage.setItem(PEOPLE_KEY, JSON.stringify(people));
+      } catch {}
+    }
+    try {
+      addPeople(JSON.parse(sessionStorage.getItem(PEOPLE_KEY) || "[]"));
+    } catch {}
+    addPeople(JSON.parse(deck.dataset.people || "[]"));
+
+    deck.addEventListener("detail-loaded", (e) => {
+      const tag = e.target.querySelector("[data-people]");
+      if (tag) addPeople(JSON.parse(tag.dataset.people || "[]"));
+    });
+
+    // The @ being typed right before the caret, if any.
+    function activeMention(box) {
+      const before = box.value.slice(0, box.selectionStart);
+      const m = before.match(/(^|\s)@([^\s@]{0,40})$/);
+      if (!m) return null;
+      return { start: before.length - m[2].length - 1, query: m[2] };
+    }
+
+    function matching(query) {
+      const q = query.toLowerCase();
+      return people
+        .filter(
+          (p) =>
+            !q ||
+            p.name
+              .toLowerCase()
+              .split(/\s+/)
+              .some((word) => word.startsWith(q)),
+        )
+        .slice(0, 6);
     }
 
     deck.querySelectorAll("form.actions").forEach((form) => {
-      syncInputs(form);
-      form.addEventListener("change", () => syncInputs(form));
+      const box = form.querySelector("textarea");
+      const list = form.querySelector(".mention-list");
+      const submit = form.querySelector("button[type=submit]");
+      const reasons = form.querySelector("[data-reasons]");
+      const reasonPick = reasons.querySelector("select");
+      const day = form.dataset.day;
+      const inserted = new Map();
+      let pendingReason = null;
+
+      function syncLabel() {
+        submit.textContent = box.value.trim()
+          ? "Comment · next touch " + day
+          : "Mark handled · " + day;
+      }
+
+      function remember(mentions) {
+        for (const p of mentions) inserted.set(p.id, p);
+      }
+
+      function closeList() {
+        list.hidden = true;
+        list.replaceChildren();
+      }
+
+      function pick(person) {
+        const token = activeMention(box);
+        if (!token) return closeList();
+        const after = box.value.slice(box.selectionStart);
+        const text = "@" + person.name + " ";
+        box.value = box.value.slice(0, token.start) + text + after;
+        const caret = token.start + text.length;
+        box.focus();
+        box.setSelectionRange(caret, caret);
+        remember([person]);
+        closeList();
+        syncLabel();
+      }
+
+      function openList() {
+        const token = activeMention(box);
+        const found = token && people.length ? matching(token.query) : [];
+        if (found.length === 0) return closeList();
+        list.replaceChildren(
+          ...found.map((person) => {
+            const li = document.createElement("li");
+            const option = document.createElement("button");
+            option.type = "button";
+            option.setAttribute("role", "option");
+            option.textContent = person.name;
+            // Keep the keyboard up: the tap must not take focus off the box.
+            option.addEventListener("mousedown", (e) => e.preventDefault());
+            option.addEventListener("click", () => pick(person));
+            li.append(option);
+            return li;
+          }),
+        );
+        list.hidden = false;
+      }
+
+      function fill(text, mentions) {
+        const current = box.value.replace(/\s+$/, "");
+        box.value = current ? current + "\n" + text : text;
+        remember(mentions);
+        box.focus();
+        box.setSelectionRange(box.value.length, box.value.length);
+        syncLabel();
+      }
+
+      box.addEventListener("input", () => {
+        openList();
+        syncLabel();
+      });
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeList();
+      });
+      box.addEventListener("blur", () => setTimeout(closeList, 150));
+
+      form.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const mentions = JSON.parse(chip.dataset.mentions || "[]");
+          if (chip.dataset.reason) {
+            pendingReason = { template: chip.dataset.template, mentions };
+            reasons.hidden = false;
+            reasonPick.focus();
+            return;
+          }
+          fill(chip.dataset.template, mentions);
+        });
+      });
+      reasonPick.addEventListener("change", () => {
+        if (!pendingReason || !reasonPick.value) return;
+        fill(
+          pendingReason.template.replace("{reason}", reasonPick.value),
+          pendingReason.mentions,
+        );
+        pendingReason = null;
+        reasonPick.value = "";
+        reasons.hidden = true;
+      });
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const result = form.querySelector(".result");
-        const submit = form.querySelector("button[type=submit]");
+        form.elements.mentions.value = JSON.stringify(
+          [...inserted.values()].filter((p) =>
+            box.value.includes("@" + p.name),
+          ),
+        );
         submit.disabled = true;
         result.className = "result";
         result.textContent = "Working…";
@@ -111,7 +255,9 @@
             result.className = "result error";
             return;
           }
-          form.querySelector("textarea").value = "";
+          box.value = "";
+          inserted.clear();
+          syncLabel();
           setTimeout(() => show(at + 1), 1400);
         } catch {
           result.className = "result error";

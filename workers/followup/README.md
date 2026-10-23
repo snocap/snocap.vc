@@ -14,7 +14,7 @@ actions that write back to Airtable.
 | `GET …/oauth/callback`                   | Exchanges the code, checks base access, sets the session cookie |
 | `GET /fundraising/followup` (session)    | The deck: one card per Campaign, `n of N`, swipe / ← → / j k    |
 | `GET …/campaign/<recId>` (session)       | The expanded card: contacts + Interactions and comments merged  |
-| `POST …/action` (session + CSRF)         | Runs a macro: a field write, a comment, or both                 |
+| `POST …/action` (session + CSRF)         | Sets Next Touch Point to +7 days; posts the comment, if any     |
 | `POST …/signout` (session + CSRF)        | Clears the session cookie                                       |
 
 ## No Airtable token of its own
@@ -32,29 +32,63 @@ next request refreshes it and re-sets the cookie (Airtable rotates the refresh
 token on every use). Every POST carries the session's CSRF token, and one with a
 foreign `Origin` is refused.
 
-## Actions
+## Commenting
 
-The default action is a free-text box: it posts an Airtable **comment** on the
-Campaign, written as the signed-in user and @-mentioning KB (`@[usrt57orTxVb75I3W]`).
-The Campaign Tracker's comment automation already delivers every Campaign
-comment to kernelbot's comment intake (`campaign-tracker` skill,
-`bin/campaign-comment.ts`), which acts on a KB-mentioned instruction and replies
-in the thread. So the comment is both the instruction and its audit trail, and
-this Worker needs no kernelbot endpoint.
+Each card has one comment box and one button. Pressing it does two things, with
+the user's own token:
 
-Macros live in `src/macros.ts` as one registry; adding one is one entry.
+1. **Moves Next Touch Point to today + 7 days** (Pacific date, written at 16:00
+   UTC). That is what takes the card down the Follow Ups list, so every handled
+   card is punted a week by default. The button shows the day:
+   `Comment · next touch Oct 30`, or `Mark handled · Oct 30` when the box is
+   empty, which only moves the date.
+2. **Posts the box as an Airtable comment** on the Campaign, exactly as typed.
+   Nothing is prepended; KB is not mentioned unless the comment mentions it.
 
-| Macro           | Writes                                              | Comment                                         |
-| --------------- | --------------------------------------------------- | ----------------------------------------------- |
-| Ask KB          | —                                                   | the instruction, to KB                          |
-| Punt 1 week     | Next Touch Point = later of (now, current) + 7 days | a note (no KB mention)                          |
-| Snooze to date  | Next Touch Point = the picked day, 16:00 UTC        | a note (no KB mention)                          |
-| Draft follow-up | —                                                   | KB: draft a follow-up email for Jon, never send |
-| Log interaction | —                                                   | KB: log this as an Interaction                  |
-| Close lost      | Closed Lost Reason (from the field's live options)  | KB: set Deal Status 11.0 - Closed Lost          |
+The date is written first, then the comment. KB's comment intake reads every
+Campaign comment (`campaign-tracker` skill, `bin/campaign-comment.ts`): a
+comment that implies another day ("reach out in December", "@KB snooze next
+touch point to Jan 5") gets Next Touch Point moved again by KB, so **KB's later
+write wins** over this page's default. A comment that @-mentions KB is also an
+instruction KB acts on and answers in the thread. One that mentions only Nate
+or Shrina gets no KB reply: Airtable notifies them, and KB just logs and
+classifies it as usual.
 
-Field writes use `typecast: false`, so a stale select label fails rather than
-minting a new option.
+### @-mentions
+
+Typing `@` opens a tap-to-pick list under the box (no hover; the keyboard
+stays up). Picking a person inserts a visible `@Name`; on submit the page sends
+the people it inserted, and `serializeComment` (`src/mentions.ts`) turns each
+`@Name` still in the text into Airtable's mention form, `@[usr…]`, so Airtable
+notifies them. A token edited into something else stays plain text.
+
+The list does not use the base-collaborators endpoint (Enterprise-only). It is
+built from what the user's token already sees: Representative and Created By
+on the loaded Campaigns, Triggered By on their Interactions, the Representative
+field's schema choices when Airtable returns any, and the authors and mentions
+in each comment thread as it opens. KB (`usrt57orTxVb75I3W`) is always on it.
+The page caches the list in `sessionStorage` for the browser session.
+
+### Macros
+
+A macro never writes or posts. It fills (or appends a line to) the comment box
+with an editable template, and Jon edits it and presses the button. They live
+in `src/macros.ts` as one registry: an entry is a label and a template, where
+`{@kb}`, `{@rep}` (the Campaign's Representative) or `{@usr…}` (anyone) is a
+mention and `{reason}` is a picked Closed Lost Reason.
+
+| Macro           | Fills the box with                                        |
+| --------------- | --------------------------------------------------------- |
+| Snooze to date  | `@KB snooze next touch point to `                         |
+| Draft follow-up | `@KB draft a follow-up email for me to send: `            |
+| Log interaction | `@KB log this interaction: `                              |
+| Close lost      | `@KB close lost: <reason>`, from the field's live options |
+| Ping rep        | `@<Representative> any update here?` (hidden without one) |
+
+There is no Punt macro: every submit already punts a week.
+
+The Next Touch Point write uses `typecast: false`, so a malformed value fails
+rather than being coerced.
 
 ## Setup — Jon, once
 
@@ -102,4 +136,5 @@ npm test   # from the repo root; the followup tests are workers/followup/src/*.t
 
 The tests stub `globalThis.fetch` with a fake Airtable and drive the Worker's
 `fetch`: the 503, the OAuth round trip, the no-access page, the CSRF gate, the
-macros' payloads, and a token refresh mid-visit.
+comment + date write, a date-only submit, and a token refresh mid-visit. The
+macro prefills, mention serialization and the PT default date are unit tests.

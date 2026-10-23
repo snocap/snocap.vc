@@ -1,12 +1,10 @@
-<label
-  ><input
-    type="radio"
-    name="macro"
-    value="{{ id }}"
-    data-input="{{ input }}"
-    data-placeholder="{{ placeholder }}"
-    {{{
-    checked
-    }}}
-  />{{ label }}</label
+<button
+  type="button"
+  class="chip"
+  data-macro="{{ id }}"
+  data-template="{{ text }}"
+  data-mentions="{{ mentions }}"
+  data-reason="{{ reason }}"
 >
+  {{ label }}
+</button>

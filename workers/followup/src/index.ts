@@ -7,7 +7,7 @@
 // no Airtable credential, so the page can only ever show what the visitor's own
 // Airtable account can already see.
 
-import { Airtable, AirtableError } from "./airtable.ts";
+import { Airtable, AirtableError, selectOptions } from "./airtable.ts";
 import type { AirtableRecord } from "./airtable.ts";
 import {
   cardOf,
@@ -26,7 +26,17 @@ import {
   configFrom,
 } from "./config.ts";
 import type { Config, Env } from "./config.ts";
-import { macroById } from "./macros.ts";
+import { defaultNextTouch, nextTouchValue, shortDay } from "./dates.ts";
+import {
+  KB,
+  choicePeople,
+  commentPeople,
+  mentionsUser,
+  mergePeople,
+  parseMentions,
+  recordPeople,
+  serializeComment,
+} from "./mentions.ts";
 import {
   STATE_TTL_MS,
   beginAuthorization,
@@ -95,6 +105,7 @@ const CAMPAIGN_FIELDS = [
   FIELD.campaign,
   FIELD.limitedPartner,
   FIELD.representative,
+  FIELD.createdBy,
   FIELD.dealStatus,
   FIELD.dealValue,
   FIELD.nextTouch,
@@ -113,6 +124,9 @@ const CONTACT_FIELDS = [
   FIELD.phone,
   FIELD.profile,
 ];
+
+/** Collaborator fields whose people can be mentioned. */
+const PEOPLE_FIELDS = [FIELD.representative, FIELD.createdBy];
 
 const RECORD_ID = /^rec[A-Za-z0-9]{14}$/;
 
@@ -205,10 +219,7 @@ async function handleReview(
     campaigns.flatMap((c) => linkedIds(c, FIELD.interactions)),
     INTERACTION_FIELDS,
   );
-  const reasons = await airtable.selectOptions(
-    AIRTABLE.campaigns,
-    FIELD.closedLostReason,
-  );
+  const schema = await airtable.tableFields(AIRTABLE.campaigns);
 
   const lpNames = new Map(
     lps.map((lp) => [lp.id, String(lp.fields[FIELD.lpEntity] ?? "")]),
@@ -218,7 +229,19 @@ async function handleReview(
   );
   const now = Date.now();
   const cards = campaigns.map((c) => cardOf(c, lpNames, lines, now));
-  return html(renderReview(cards, session, reasons));
+  const people = mergePeople(
+    recordPeople(campaigns, PEOPLE_FIELDS),
+    recordPeople(interactions, [FIELD.triggeredBy]),
+    choicePeople(schema.find((f) => f.name === FIELD.representative)?.options),
+  );
+  return html(
+    renderReview(cards, session, {
+      csrf: session.csrf,
+      closedLostReasons: selectOptions(schema, FIELD.closedLostReason),
+      people,
+      nextTouchDay: defaultNextTouch(now),
+    }),
+  );
 }
 
 async function handleDetail(airtable: Airtable, id: string): Promise<Response> {
@@ -244,10 +267,19 @@ async function handleDetail(airtable: Airtable, id: string): Promise<Response> {
     renderDetail(
       contacts.map(contactCard),
       timeline(interactions.map(interactionLine), comments),
+      mergePeople(
+        recordPeople([campaign], PEOPLE_FIELDS),
+        recordPeople(interactions, [FIELD.triggeredBy]),
+        commentPeople(comments),
+      ),
     ),
   );
 }
 
+/** Every submit moves the Campaign's Next Touch Point to the default day,
+ * which is what takes it down the Follow Ups list; a non-empty box is also
+ * posted as the user's comment, exactly as typed but for its mentions. KB
+ * reads every comment and moves the date again when one implies another. */
 async function handleAction(
   request: Request,
   airtable: Airtable,
@@ -262,39 +294,22 @@ async function handleAction(
   if (!csrfOk(request, session, form.get("csrf"), ORIGIN)) {
     return reply(false, "This page is stale. Reload it and try again.", 403);
   }
-  const macro = macroById(String(form.get("macro") ?? "instruct"));
-  if (!macro) return reply(false, "Unknown action.", 400);
   const id = String(form.get("campaign") ?? "");
   if (!RECORD_ID.test(id)) return reply(false, "Unknown Campaign.", 400);
+  const comment = serializeComment(
+    String(form.get("text") ?? "").trim(),
+    parseMentions(form.get("mentions")),
+  );
+  const day = defaultNextTouch(Date.now());
 
-  const campaign = await airtable.getRecord(AIRTABLE.campaigns, id);
-  const planned = macro.plan({
-    campaignName: String(campaign.fields[FIELD.campaign] ?? ""),
-    nextTouch: (campaign.fields[FIELD.nextTouch] as string | undefined) ?? null,
-    closedLostReasons:
-      macro.input === "reasons"
-        ? await airtable.selectOptions(
-            AIRTABLE.campaigns,
-            FIELD.closedLostReason,
-          )
-        : [],
-    now: Date.now(),
-    input: {
-      text: String(form.get("text") ?? ""),
-      date: String(form.get("date") ?? ""),
-      reasons: form.getAll("reasons").map(String),
-    },
+  // The date first: the comment wakes KB, whose own date write must land after.
+  await airtable.updateRecord(AIRTABLE.campaigns, id, {
+    [FIELD.nextTouch]: nextTouchValue(day),
   });
-  if ("error" in planned) return reply(false, planned.error, 400);
-
-  if (planned.fields) {
-    await airtable.updateRecord(AIRTABLE.campaigns, id, planned.fields);
-  }
-  if (planned.comment) {
+  if (comment) {
     try {
-      await airtable.createComment(AIRTABLE.campaigns, id, planned.comment);
+      await airtable.createComment(AIRTABLE.campaigns, id, comment);
     } catch (err) {
-      // The field write already landed; say so rather than report a clean failure.
       console.error(
         JSON.stringify({
           event: "followup_comment_failed",
@@ -304,9 +319,7 @@ async function handleAction(
       );
       return reply(
         false,
-        planned.fields
-          ? "The field was updated, but the comment did not post. Add it by hand."
-          : "The comment did not post. Try again.",
+        `Next touch moved to ${shortDay(day)}, but the comment did not post. Try it again.`,
         502,
       );
     }
@@ -314,13 +327,19 @@ async function handleAction(
   console.log(
     JSON.stringify({
       event: "followup_action",
-      macro: macro.id,
       campaign: id,
+      commented: Boolean(comment),
       by: session.email,
     }),
   );
   if (!wantsJson(request)) return redirect(`${TOOL_PATH}#c-${id}`, [], 303);
-  return json({ ok: true, message: planned.result });
+  const next = `Next touch ${shortDay(day)}.`;
+  const message = !comment
+    ? `Marked handled. ${next}`
+    : mentionsUser(comment, KB.id)
+      ? `Comment posted. ${next} KB will reply in the thread.`
+      : `Comment posted. ${next}`;
+  return json({ ok: true, message });
 }
 
 async function route(

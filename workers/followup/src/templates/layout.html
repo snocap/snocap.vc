@@ -213,48 +213,62 @@
         gap: 6px;
         margin-bottom: 10px;
       }
-      .chips label {
+      .chips .chip {
         font-size: 13px;
+        background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 7px 10px;
-        cursor: pointer;
+        color: #ddd;
+        padding: 8px 11px;
       }
-      .chips input {
-        position: absolute;
-        opacity: 0;
-      }
-      .chips label:has(input:checked) {
+      .chips .chip:active {
         border-color: #f15800;
         background: rgba(241, 88, 0, 0.15);
       }
       textarea,
-      input[type="date"] {
+      select {
         width: 100%;
         padding: 11px 12px;
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #fff;
         font:
-          15px "Inter",
+          16px "Inter",
           system-ui,
           sans-serif;
         margin-bottom: 10px;
         color-scheme: dark;
       }
       textarea {
-        min-height: 84px;
+        min-height: 96px;
         resize: vertical;
       }
-      .reasons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px 12px;
-        font-size: 13px;
-        color: #ccc;
-        margin-bottom: 10px;
-      }
-      .js [data-for][hidden] {
+      .reasons[hidden],
+      .mention-list[hidden] {
         display: none;
+      }
+      .compose {
+        position: relative;
+      }
+      .mention-list {
+        list-style: none;
+        margin: -6px 0 10px;
+        border: 1px solid rgba(241, 88, 0, 0.6);
+        background: #1d1d1d;
+      }
+      .mention-list button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        color: #fff;
+        padding: 12px 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .mention-list li:first-child button {
+        border-top: 0;
+      }
+      .mention-list button:active {
+        background: rgba(241, 88, 0, 0.2);
       }
       .result {
         margin-top: 10px;
