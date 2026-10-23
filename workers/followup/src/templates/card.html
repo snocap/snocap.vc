@@ -1,0 +1,40 @@
+<article class="card" id="c-{{ id }}" data-id="{{ id }}">
+  <div class="mono">{{ position }} of {{ total }} · {{ dealStatus }}</div>
+  <h2>{{ name }}</h2>
+  <div class="lp">{{ lp }}</div>
+  <dl class="facts">
+    <div>
+      <dt>Value</dt>
+      <dd>{{ value }}</dd>
+    </div>
+    <div>
+      <dt>Probability</dt>
+      <dd>{{ probability }}</dd>
+    </div>
+    <div class="{{ touchClass }}">
+      <dt>Next touch</dt>
+      <dd>{{ nextTouch }}</dd>
+    </div>
+    <div>
+      <dt>Rep</dt>
+      <dd>{{ representative }}</dd>
+    </div>
+  </dl>
+  <div class="latest">{{ latest }}</div>
+  <details class="more">
+    <summary>History, comments &amp; contacts</summary>
+    <div data-detail>Loading…</div>
+  </details>
+  <form class="actions" method="post" action="{{ actionPath }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}" />
+    <input type="hidden" name="campaign" value="{{ id }}" />
+    <div class="chips">{{{ macros }}}</div>
+    <div data-for="date"><input type="date" name="date" /></div>
+    <div class="reasons" data-for="reasons">{{{ reasons }}}</div>
+    <div data-for="text date reasons">
+      <textarea name="text" placeholder="Tell KB what to do next…"></textarea>
+    </div>
+    <button type="submit">Send</button>
+    <div class="result" role="status"></div>
+  </form>
+</article>

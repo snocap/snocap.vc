@@ -1,0 +1,26 @@
+name = "followup"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+routes = [
+  { pattern = "snocap.vc/fundraising/followup*", zone_name = "snocap.vc" }
+]
+
+# The page templates are external .html files, imported as their text. This rule
+# tells wrangler's bundler to inline a .html import as a string; node --test does
+# the same through the workers/html.mjs loader (root `test` script).
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+
+# No [vars] and no bindings. The Airtable ids are constants in src/config.ts, and
+# the Worker holds NO Airtable token of its own: every read and write uses the
+# signed-in user's OAuth token, kept in an encrypted HttpOnly cookie.
+#
+# ONE-TIME SETUP — three Worker secrets, NOT in this file (see README.md):
+#   cd workers/followup
+#   npx wrangler secret put AIRTABLE_CLIENT_ID       # from airtable.com/create/oauth
+#   npx wrangler secret put AIRTABLE_CLIENT_SECRET   # "Generate client secret" there
+#   npx wrangler secret put FOLLOWUP_SESSION_SECRET  # a fresh random string; NOT
+#                                                    # any other worker's secret
+# Until all three are set, every path answers a 503 "not configured yet" page.

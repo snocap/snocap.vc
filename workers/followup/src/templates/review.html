@@ -1,0 +1,127 @@
+<div class="topbar">
+  <div class="mono">
+    LP follow-ups · <span data-position>1</span> of {{ total }}
+  </div>
+  <form method="post" action="{{ signOutPath }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}" />
+    <button class="ghost" type="submit" title="{{ email }}">Sign out</button>
+  </form>
+</div>
+<div class="progress"><span data-bar style="width: 0"></span></div>
+<div data-deck data-detail-path="{{ detailPath }}" data-csrf="{{ csrf }}">
+  {{{ cards }}}
+</div>
+<div class="nav">
+  <button class="ghost" type="button" data-prev>← Prev</button>
+  <button class="ghost" type="button" data-next>Next →</button>
+</div>
+<script>
+  (() => {
+    document.documentElement.classList.add("js");
+    const deck = document.querySelector("[data-deck]");
+    const cards = [...deck.querySelectorAll(".card")];
+    const position = document.querySelector("[data-position]");
+    const bar = document.querySelector("[data-bar]");
+    if (cards.length === 0) return;
+    let at = Math.max(
+      0,
+      cards.findIndex((c) => "#" + c.id === location.hash),
+    );
+
+    function show(index) {
+      at = Math.min(Math.max(index, 0), cards.length - 1);
+      cards.forEach((card, i) => (card.hidden = i !== at));
+      position.textContent = String(at + 1);
+      bar.style.width = ((at + 1) / cards.length) * 100 + "%";
+      history.replaceState(null, "", "#" + cards[at].id);
+      window.scrollTo(0, 0);
+    }
+    document.querySelector("[data-prev]").onclick = () => show(at - 1);
+    document.querySelector("[data-next]").onclick = () => show(at + 1);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.target.closest("textarea, input, select")) return;
+      if (e.key === "ArrowRight" || e.key === "j") show(at + 1);
+      if (e.key === "ArrowLeft" || e.key === "k") show(at - 1);
+    });
+
+    let startX = null;
+    let startY = null;
+    deck.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    });
+    deck.addEventListener("touchend", (e) => {
+      if (startX === null) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      startX = null;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (e.target.closest("textarea, input")) return;
+      show(dx < 0 ? at + 1 : at - 1);
+    });
+
+    // The expanded card's timeline and contacts load when it is first opened:
+    // each one is a few Airtable calls, so the deck does not make them all up front.
+    deck.querySelectorAll("details.more").forEach((more) => {
+      more.addEventListener("toggle", async () => {
+        if (!more.open || more.dataset.loaded) return;
+        more.dataset.loaded = "1";
+        const slot = more.querySelector("[data-detail]");
+        try {
+          const id = more.closest(".card").dataset.id;
+          const res = await fetch(deck.dataset.detailPath + "/" + id);
+          slot.innerHTML = await res.text();
+        } catch {
+          slot.textContent = "Could not load the history. Try again.";
+          delete more.dataset.loaded;
+        }
+      });
+    });
+
+    function syncInputs(form) {
+      const picked = form.querySelector("input[name=macro]:checked");
+      const kind = picked ? picked.dataset.input : "text";
+      form.querySelectorAll("[data-for]").forEach((el) => {
+        el.hidden = !el.dataset.for.split(" ").includes(kind);
+      });
+      const text = form.querySelector("textarea");
+      text.placeholder = picked ? picked.dataset.placeholder : "";
+    }
+
+    deck.querySelectorAll("form.actions").forEach((form) => {
+      syncInputs(form);
+      form.addEventListener("change", () => syncInputs(form));
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const result = form.querySelector(".result");
+        const submit = form.querySelector("button[type=submit]");
+        submit.disabled = true;
+        result.className = "result";
+        result.textContent = "Working…";
+        try {
+          const res = await fetch(form.action, {
+            method: "POST",
+            headers: { Accept: "application/json" },
+            body: new URLSearchParams(new FormData(form)),
+          });
+          const json = await res.json();
+          result.textContent = json.message;
+          if (!json.ok) {
+            result.className = "result error";
+            return;
+          }
+          form.querySelector("textarea").value = "";
+          setTimeout(() => show(at + 1), 1400);
+        } catch {
+          result.className = "result error";
+          result.textContent = "That did not go through. Try again.";
+        } finally {
+          submit.disabled = false;
+        }
+      });
+    });
+
+    show(at);
+  })();
+</script>
