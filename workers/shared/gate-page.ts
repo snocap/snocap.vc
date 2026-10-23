@@ -3,7 +3,6 @@
 // — is one design; only the copy, the form target and the head metadata differ
 // per gate.
 
-import qrcode from "./vendor/qrcode-generator.js";
 import { escapeHtml } from "./viewers.ts";
 
 // Shared <head> boilerplate: charset/viewport/theme-color, plus the Google
@@ -20,10 +19,9 @@ ${headExtra}
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet" />`;
 }
 
-// The chrome shared by every page in this file: dark card, wordmark, Inter +
-// NB Akademie Mono, the orange (#F15800) accent, and the QR/button styles
-// used by the success page. `backgroundImage` adds the gate page's hero-image
-// layer; pass undefined for pages (the success page) that don't use it.
+// The page chrome: dark card, wordmark, Inter + NB Akademie Mono, the orange
+// (#F15800) accent and button. `backgroundImage` adds the hero-image layer;
+// pass undefined for a flat background.
 function renderBaseStyle(backgroundImage?: string): string {
   return `
     @font-face {
@@ -101,8 +99,7 @@ ${
       line-height: 1.5;
     }
 
-    button,
-    a.button-link {
+    button {
       display: block;
       width: 100%;
       padding: 14px 20px;
@@ -121,7 +118,7 @@ ${
       transition: background 120ms ease;
     }
 
-    button:hover, a.button-link:hover { background: #c24600; }
+    button:hover { background: #c24600; }
 
     .fine-print {
       font-size: 12px;
@@ -134,19 +131,6 @@ ${
       color: #F15800;
       font-size: 13px;
       margin-bottom: 8px;
-    }
-
-    .qr {
-      margin: 0 auto 12px;
-      width: fit-content;
-    }
-
-    .qr svg { display: block; }
-
-    .qr-caption {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 32px;
     }`;
 }
 
@@ -235,60 +219,6 @@ ${renderHead(title, headExtra)}
       <button type="submit">${submitLabel}</button>
     </form>
     <div class="fine-print">${finePrint}</div>
-  </div>
-</body>
-</html>`;
-}
-
-export interface SuccessPageOptions {
-  /** <title>, and the tab name. */
-  title: string;
-  /** Extra <head> markup: icons, share cards, robots, etc. */
-  headExtra?: string;
-  /** Small mono line under the wordmark. */
-  subtitle: string;
-  /** Short success line, e.g. "You're in." HTML-escaped before rendering. */
-  message: string;
-  /** Absolute URL to continue to — encoded into the QR code and the link href. */
-  continueUrl: string;
-  /** Defaults to "Continue". */
-  continueLabel?: string;
-}
-
-// Shown in place of the old instant 302 after a successful gate submission, so
-// a viewer who opened the gate on a laptop can scan a QR code to pick the
-// session back up on their phone instead of re-typing the URL. The QR is
-// generated server-side (Workers have no DOM/canvas) by the pure-JS
-// qrcode-generator, vendored under ./vendor/ so the workers keep needing no
-// install — see the header of that file.
-export function renderSuccessPage({
-  title,
-  headExtra = "",
-  subtitle,
-  message,
-  continueUrl,
-  continueLabel = "Continue",
-}: SuccessPageOptions): string {
-  const qr = qrcode(0, "M");
-  qr.addData(continueUrl);
-  qr.make();
-  const qrSvg = qr.createSvgTag({ cellSize: 4, margin: 8 });
-
-  return `<!doctype html>
-<html lang="en">
-<head>
-${renderHead(title, headExtra)}
-  <style>${renderBaseStyle()}
-  </style>
-</head>
-<body>
-  <div class="card">
-    ${LOGO_SVG}
-    <div class="subtitle">${subtitle}</div>
-    <div class="prompt">${escapeHtml(message)}</div>
-    <div class="qr">${qrSvg}</div>
-    <div class="qr-caption">Scan to continue on another device</div>
-    <a class="button-link" href="${escapeHtml(continueUrl)}">${escapeHtml(continueLabel)}</a>
   </div>
 </body>
 </html>`;

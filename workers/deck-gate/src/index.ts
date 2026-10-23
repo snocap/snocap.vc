@@ -1,4 +1,4 @@
-import { renderGatePage, renderSuccessPage } from "./gate-page.ts";
+import { renderGatePage } from "./gate-page.ts";
 import {
   readCookie,
   setCookie,
@@ -151,8 +151,10 @@ export default {
 
       await logViewer(env.DB, { email, ref, request });
 
+      // Straight to the deck: the 303 carries the cookies and turns the POST
+      // into a GET, so there's no "view the deck" click in between.
       const headers = new Headers({
-        "Content-Type": "text/html",
+        Location: new URL(safeReturn, url).toString(),
         "Cache-Control": "no-store",
       });
       headers.append(
@@ -165,11 +167,7 @@ export default {
         }),
       );
       headers.append("Set-Cookie", makeRefCookie(ref));
-      const continueUrl = new URL(safeReturn, url).toString();
-      return new Response(renderSuccessPage(continueUrl), {
-        status: 200,
-        headers,
-      });
+      return new Response(null, { status: 303, headers });
     }
 
     // GET: email cookie is the only bypass
