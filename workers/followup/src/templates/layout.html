@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        min-height: 100%;
+        font-family: "Inter", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        background: #0a0a0a;
+        color: #fff;
+        padding: 16px 14px 40px;
+      }
+      main {
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+      }
+      a {
+        color: #f15800;
+      }
+      .mono {
+        font-family: "Fira Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9f9f9f;
+      }
+      .notice {
+        padding-top: 18vh;
+      }
+      .notice h1 {
+        font-size: 22px;
+        font-weight: 400;
+        margin: 8px 0 12px;
+      }
+      .notice p {
+        color: #bdbdbd;
+        line-height: 1.55;
+        margin-bottom: 24px;
+      }
+      .button,
+      button {
+        display: inline-block;
+        background: #f15800;
+        color: #fff;
+        border: 0;
+        padding: 12px 18px;
+        font:
+          500 15px "Inter",
+          system-ui,
+          sans-serif;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ddd;
+      }
+      button:disabled {
+        opacity: 0.5;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .topbar form button {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      .progress {
+        height: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        margin-bottom: 14px;
+      }
+      .progress span {
+        display: block;
+        height: 100%;
+        background: #f15800;
+        transition: width 0.2s;
+      }
+      .card {
+        background: #151515;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 18px 16px;
+      }
+      .js .card[hidden] {
+        display: none;
+      }
+      .card h2 {
+        font-size: 21px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+      .card .lp {
+        color: #bdbdbd;
+        margin: 4px 0 14px;
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 14px;
+        margin-bottom: 14px;
+      }
+      .facts dt {
+        font-family: "Fira Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #888;
+      }
+      .facts dd {
+        font-size: 15px;
+        margin-top: 2px;
+      }
+      .overdue dd {
+        color: #ff7a45;
+        font-weight: 600;
+      }
+      .overdue dt::after {
+        content: " · overdue";
+        color: #ff7a45;
+      }
+      .latest {
+        border-left: 2px solid #f15800;
+        padding: 4px 0 4px 10px;
+        color: #ddd;
+        font-size: 14px;
+        line-height: 1.45;
+        margin-bottom: 14px;
+      }
+      details.more summary {
+        cursor: pointer;
+        color: #f15800;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+      .timeline {
+        list-style: none;
+        margin: 6px 0 16px;
+      }
+      .timeline li {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 10px 0;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .timeline .meta {
+        font-size: 12px;
+        color: #888;
+      }
+      .timeline .comment .meta {
+        color: #f1a070;
+      }
+      .timeline .body {
+        white-space: pre-wrap;
+        color: #ccc;
+        margin-top: 4px;
+      }
+      .contacts {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .contact {
+        background: #1d1d1d;
+        padding: 10px 12px;
+      }
+      .contact .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .contact .links a {
+        border: 1px solid rgba(241, 88, 0, 0.6);
+        padding: 6px 12px;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .actions {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 14px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .chips .chip {
+        font-size: 13px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ddd;
+        padding: 8px 11px;
+      }
+      .chips .chip:active {
+        border-color: #f15800;
+        background: rgba(241, 88, 0, 0.15);
+      }
+      textarea,
+      select {
+        width: 100%;
+        padding: 11px 12px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font:
+          16px "Inter",
+          system-ui,
+          sans-serif;
+        margin-bottom: 10px;
+        color-scheme: dark;
+      }
+      textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+      .reasons[hidden],
+      .mention-list[hidden] {
+        display: none;
+      }
+      .compose {
+        position: relative;
+      }
+      .mention-list {
+        list-style: none;
+        margin: -6px 0 10px;
+        border: 1px solid rgba(241, 88, 0, 0.6);
+        background: #1d1d1d;
+      }
+      .mention-list button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        color: #fff;
+        padding: 12px 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .mention-list li:first-child button {
+        border-top: 0;
+      }
+      .mention-list button:active {
+        background: rgba(241, 88, 0, 0.2);
+      }
+      .result {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #8fd18f;
+      }
+      .result.error {
+        color: #ff7a45;
+      }
+      .nav {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .nav button {
+        flex: 1;
+      }
+      .empty {
+        color: #bdbdbd;
+        padding: 30px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>{{{ body }}}</main>
+  </body>
+</html>

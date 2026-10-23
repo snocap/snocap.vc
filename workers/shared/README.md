@@ -77,8 +77,9 @@ diffable against upstream, and each one carries a header saying what it is, whic
 version, and how to re-vendor it.
 
 **Editing anything here redeploys every worker that imports it** — `deck-gate`,
-`dataroom-gate` and `link` each watch this directory in their own workflow
-(`.github/workflows/deploy-worker.yml`, `deploy-dataroom-worker.yml`,
-`deploy-link-worker.yml`), so a shared change goes live on all three within a
+`dataroom-gate`, `link` and `followup` each watch this directory in their own
+workflow (`.github/workflows/deploy-worker.yml`, `deploy-dataroom-worker.yml`,
+`deploy-link-worker.yml`, `deploy-followup-worker.yml`), so a shared change goes
+live on all four within a
 couple of minutes of the merge. Editing one worker's own directory redeploys
 only that worker. Nothing here is deployed by hand any more.

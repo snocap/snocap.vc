@@ -1,0 +1,273 @@
+<div class="topbar">
+  <div class="mono">
+    LP follow-ups · <span data-position>1</span> of {{ total }}
+  </div>
+  <form method="post" action="{{ signOutPath }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}" />
+    <button class="ghost" type="submit" title="{{ email }}">Sign out</button>
+  </form>
+</div>
+<div class="progress"><span data-bar style="width: 0"></span></div>
+<div
+  data-deck
+  data-detail-path="{{ detailPath }}"
+  data-csrf="{{ csrf }}"
+  data-people="{{ people }}"
+>
+  {{{ cards }}}
+</div>
+<div class="nav">
+  <button class="ghost" type="button" data-prev>← Prev</button>
+  <button class="ghost" type="button" data-next>Next →</button>
+</div>
+<script>
+  (() => {
+    document.documentElement.classList.add("js");
+    const deck = document.querySelector("[data-deck]");
+    const cards = [...deck.querySelectorAll(".card")];
+    const position = document.querySelector("[data-position]");
+    const bar = document.querySelector("[data-bar]");
+    if (cards.length === 0) return;
+    let at = Math.max(
+      0,
+      cards.findIndex((c) => "#" + c.id === location.hash),
+    );
+
+    function show(index) {
+      at = Math.min(Math.max(index, 0), cards.length - 1);
+      cards.forEach((card, i) => (card.hidden = i !== at));
+      position.textContent = String(at + 1);
+      bar.style.width = ((at + 1) / cards.length) * 100 + "%";
+      history.replaceState(null, "", "#" + cards[at].id);
+      window.scrollTo(0, 0);
+    }
+    document.querySelector("[data-prev]").onclick = () => show(at - 1);
+    document.querySelector("[data-next]").onclick = () => show(at + 1);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.target.closest("textarea, input, select")) return;
+      if (e.key === "ArrowRight" || e.key === "j") show(at + 1);
+      if (e.key === "ArrowLeft" || e.key === "k") show(at - 1);
+    });
+
+    let startX = null;
+    let startY = null;
+    deck.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    });
+    deck.addEventListener("touchend", (e) => {
+      if (startX === null) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      startX = null;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (e.target.closest("textarea, input")) return;
+      show(dx < 0 ? at + 1 : at - 1);
+    });
+
+    // The expanded card's timeline and contacts load when it is first opened:
+    // each one is a few Airtable calls, so the deck does not make them all up front.
+    deck.querySelectorAll("details.more").forEach((more) => {
+      more.addEventListener("toggle", async () => {
+        if (!more.open || more.dataset.loaded) return;
+        more.dataset.loaded = "1";
+        const slot = more.querySelector("[data-detail]");
+        try {
+          const id = more.closest(".card").dataset.id;
+          const res = await fetch(deck.dataset.detailPath + "/" + id);
+          slot.innerHTML = await res.text();
+          slot.dispatchEvent(new Event("detail-loaded", { bubbles: true }));
+        } catch {
+          slot.textContent = "Could not load the history. Try again.";
+          delete more.dataset.loaded;
+        }
+      });
+    });
+
+    // Mentionable people, cached for the browser session. The page brings the
+    // Campaigns' collaborators; each opened thread adds its authors and mentions.
+    const PEOPLE_KEY = "followup-people";
+    let people = [];
+    function addPeople(list) {
+      const byId = new Map(people.map((p) => [p.id, p]));
+      for (const p of list || []) {
+        if (p && p.id && p.name && !byId.has(p.id)) byId.set(p.id, p);
+      }
+      people = [...byId.values()];
+      try {
+        sessionStorage.setItem(PEOPLE_KEY, JSON.stringify(people));
+      } catch {}
+    }
+    try {
+      addPeople(JSON.parse(sessionStorage.getItem(PEOPLE_KEY) || "[]"));
+    } catch {}
+    addPeople(JSON.parse(deck.dataset.people || "[]"));
+
+    deck.addEventListener("detail-loaded", (e) => {
+      const tag = e.target.querySelector("[data-people]");
+      if (tag) addPeople(JSON.parse(tag.dataset.people || "[]"));
+    });
+
+    // The @ being typed right before the caret, if any.
+    function activeMention(box) {
+      const before = box.value.slice(0, box.selectionStart);
+      const m = before.match(/(^|\s)@([^\s@]{0,40})$/);
+      if (!m) return null;
+      return { start: before.length - m[2].length - 1, query: m[2] };
+    }
+
+    function matching(query) {
+      const q = query.toLowerCase();
+      return people
+        .filter(
+          (p) =>
+            !q ||
+            p.name
+              .toLowerCase()
+              .split(/\s+/)
+              .some((word) => word.startsWith(q)),
+        )
+        .slice(0, 6);
+    }
+
+    deck.querySelectorAll("form.actions").forEach((form) => {
+      const box = form.querySelector("textarea");
+      const list = form.querySelector(".mention-list");
+      const submit = form.querySelector("button[type=submit]");
+      const reasons = form.querySelector("[data-reasons]");
+      const reasonPick = reasons.querySelector("select");
+      const day = form.dataset.day;
+      const inserted = new Map();
+      let pendingReason = null;
+
+      function syncLabel() {
+        submit.textContent = box.value.trim()
+          ? "Comment · next touch " + day
+          : "Mark handled · " + day;
+      }
+
+      function remember(mentions) {
+        for (const p of mentions) inserted.set(p.id, p);
+      }
+
+      function closeList() {
+        list.hidden = true;
+        list.replaceChildren();
+      }
+
+      function pick(person) {
+        const token = activeMention(box);
+        if (!token) return closeList();
+        const after = box.value.slice(box.selectionStart);
+        const text = "@" + person.name + " ";
+        box.value = box.value.slice(0, token.start) + text + after;
+        const caret = token.start + text.length;
+        box.focus();
+        box.setSelectionRange(caret, caret);
+        remember([person]);
+        closeList();
+        syncLabel();
+      }
+
+      function openList() {
+        const token = activeMention(box);
+        const found = token && people.length ? matching(token.query) : [];
+        if (found.length === 0) return closeList();
+        list.replaceChildren(
+          ...found.map((person) => {
+            const li = document.createElement("li");
+            const option = document.createElement("button");
+            option.type = "button";
+            option.setAttribute("role", "option");
+            option.textContent = person.name;
+            // Keep the keyboard up: the tap must not take focus off the box.
+            option.addEventListener("mousedown", (e) => e.preventDefault());
+            option.addEventListener("click", () => pick(person));
+            li.append(option);
+            return li;
+          }),
+        );
+        list.hidden = false;
+      }
+
+      function fill(text, mentions) {
+        const current = box.value.replace(/\s+$/, "");
+        box.value = current ? current + "\n" + text : text;
+        remember(mentions);
+        box.focus();
+        box.setSelectionRange(box.value.length, box.value.length);
+        syncLabel();
+      }
+
+      box.addEventListener("input", () => {
+        openList();
+        syncLabel();
+      });
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeList();
+      });
+      box.addEventListener("blur", () => setTimeout(closeList, 150));
+
+      form.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const mentions = JSON.parse(chip.dataset.mentions || "[]");
+          if (chip.dataset.reason) {
+            pendingReason = { template: chip.dataset.template, mentions };
+            reasons.hidden = false;
+            reasonPick.focus();
+            return;
+          }
+          fill(chip.dataset.template, mentions);
+        });
+      });
+      reasonPick.addEventListener("change", () => {
+        if (!pendingReason || !reasonPick.value) return;
+        fill(
+          pendingReason.template.replace("{reason}", reasonPick.value),
+          pendingReason.mentions,
+        );
+        pendingReason = null;
+        reasonPick.value = "";
+        reasons.hidden = true;
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const result = form.querySelector(".result");
+        form.elements.mentions.value = JSON.stringify(
+          [...inserted.values()].filter((p) =>
+            box.value.includes("@" + p.name),
+          ),
+        );
+        submit.disabled = true;
+        result.className = "result";
+        result.textContent = "Working…";
+        try {
+          const res = await fetch(form.action, {
+            method: "POST",
+            headers: { Accept: "application/json" },
+            body: new URLSearchParams(new FormData(form)),
+          });
+          const json = await res.json();
+          result.textContent = json.message;
+          if (!json.ok) {
+            result.className = "result error";
+            return;
+          }
+          box.value = "";
+          inserted.clear();
+          syncLabel();
+          setTimeout(() => show(at + 1), 1400);
+        } catch {
+          result.className = "result error";
+          result.textContent = "That did not go through. Try again.";
+        } finally {
+          submit.disabled = false;
+        }
+      });
+    });
+
+    show(at);
+  })();
+</script>
