@@ -1,4 +1,4 @@
-import { renderGatePage, renderSuccessPage } from "./gate-page.ts";
+import { renderGatePage } from "./gate-page.ts";
 import { derivePassword } from "./password.ts";
 import { checkEmailOverride } from "./override.ts";
 import { listFolder, streamFile } from "./drive.ts";
@@ -213,8 +213,10 @@ export default {
         request,
       });
 
+      // Straight into the room: the 303 carries the cookie and turns the POST
+      // into a GET, so there's no "enter the data room" click in between.
       const headers = new Headers({
-        "Content-Type": "text/html",
+        Location: new URL(safeReturn, url).toString(),
         "Cache-Control": "no-store",
       });
       headers.append(
@@ -227,11 +229,7 @@ export default {
           httpOnly: true,
         }),
       );
-      const continueUrl = new URL(safeReturn, url).toString();
-      return new Response(renderSuccessPage(continueUrl), {
-        status: 200,
-        headers,
-      });
+      return new Response(null, { status: 303, headers });
     }
 
     // Cookie is the sole bypass past this point — no ref/password shortcut.
