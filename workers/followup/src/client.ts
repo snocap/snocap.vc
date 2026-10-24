@@ -79,11 +79,10 @@ export function applyMacro(
   return current.replace(/\s+$/, "") + "\n" + text;
 }
 
-/** The submit button's label: what pressing it does. It never shows a date,
- * since the day a submit sets depends on the current value and a comment can
- * move it again. The server renders the first label with this too. */
-export function buttonLabel(text: string): string {
-  return text.trim() ? "Post comment" : "Mark handled";
+/** Whether there is anything to post: the button stays disabled while the
+ * box is empty and nothing is attached, since a submit only ever posts. */
+export function canPost(text: string, files: number): boolean {
+  return text.trim() !== "" || files > 0;
 }
 
 /** Whether the page can shrink this file by re-encoding it as a JPEG: any
@@ -156,7 +155,7 @@ export function carouselSlots(
 /** One line of a streamed submit: a phase as it starts, or, last, the
  * outcome (`done`). */
 export interface SubmitEvent {
-  phase?: "upload" | "date" | "comment";
+  phase?: "upload" | "comment";
   n?: number;
   of?: number;
   done?: boolean;
@@ -195,8 +194,6 @@ export async function readSubmit(
 export interface SubmitIO<F extends { name: string; size: number }> {
   files: F[];
   maxBytes: number;
-  /** Whether the box holds a comment, so success reads Posted, not Handled. */
-  commenting: boolean;
   /** Disables the button and freezes the box, macros, reasons, attachments
    * and mention list; `false` gives them back as they were. */
   lock(busy: boolean): void;
@@ -243,12 +240,10 @@ export async function submitFlow<F extends { name: string; size: number }>(
       }
       files.push(file);
     }
-    io.label(total ? `Uploading 1 of ${total}…` : "Sending…");
+    io.label(total ? `Uploading 1 of ${total}…` : "Posting comment…");
     const outcome = await io.send(files, (event) => {
       if (event.phase === "upload") {
         io.label(`Uploading ${event.n} of ${event.of}…`);
-      } else if (event.phase === "date") {
-        io.label("Updating next touch…");
       } else if (event.phase === "comment") {
         io.label("Posting comment…");
       }
@@ -262,7 +257,7 @@ export async function submitFlow<F extends { name: string; size: number }>(
   } catch {
     return fail("network error", "That did not go through. Try again.");
   }
-  io.label(io.commenting ? "Posted ✓" : "Handled ✓");
+  io.label("Posted ✓");
   io.posted();
   return true;
 }

@@ -14,7 +14,7 @@ actions that write back to Airtable.
 | `GET …/oauth/callback`                   | Exchanges the code, checks base access, sets the session cookie |
 | `GET /fundraising/followup` (session)    | The deck: one card per Campaign, `n of N` (see Navigating)      |
 | `GET …/campaign/<recId>` (session)       | The expanded card: contacts + Interactions and comments merged  |
-| `POST …/action` (session + CSRF)         | Keeps Next Touch Point ≥ today + 7; attachments; the comment    |
+| `POST …/action` (session + CSRF)         | Attachments, then the comment; sets no dates                    |
 | `POST …/signout` (session + CSRF)        | Clears the session cookie                                       |
 
 ## No Airtable token of its own
@@ -62,29 +62,28 @@ that is unavailable or holds junk just opens the first card.
 
 ## Commenting
 
-Each card has one comment box and one button. The button says **Post comment**,
-or **Mark handled** when the box is empty; it never shows a date. Pressing it
-does, with the user's own token, in this order:
+Each card has one comment box and one button, **Post comment**. It is disabled
+while the box is empty and nothing is attached, and the Worker refuses an empty
+submit too. Pressing it does, with the user's own token, in this order:
 
 1. **Saves any attachments** on a new Interaction (see Attachments). If that
    fails nothing else is written.
-2. **Keeps Next Touch Point at least a week out**: it becomes the later of its
-   current value, when that is still in the future, and today + 7 days. Days are
-   Pacific dates, and a day is written at 16:00 UTC. A week is never added to the
-   existing value, and a later date already set is left alone. This is what takes
-   the card down the Follow Ups list (`nextTouchAfterSubmit`, `src/dates.ts`).
-3. **Posts the box as an Airtable comment** on the Campaign, exactly as typed.
-   Nothing is prepended; KB is not mentioned unless the comment mentions it.
+2. **Posts the box as an Airtable comment** on the Campaign, exactly as typed
+   but for its mentions. Nothing is prepended; KB is not mentioned unless the
+   comment mentions it, or files are attached (see Attachments).
 
-The comment is always last: it is what wakes KB, so the Interaction must exist
-and this page's date must already be written when KB reads it. KB's comment intake reads every
-Campaign comment (`campaign-tracker` skill, `bin/campaign-comment.ts`): a
-comment that implies another day ("reach out in December", "@KB snooze next
-touch point to Jan 5") gets Next Touch Point moved again by KB, so **KB's later
-write wins** over this page's default. A comment that @-mentions KB is also an
-instruction KB acts on and answers in the thread. One that mentions only Nate
-or Shrina gets no KB reply: Airtable notifies them, and KB just logs and
-classifies it as usual.
+Nothing else is written. **The page sets no dates**: Next Touch Point is KB's.
+KB's comment intake reads every human-authored Campaign comment, whether it was
+posted here or typed in Airtable (`campaign-tracker` skill, step 1c), and
+decides the next touch from it: a day the comment implies ("reach out in
+December", "@KB snooze next touch point to Jan 5"), or else the later of the
+current Next Touch Point, when still in the future, and the comment's Pacific
+date + 7 days. A comment that says to leave the date alone is followed. That
+change is what takes the card down the Follow Ups list. The comment is last
+because it is what wakes KB, so the Interaction must exist when KB reads it. A
+comment that @-mentions KB is also an instruction KB acts on and answers in the
+thread. One that mentions only Nate or Shrina gets no KB reply: Airtable
+notifies them, and KB just logs and classifies it as usual.
 
 ### While it posts
 
@@ -92,10 +91,9 @@ The press locks the card at once: the button is disabled, so a second tap
 cannot post twice, and the box, macros, Closed Lost Reason, attachment controls
 and mention list are frozen. The page asks for `application/x-ndjson`, and the
 Worker streams one line per step as it starts (`{"phase":"upload","n":1,"of":2}`,
-`{"phase":"date"}`, `{"phase":"comment"}`), then the outcome
+`{"phase":"comment"}`), then the outcome
 (`{"done":true,"ok":…,"message":…,"reason":…}`). The button names each step:
-**Uploading 1 of N…**, **Updating next touch…**, **Posting comment…**, then
-**Posted ✓** (or **Handled ✓**) before the deck moves to the next Campaign. A
+**Uploading 1 of N…**, **Posting comment…**, then **Posted ✓** before the deck moves to the next Campaign. A
 refusal before anything is written (stale page, signed out, a bad file) comes
 back as plain JSON.
 
@@ -140,7 +138,7 @@ mention and `{reason}` is a picked Closed Lost Reason.
 | Close lost      | `@Kernel Bottie close lost: <reason>`, live options       |
 | Ping rep        | `@<Representative> any update here?` (hidden without one) |
 
-There is no Punt macro: every submit already punts a week.
+There is no Punt macro: every comment already gets a next touch from KB, a week out by default.
 
 The Closed Lost Reasons are read from the base schema on every page load, never
 hardcoded or cached, so an option added in Airtable shows on the next reload.
@@ -224,11 +222,11 @@ npm test   # from the repo root; the followup tests are workers/followup/src/*.t
 
 The tests stub `globalThis.fetch` with a fake Airtable and drive the Worker's
 `fetch`: the 503, the OAuth round trip, the no-access page, the CSRF gate, the
-comment + date write, a date-only submit, a later date kept, attachments (the
+comment posted with no other write, an empty submit refused, attachments (the
 Interaction, the uploads, the comment with and without text, a failed upload,
 refused files), live
-Closed Lost Reasons, the search index, and a token refresh mid-visit. The
-next-touch rule (past, nearer, later, DST), macro prefills, mention
+Closed Lost Reasons, the search index, and a token refresh mid-visit. Pacific days,
+macro prefills, mention
 serialization, and the page's own rules (`src/client.ts`: search, the restored
 position, highlight keys, macro replace, file intake and image shrinking, the
 row's window) are

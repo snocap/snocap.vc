@@ -352,8 +352,8 @@
       let attached = [];
       let busy = false;
 
-      function syncLabel() {
-        submit.textContent = buttonLabel(box.value);
+      function syncButton() {
+        submit.disabled = busy || !canPost(box.value, attached.length);
       }
 
       function remember(mentions) {
@@ -378,7 +378,7 @@
         box.setSelectionRange(caret, caret);
         remember([person]);
         closeList();
-        syncLabel();
+        syncButton();
       }
 
       function openList() {
@@ -403,7 +403,7 @@
         remember(mentions);
         box.focus();
         box.setSelectionRange(box.value.length, box.value.length);
-        syncLabel();
+        syncButton();
       }
 
       // Images show as thumbnails, anything else as a chip with its name;
@@ -439,6 +439,7 @@
           }),
         );
         thumbs.hidden = attached.length === 0;
+        syncButton();
       }
 
       function addFiles(fileList) {
@@ -502,7 +503,7 @@
 
       box.addEventListener("input", () => {
         openList();
-        syncLabel();
+        syncButton();
       });
       box.addEventListener("keydown", (e) => {
         if (list.hidden) return;
@@ -553,7 +554,7 @@
       // form), and the macros, reasons and attachment controls are disabled.
       function lock(on) {
         busy = on;
-        submit.disabled = on;
+        syncButton();
         box.readOnly = on;
         reasonPick.disabled = on;
         picker.disabled = on;
@@ -594,7 +595,6 @@
         await submitFlow({
           files: attached.map((a) => a.file),
           maxBytes: limits.maxBytes,
-          commenting: box.value.trim() !== "",
           lock,
           label: (text) => (submit.textContent = text),
           detail: (text) => {
@@ -609,8 +609,8 @@
               inserted.clear();
               lastMacro = null;
               clearAttached();
+              submit.textContent = "Post comment";
               lock(false);
-              syncLabel();
               show(cards.indexOf(card) + 1);
             }, 900),
         });

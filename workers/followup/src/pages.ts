@@ -136,7 +136,6 @@ export function renderCard(
     latest,
     actionPath: ACTION_PATH,
     csrf: deck.csrf,
-    submitLabel: client.buttonLabel(""),
     macros: macroChips(card, deck.people),
     reasons: deck.closedLostReasons
       .map((reason) => renderTemplate(reasonTemplate, { reason }))

@@ -1,11 +1,7 @@
-// Days as Jon reads them: in Pacific time. Next Touch Point is a dateTime, and
-// a day is written at 16:00 UTC (8 or 9am Pacific) so it is the same day in
-// both zones.
+// Days as Jon reads them: in Pacific time. A dateTime field holding a day is
+// written at 16:00 UTC (8 or 9am Pacific) so it is the same day in both zones.
 
 const ZONE = "America/Los_Angeles";
-/** Every submit keeps the card at least this far out; a comment that implies
- * another day gets it from KB's comment intake afterwards. */
-export const DEFAULT_PUNT_DAYS = 7;
 
 export function formatDay(iso: string): string {
   return new Intl.DateTimeFormat("en-US", {
@@ -14,15 +10,6 @@ export function formatDay(iso: string): string {
     day: "numeric",
     year: "numeric",
   }).format(new Date(iso));
-}
-
-/** YYYY-MM-DD → "Oct 30", the form the submit button shows. */
-export function shortDay(day: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "UTC",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(`${day}T00:00:00.000Z`));
 }
 
 /** An instant's Pacific date, YYYY-MM-DD. */
@@ -35,34 +22,7 @@ export function pacificDay(at: number): string {
   }).format(new Date(at));
 }
 
-/** Today in Pacific time plus `days`, as YYYY-MM-DD. Calendar arithmetic on the
- * Pacific date, so a DST change in between cannot shift the day. */
-export function pacificDayPlus(now: number, days: number): string {
-  const [y, m, d] = pacificDay(now).split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-}
-
-export function defaultNextTouch(now: number): string {
-  return pacificDayPlus(now, DEFAULT_PUNT_DAYS);
-}
-
-/** YYYY-MM-DD → the ISO time Next Touch Point is written with. */
-export function nextTouchValue(day: string): string {
+/** YYYY-MM-DD → the ISO time a day is written to a dateTime field with. */
+export function dayValue(day: string): string {
   return `${day}T16:00:00.000Z`;
-}
-
-/** The day a submit leaves Next Touch Point on: the later of the current
- * value, when it is still in the future, and today + 7 (Pacific dates). A week
- * is never added to the existing value, so pressing twice does not punt twice.
- * `current` is the field as Airtable returns it; anything unparseable counts as
- * unset. Returns null when the current value is later and nothing changes. */
-export function nextTouchAfterSubmit(
-  current: unknown,
-  now: number,
-): string | null {
-  const floor = defaultNextTouch(now);
-  const at = typeof current === "string" ? Date.parse(current) : NaN;
-  if (Number.isNaN(at)) return floor;
-  const day = pacificDay(at);
-  return day > pacificDay(now) && day > floor ? null : floor;
 }

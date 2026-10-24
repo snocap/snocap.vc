@@ -10,7 +10,7 @@
 
 import { Airtable } from "./airtable.ts";
 import { AIRTABLE, ATTACHMENT_LIMITS, FIELD } from "./config.ts";
-import { nextTouchValue, pacificDay } from "./dates.ts";
+import { dayValue, pacificDay } from "./dates.ts";
 
 export const PLACEHOLDER_SUMMARY = "New Interaction Attachment";
 
@@ -69,7 +69,7 @@ export async function saveAttachments(
   const record = await airtable.createRecord(AIRTABLE.interactions, {
     [FIELD.interactionCampaign]: [campaign],
     [FIELD.triggeredBy]: { id: user.id },
-    [FIELD.occurredOn]: nextTouchValue(pacificDay(now)),
+    [FIELD.occurredOn]: dayValue(pacificDay(now)),
     [FIELD.summary]: PLACEHOLDER_SUMMARY,
   });
   for (const [i, file] of files.entries()) {

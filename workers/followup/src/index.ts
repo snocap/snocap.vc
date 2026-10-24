@@ -26,7 +26,6 @@ import {
   configFrom,
 } from "./config.ts";
 import type { Config, Env } from "./config.ts";
-import { nextTouchAfterSubmit, nextTouchValue, shortDay } from "./dates.ts";
 import {
   KB,
   choicePeople,
@@ -307,10 +306,7 @@ async function handleDetail(airtable: Airtable, id: string): Promise<Response> {
 }
 
 /** A step of a submit, as the page's button names it while it runs. */
-type Phase =
-  | { phase: "upload"; n: number; of: number }
-  | { phase: "date" }
-  | { phase: "comment" };
+type Phase = { phase: "upload"; n: number; of: number } | { phase: "comment" };
 
 /** How a submit ended: `reason` is the few words the button shows on a
  * failure, `message` the full sentence. */
@@ -328,13 +324,11 @@ const failed = (status: number, reason: string, message: string): Outcome => ({
   message,
 });
 
-/** Every submit keeps the Campaign's Next Touch Point at least a week out,
- * which is what takes it down the Follow Ups list (dates.ts
- * nextTouchAfterSubmit). A non-empty box is posted as the user's comment,
- * exactly as typed but for its mentions. Attachments are saved on a new
- * Interaction first, and the comment then also asks KB to fill it in
- * (attachments.ts). KB reads every comment and moves the date again when one
- * implies another, so the comment is always the last write. */
+/** A submit posts the box as the user's comment, exactly as typed but for its
+ * mentions. Attachments are saved on a new Interaction first, and the comment
+ * then also asks KB to fill it in (attachments.ts). Nothing else is written:
+ * the page sets no dates. KB reads every comment and decides the Campaign's
+ * Next Touch Point from it. */
 async function submit(
   airtable: Airtable,
   session: Session,
@@ -368,54 +362,39 @@ async function submit(
       );
     }
   }
-  // Then the date: the comment wakes KB, whose own date write must land after.
-  onPhase({ phase: "date" });
-  const campaign = await airtable.getRecord(AIRTABLE.campaigns, id);
-  const day = nextTouchAfterSubmit(campaign.fields[FIELD.nextTouch], now);
-  if (day) {
-    await airtable.updateRecord(AIRTABLE.campaigns, id, {
-      [FIELD.nextTouch]: nextTouchValue(day),
-    });
-  }
-  const next = day ? `Next touch ${shortDay(day)}.` : "Next touch unchanged.";
-  if (comment) {
-    onPhase({ phase: "comment" });
-    try {
-      await airtable.createComment(AIRTABLE.campaigns, id, comment);
-    } catch (err) {
-      console.error(
-        JSON.stringify({
-          event: "followup_comment_failed",
-          id,
-          error: String(err),
-        }),
-      );
-      return failed(
-        502,
-        "comment did not post",
-        files.length
-          ? `${next} The attachments are saved on a new Interaction, but the comment did not post, so KB was not asked to read them. Post a comment asking it to.`
-          : `${next} But the comment did not post. Try it again.`,
-      );
-    }
+  onPhase({ phase: "comment" });
+  try {
+    await airtable.createComment(AIRTABLE.campaigns, id, comment);
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        event: "followup_comment_failed",
+        id,
+        error: String(err),
+      }),
+    );
+    return failed(
+      502,
+      "comment did not post",
+      files.length
+        ? "The attachments are saved on a new Interaction, but the comment did not post, so KB was not asked to read them. Post a comment asking it to."
+        : "The comment did not post. Try it again.",
+    );
   }
   console.log(
     JSON.stringify({
       event: "followup_action",
       campaign: id,
-      commented: Boolean(comment),
       attachments: files.length,
       by: session.email,
     }),
   );
-  const lead = files.length
+  const message = files.length
     ? `${files.length === 1 ? "Attachment" : `${files.length} attachments`} saved. KB will log the Interaction and reply in the thread.`
-    : !comment
-      ? "Marked handled."
-      : mentionsUser(comment, KB.id)
-        ? "Comment posted. KB will reply in the thread."
-        : "Comment posted.";
-  return { ok: true, status: 200, message: `${lead} ${next}` };
+    : mentionsUser(comment, KB.id)
+      ? "Comment posted. KB will reply in the thread."
+      : "Comment posted.";
+  return { ok: true, status: 200, message };
 }
 
 /** What an Airtable failure mid-submit means to the person pressing the button. */
@@ -506,6 +485,11 @@ async function handleAction(
   const files = uploadsOf(form);
   const problem = uploadProblem(files);
   if (problem) return reply(failed(400, "attachments refused", problem));
+  if (!typed && files.length === 0) {
+    return reply(
+      failed(400, "nothing to post", "Type a comment or attach a file first."),
+    );
+  }
 
   if ((request.headers.get("Accept") ?? "").includes("application/x-ndjson")) {
     return streamSubmit((onPhase) =>

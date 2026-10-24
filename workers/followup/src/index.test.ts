@@ -6,7 +6,6 @@ import { afterEach, test } from "node:test";
 import worker from "./index.ts";
 import { AIRTABLE, FIELD } from "./config.ts";
 import type { Env } from "./config.ts";
-import { defaultNextTouch } from "./dates.ts";
 import { codeChallenge } from "./oauth.ts";
 import { newSession, sessionCookie } from "./session.ts";
 
@@ -411,7 +410,7 @@ function writes(fake: { calls: Call[] }) {
   };
 }
 
-test("a comment posts exactly what was typed, mentions serialized, and moves Next Touch Point a week", async () => {
+test("a comment posts exactly what was typed, mentions serialized, and writes nothing else", async () => {
   const fake = useAirtable();
   const { session, cookie } = await sessionFor();
   const response = await worker.fetch(
@@ -426,27 +425,14 @@ test("a comment posts exactly what was typed, mentions serialized, and moves Nex
   assert.equal(response.status, 200);
   const { message, ok } = await response.json();
   assert.equal(ok, true);
-  assert.match(message, /^Comment posted\. Next touch \w{3} \d+\.$/);
+  assert.equal(message, "Comment posted.");
   assert.doesNotMatch(message, /KB/);
 
   const w = writes(fake);
-  assert.deepEqual(
-    w.order,
-    ["PATCH", "POST"],
-    "the date lands before the comment",
-  );
+  assert.deepEqual(w.order, ["POST"], "the page sets no dates");
   assert.deepEqual(w.comments, [`@[${NATE.id}] commitment is now $250K`]);
   assert.doesNotMatch(w.comments[0], /usrt57orTxVb75I3W/, "no auto @KB");
-  assert.equal(
-    w.patches[0].path,
-    `/v0/${AIRTABLE.base}/${AIRTABLE.campaigns}/${CAMPAIGN_A}`,
-  );
-  assert.deepEqual(w.patches[0].body, {
-    fields: {
-      [FIELD.nextTouch]: `${defaultNextTouch(Date.now())}T16:00:00.000Z`,
-    },
-    typecast: false,
-  });
+  assert.deepEqual(w.patches, []);
   assert.ok(
     fake.calls
       .filter((c) => c.url.hostname === "api.airtable.com")
@@ -472,7 +458,7 @@ test("a comment that mentions KB says KB will reply", async () => {
   ]);
 });
 
-test("an empty submit only marks the card handled: the date moves, no comment posts", async () => {
+test("an empty submit with nothing attached is refused and writes nothing", async () => {
   const fake = useAirtable();
   const { session, cookie } = await sessionFor();
   const response = await worker.fetch(
@@ -483,14 +469,9 @@ test("an empty submit only marks the card handled: the date moves, no comment po
     }),
     ENV,
   );
-  assert.equal(response.status, 200);
-  assert.match(
-    (await response.json()).message,
-    /^Marked handled\. Next touch /,
-  );
-  const w = writes(fake);
-  assert.deepEqual(w.order, ["PATCH"]);
-  assert.deepEqual(w.comments, []);
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).reason, "nothing to post");
+  assert.deepEqual(writes(fake).order, []);
 });
 
 function attr(body: string, name: string): unknown {
@@ -511,7 +492,7 @@ test("the deck renders the mention list and each card's macro prefills", async (
     { id: AIRTABLE.kbUserId, name: "Kernel Bottie" },
     NATE,
   ]);
-  assert.match(body, /use @ to mention someone; paste or drop a screenshot/);
+  assert.match(body, /use @ to mention someone; paste or drop an attachment/);
   assert.doesNotMatch(body, /@KB\b/);
   assert.match(body, /data-template="@Nate any update here\?"/);
   assert.match(body, /data-template="@Kernel Bottie close lost: \{reason\}"/);
@@ -520,16 +501,20 @@ test("the deck renders the mention list and each card's macro prefills", async (
   assert.equal(body.match(/data-macro="ping-rep"/g)?.length, 1);
 });
 
-test("the button is just 'Mark handled' at first, with no date on it", async () => {
+test("every card's button is Post comment, disabled until there is something to post", async () => {
   useAirtable();
   const { cookie } = await sessionFor();
   const body = await (
     await worker.fetch(new Request(ROOT, { headers: { Cookie: cookie } }), ENV)
   ).text();
-  const labels = [
-    ...body.matchAll(/<button type="submit">([^<]*)<\/button>/g),
-  ].map((m) => m[1].trim());
-  assert.deepEqual(labels, ["Mark handled", "Mark handled"]);
+  const buttons = [
+    ...body.matchAll(/<button type="submit"([^>]*)>([^<]*)<\/button>/g),
+  ].map((m) => [m[1].trim(), m[2].trim()]);
+  assert.deepEqual(buttons, [
+    ["disabled", "Post comment"],
+    ["disabled", "Post comment"],
+  ]);
+  assert.doesNotMatch(body, /Mark handled/);
 });
 
 test("Closed Lost Reasons come from the live schema on every load", async () => {
@@ -573,27 +558,6 @@ const PNG = () =>
     type: "image/png",
   });
 
-test("a future Next Touch Point later than a week out is kept, not punted", async () => {
-  const fake = useAirtable();
-  const { session, cookie } = await sessionFor();
-  const record = fake.records[AIRTABLE.campaigns].find(
-    (r) => r.id === CAMPAIGN_A,
-  )!;
-  record.fields[FIELD.nextTouch] = new Date(
-    Date.now() + 30 * 86_400_000,
-  ).toISOString();
-  const response = await worker.fetch(
-    actionRequest(cookie, {
-      campaign: CAMPAIGN_A,
-      text: "",
-      csrf: session.csrf,
-    }),
-    ENV,
-  );
-  assert.match((await response.json()).message, /Next touch unchanged\./);
-  assert.deepEqual(writes(fake).patches, []);
-});
-
 const PDF = () =>
   new File([new Uint8Array([37, 80, 68, 70])], "memo.pdf", {
     type: "application/pdf",
@@ -627,7 +591,7 @@ test("attachments with no text: one Interaction, the uploads, then just the @KB 
   assert.equal(ok, true);
   assert.match(
     message,
-    /^2 attachments saved\. KB will log the Interaction and reply in the thread\. Next touch /,
+    /^2 attachments saved\. KB will log the Interaction and reply in the thread\.$/,
   );
 
   const create = fake.calls.find(
@@ -668,8 +632,8 @@ test("attachments with no text: one Interaction, the uploads, then just the @KB 
 
   const w = writes(fake);
   assert.deepEqual(w.comments, [INSTRUCTION]);
-  // The Interaction and its files, then the date, then the comment that sends
-  // KB to them.
+  // The Interaction and its files, then the comment that sends KB to them;
+  // nothing touches the Campaign itself.
   const order = fake.calls
     .filter((c) => c.method !== "GET")
     .map(
@@ -680,7 +644,6 @@ test("attachments with no text: one Interaction, the uploads, then just the @KB 
     `POST ${AIRTABLE.interactions}`,
     "POST upload",
     "POST upload",
-    `PATCH ${AIRTABLE.campaigns}/${CAMPAIGN_A}`,
     `POST ${AIRTABLE.campaigns}/${CAMPAIGN_A}/comments`,
   ]);
 });
@@ -711,7 +674,7 @@ test("attachments with text: the typed comment, mentions serialized, then the in
   ]);
 });
 
-test("a failed upload posts no comment and leaves the date, so KB is never sent to a half-saved record", async () => {
+test("a failed upload posts no comment, so KB is never sent to a half-saved record", async () => {
   const fake = useAirtable({ uploadStatus: 422 });
   const { session, cookie } = await sessionFor();
   const response = await worker.fetch(
@@ -738,7 +701,7 @@ async function streamed(request: Request): Promise<Record<string, unknown>[]> {
     .map((line) => JSON.parse(line));
 }
 
-test("a streamed submit reports each upload, then the date, then the comment, as they start", async () => {
+test("a streamed submit reports each upload, then the comment, as they start", async () => {
   useAirtable();
   const { session, cookie } = await sessionFor();
   const lines = await streamed(
@@ -747,7 +710,6 @@ test("a streamed submit reports each upload, then the date, then the comment, as
   assert.deepEqual(lines.slice(0, -1), [
     { phase: "upload", n: 1, of: 2 },
     { phase: "upload", n: 2, of: 2 },
-    { phase: "date" },
     { phase: "comment" },
   ]);
   assert.equal(lines.at(-1)?.done, true);
@@ -755,19 +717,19 @@ test("a streamed submit reports each upload, then the date, then the comment, as
   assert.match(String(lines.at(-1)?.message), /^2 attachments saved/);
 });
 
-test("a streamed Mark handled has only the date phase", async () => {
+test("a streamed comment has only the comment phase", async () => {
   useAirtable();
   const { session, cookie } = await sessionFor();
   const lines = await streamed(
     actionRequest(cookie, {
       campaign: CAMPAIGN_A,
-      text: "",
+      text: "hi",
       csrf: session.csrf,
     }),
   );
   assert.deepEqual(
     lines.map((l) => l.phase ?? "done"),
-    ["date", "done"],
+    ["comment", "done"],
   );
 });
 

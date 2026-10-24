@@ -7,8 +7,8 @@ import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import {
   acceptFiles,
+  canPost,
   applyMacro,
-  buttonLabel,
   carouselSlots,
   moveHighlight,
   readSubmit,
@@ -118,10 +118,11 @@ test("a macro appends once the user has typed anything", () => {
   );
 });
 
-test("the button says Post comment or Mark handled, never a date", () => {
-  assert.equal(buttonLabel(""), "Mark handled");
-  assert.equal(buttonLabel(" \n "), "Mark handled");
-  assert.equal(buttonLabel("hi"), "Post comment");
+test("Post comment is disabled while the box is empty and nothing is attached", () => {
+  assert.equal(canPost("", 0), false);
+  assert.equal(canPost(" \n ", 0), false);
+  assert.equal(canPost("hi", 0), true);
+  assert.equal(canPost("", 1), true, "attachments alone can be posted");
 });
 
 const LIMITS = { maxFiles: 3, maxBytes: 5 * 1048576 };
@@ -189,13 +190,13 @@ test("the page's copy of the helpers is these functions, runnable on their own",
     .replace(/<\/script>$/, "");
   const context: Record<string, unknown> = {};
   runInNewContext(
-    `${script}\nthis.out = { search: searchDeck(deck, "cafe"), slots: carouselSlots(0, 4, 3), label: buttonLabel("x") };`,
+    `${script}\nthis.out = { search: searchDeck(deck, "cafe"), slots: carouselSlots(0, 4, 3), can: canPost("", 0) };`,
     Object.assign(context, { deck: DECK }),
   );
   assert.deepEqual(JSON.parse(JSON.stringify(context.out)), {
     search: [2],
     slots: [-1, 0, 1],
-    label: "Post comment",
+    can: false,
   });
 });
 
@@ -210,7 +211,6 @@ interface FakeFile {
 function fakeCard(
   opts: {
     files?: FakeFile[];
-    commenting?: boolean;
     events?: SubmitEvent[];
     outcome?: SubmitEvent;
     throws?: boolean;
@@ -230,7 +230,6 @@ function fakeCard(
   const io = {
     files: opts.files ?? [],
     maxBytes: 5 * MB,
-    commenting: opts.commenting ?? true,
     lock(busy: boolean) {
       card.locked = busy;
       log.push(busy ? "lock" : "unlock");
@@ -279,7 +278,6 @@ test("the button steps through the real phases with attachments, then advances",
     events: [
       { phase: "upload", n: 1, of: 2 },
       { phase: "upload", n: 2, of: 2 },
-      { phase: "date" },
       { phase: "comment" },
     ],
   });
@@ -289,30 +287,19 @@ test("the button steps through the real phases with attachments, then advances",
     "Uploading 1 of 2…",
     "Uploading 1 of 2…",
     "Uploading 2 of 2…",
-    "Updating next touch…",
     "Posting comment…",
     "Posted ✓",
     "advance",
   ]);
 });
 
-test("without attachments the button goes straight to the date and the comment", async () => {
-  const { card, io } = fakeCard({
-    events: [{ phase: "date" }, { phase: "comment" }],
-  });
+test("without attachments the button goes straight to posting the comment", async () => {
+  const { card, io } = fakeCard({ events: [{ phase: "comment" }] });
   await submitFlow(io);
   assert.deepEqual(card.labels, [
-    "Sending…",
-    "Updating next touch…",
+    "Posting comment…",
     "Posting comment…",
     "Posted ✓",
-  ]);
-  const handled = fakeCard({ commenting: false, events: [{ phase: "date" }] });
-  await submitFlow(handled.io);
-  assert.deepEqual(handled.card.labels, [
-    "Sending…",
-    "Updating next touch…",
-    "Handled ✓",
   ]);
 });
 
@@ -387,18 +374,21 @@ test("a streamed submit is read line by line, even split mid-line, to its outcom
   const outcome = await readSubmit(
     streamOf(
       '{"phase":"upload","n":1,"of":1}\n{"pha',
-      'se":"date"}\n',
+      'se":"comment"}\n',
       '{"done":true,"ok":true,"message":"Done."}\n',
     ),
     (event) => seen.push(event),
   );
-  assert.deepEqual(seen, [{ phase: "upload", n: 1, of: 1 }, { phase: "date" }]);
+  assert.deepEqual(seen, [
+    { phase: "upload", n: 1, of: 1 },
+    { phase: "comment" },
+  ]);
   assert.deepEqual(outcome, { done: true, ok: true, message: "Done." });
 });
 
 test("a stream cut off before its outcome is an error", async () => {
   await assert.rejects(
-    readSubmit(streamOf('{"phase":"date"}\n'), () => {}),
+    readSubmit(streamOf('{"phase":"comment"}\n'), () => {}),
     /without an outcome/,
   );
 });
