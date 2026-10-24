@@ -506,6 +506,12 @@
         syncButton();
       });
       box.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          closeList();
+          if (!submit.disabled) form.requestSubmit();
+          return;
+        }
         if (list.hidden) return;
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();

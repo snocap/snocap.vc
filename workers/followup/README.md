@@ -64,7 +64,9 @@ that is unavailable or holds junk just opens the first card.
 
 Each card has one comment box and one button, **Post comment**. It is disabled
 while the box is empty and nothing is attached, and the Worker refuses an empty
-submit too. Pressing it does, with the user's own token, in this order:
+submit too. Ctrl+Enter (Cmd+Enter on Mac) in the box submits the form, same as
+clicking the button — it does nothing while the button is disabled. Pressing it
+does, with the user's own token, in this order:
 
 1. **Saves any attachments** on a new Interaction (see Attachments). If that
    fails nothing else is written.
