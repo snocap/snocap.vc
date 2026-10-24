@@ -7,7 +7,12 @@
 // no Airtable credential, so the page can only ever show what the visitor's own
 // Airtable account can already see.
 
-import { Airtable, AirtableError, selectOptions } from "./airtable.ts";
+import {
+  Airtable,
+  AirtableError,
+  isRateLimited,
+  selectOptions,
+} from "./airtable.ts";
 import type { AirtableRecord } from "./airtable.ts";
 import {
   cardOf,
@@ -218,25 +223,33 @@ async function handleReview(
     AIRTABLE.followUpsView,
     CAMPAIGN_FIELDS,
   );
-  const lps = await airtable.recordsByIds(
-    AIRTABLE.limitedPartners,
-    campaigns.flatMap((c) => linkedIds(c, FIELD.limitedPartner)),
-    [FIELD.lpEntity, FIELD.lpPrimaryContacts],
-  );
-  // Contact names only, for search; the full contact cards load per card.
-  const contacts = await airtable.recordsByIds(
-    AIRTABLE.contacts,
-    lps.flatMap((lp) => linkedIds(lp, FIELD.lpPrimaryContacts)),
-    [FIELD.contactName],
-  );
-  const interactions = await airtable.recordsByIds(
-    AIRTABLE.interactions,
-    campaigns.flatMap((c) => linkedIds(c, FIELD.interactions)),
-    INTERACTION_FIELDS,
-  );
-  // Read on every page load, never cached: a Closed Lost Reason added in
-  // Airtable shows on the next reload.
-  const schema = await airtable.tableFields(AIRTABLE.campaigns);
+  // The LPs-then-contacts chain, the Interactions and the schema need only the
+  // Campaigns, so they start together; the client's limiter spaces the calls.
+  const [{ lps, contacts }, interactions, schema] = await Promise.all([
+    airtable
+      .recordsByIds(
+        AIRTABLE.limitedPartners,
+        campaigns.flatMap((c) => linkedIds(c, FIELD.limitedPartner)),
+        [FIELD.lpEntity, FIELD.lpPrimaryContacts],
+      )
+      .then(async (lps) => ({
+        lps,
+        // Contact names only, for search; the full contact cards load per card.
+        contacts: await airtable.recordsByIds(
+          AIRTABLE.contacts,
+          lps.flatMap((lp) => linkedIds(lp, FIELD.lpPrimaryContacts)),
+          [FIELD.contactName],
+        ),
+      })),
+    airtable.recordsByIds(
+      AIRTABLE.interactions,
+      campaigns.flatMap((c) => linkedIds(c, FIELD.interactions)),
+      INTERACTION_FIELDS,
+    ),
+    // Read on every page load, never cached: a Closed Lost Reason added in
+    // Airtable shows on the next reload.
+    airtable.tableFields(AIRTABLE.campaigns),
+  ]);
 
   const lpNames = new Map(
     lps.map((lp) => [lp.id, String(lp.fields[FIELD.lpEntity] ?? "")]),
@@ -413,17 +426,29 @@ function thrownOutcome(err: unknown): Outcome {
       "Your Airtable account cannot write to this Campaign.",
     );
   }
+  logError(ACTION_PATH, err);
+  return isRateLimited(err)
+    ? failed(429, "rate-limited", RATE_LIMITED_MESSAGE)
+    : failed(502, "Airtable error", UNEXPECTED_MESSAGE);
+}
+
+const RATE_LIMITED_MESSAGE =
+  "Airtable is rate-limiting us. Try again in 30 seconds.";
+const UNEXPECTED_MESSAGE =
+  "Airtable did not answer as expected. Try again in a moment.";
+
+/** The followup_error line, with Airtable's status and error code when the
+ * failure came from Airtable, so Workers Logs say which failure it was. */
+function logError(path: string, err: unknown): void {
   console.error(
     JSON.stringify({
       event: "followup_error",
-      path: ACTION_PATH,
+      path,
+      ...(err instanceof AirtableError
+        ? { status: err.status, type: err.type, airtablePath: err.path }
+        : {}),
       error: String(err),
     }),
-  );
-  return failed(
-    502,
-    "Airtable error",
-    "Airtable did not answer as expected. Try again in a moment.",
   );
 }
 
@@ -576,14 +601,26 @@ async function route(
       );
     }
     if (isNoAccess(err)) return html(renderNoAccess(session.email), 403);
-    console.error(
-      JSON.stringify({ event: "followup_error", path, error: String(err) }),
-    );
-    const message =
-      "Airtable did not answer as expected. Try again in a moment.";
+    logError(path, err);
+    const limited = isRateLimited(err);
+    const status = limited ? 429 : 502;
+    const message = limited ? RATE_LIMITED_MESSAGE : UNEXPECTED_MESSAGE;
     return wantsJson(request)
-      ? json({ ok: false, reason: "Airtable error", message }, 502)
-      : html(renderError(message), 502);
+      ? json(
+          {
+            ok: false,
+            reason: limited ? "rate-limited" : "Airtable error",
+            message,
+          },
+          status,
+        )
+      : html(
+          renderError(
+            message,
+            err instanceof AirtableError ? err.label : undefined,
+          ),
+          status,
+        );
   }
   if (fresh.refreshed) {
     // Airtable rotates the refresh token on every use, so the new pair must reach

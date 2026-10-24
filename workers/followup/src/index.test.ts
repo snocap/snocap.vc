@@ -2,7 +2,8 @@
 // 503 before it is configured, the OAuth round trip, the no-access page, the
 // CSRF gate on every POST, an action's real payloads, and a refresh mid-visit.
 import assert from "node:assert/strict";
-import { afterEach, test } from "node:test";
+import { afterEach, beforeEach, test } from "node:test";
+import { clock } from "./airtable.ts";
 import worker from "./index.ts";
 import { AIRTABLE, FIELD } from "./config.ts";
 import type { Env } from "./config.ts";
@@ -160,8 +161,14 @@ function fakeAirtable(
 }
 
 const realFetch = globalThis.fetch;
+const realSleep = clock.sleep;
+// The client's pacing and 429 backoff, skipped: airtable.test.ts times them.
+beforeEach(() => {
+  clock.sleep = async () => {};
+});
 afterEach(() => {
   globalThis.fetch = realFetch;
+  clock.sleep = realSleep;
 });
 
 function useAirtable(opts?: Parameters<typeof fakeAirtable>[0]) {
@@ -804,4 +811,51 @@ test("the expanded card merges history and lists the LP's contacts", async () =>
   );
   assert.equal(response.status, 200);
   assert.match(await response.text(), /Email · Sent the deck/);
+});
+
+/** The fake Airtable, but every read of the Follow Ups view answers `status`. */
+function failingView(status: number, body: object) {
+  const fake = fakeAirtable();
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(String(input));
+    if (url.searchParams.get("view") === AIRTABLE.followUpsView) {
+      return new Response(JSON.stringify(body), { status });
+    }
+    return fake.impl(input, init);
+  };
+  return fake;
+}
+
+test("a 429 that outlasts the retries says Airtable is rate-limiting, with the status in small print", async () => {
+  failingView(429, {
+    errors: [{ error: "RATE_LIMIT_REACHED", message: "Rate limit exceeded" }],
+  });
+  const { cookie } = await sessionFor();
+  const response = await worker.fetch(
+    new Request(ROOT, { headers: { Cookie: cookie } }),
+    ENV,
+  );
+  assert.equal(response.status, 429);
+  const page = await response.text();
+  assert.match(
+    page,
+    /Airtable is rate-limiting us\. Try again in 30 seconds\./,
+  );
+  assert.match(page, /Airtable 429 RATE_LIMIT_REACHED/);
+  assert.doesNotMatch(page, /did not answer as expected/);
+});
+
+test("any other Airtable failure keeps the generic message and names its status and code", async () => {
+  failingView(422, {
+    error: { type: "INVALID_FILTER_BY_FORMULA", message: "bad formula" },
+  });
+  const { cookie } = await sessionFor();
+  const response = await worker.fetch(
+    new Request(ROOT, { headers: { Cookie: cookie } }),
+    ENV,
+  );
+  assert.equal(response.status, 502);
+  const page = await response.text();
+  assert.match(page, /did not answer as expected/);
+  assert.match(page, /Airtable 422 INVALID_FILTER_BY_FORMULA/);
 });

@@ -33,10 +33,15 @@ function button(href: string, label: string): string {
   return renderTemplate(linkButtonTemplate, { href, label });
 }
 
-function notice(heading: string, message: string, action = ""): string {
+function notice(
+  heading: string,
+  message: string,
+  action = "",
+  detail = "",
+): string {
   return layout(
     `${heading} · LP follow-ups`,
-    renderTemplate(noticeTemplate, { heading, message, action }),
+    renderTemplate(noticeTemplate, { heading, message, action, detail }),
   );
 }
 
@@ -64,8 +69,15 @@ export function renderNoAccess(email: string): string {
   );
 }
 
-export function renderError(message: string): string {
-  return notice("Something went wrong", message, button(TOOL_PATH, "Reload"));
+/** `detail` is the small print under the button, e.g. "Airtable 429", so a
+ * failure names its cause on the page itself. */
+export function renderError(message: string, detail = ""): string {
+  return notice(
+    "Something went wrong",
+    message,
+    button(TOOL_PATH, "Reload"),
+    detail,
+  );
 }
 
 function macroChips(card: Card, people: Person[]): string {
