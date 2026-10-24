@@ -1,55 +1,64 @@
 <article class="card" id="c-{{ id }}" data-id="{{ id }}">
-  <div class="mono">{{ position }} of {{ total }} · {{ dealStatus }}</div>
-  <h2>{{ name }}</h2>
-  <div class="lp">{{ lp }}</div>
-  <dl class="facts">
-    <div>
-      <dt>Value</dt>
-      <dd>{{ value }}</dd>
-    </div>
-    <div>
-      <dt>Probability</dt>
-      <dd>{{ probability }}</dd>
-    </div>
-    <div class="{{ touchClass }}">
-      <dt>Next touch</dt>
-      <dd>{{ nextTouch }}</dd>
-    </div>
-    <div>
-      <dt>Rep</dt>
-      <dd>{{ representative }}</dd>
-    </div>
-  </dl>
-  <div class="latest">{{ latest }}</div>
-  <details class="more">
-    <summary>History, comments &amp; contacts</summary>
-    <div data-detail>Loading…</div>
-  </details>
-  <form
-    class="actions"
-    method="post"
-    action="{{ actionPath }}"
-    data-day="{{ nextTouchDay }}"
-  >
-    <input type="hidden" name="csrf" value="{{ csrf }}" />
-    <input type="hidden" name="campaign" value="{{ id }}" />
-    <input type="hidden" name="mentions" value="[]" />
-    <div class="chips">{{{ macros }}}</div>
-    <div class="reasons" data-reasons hidden>
-      <select aria-label="Closed Lost Reason">
-        <option value="">Pick a Closed Lost Reason…</option>
-        {{{ reasons }}}
-      </select>
-    </div>
-    <div class="compose">
-      <textarea
-        name="text"
-        placeholder="Comment… use @ to mention KB or a teammate"
-        autocapitalize="sentences"
-      ></textarea>
-      <ul class="mention-list" role="listbox" hidden></ul>
-    </div>
-    <button type="submit">{{ submitLabel }}</button>
-    <div class="result" role="status"></div>
-  </form>
+  <div class="card-body">
+    <div class="mono">{{ position }} of {{ total }} · {{ dealStatus }}</div>
+    <h2>{{ name }}</h2>
+    <div class="lp">{{ lp }}</div>
+    <dl class="facts">
+      <div>
+        <dt>Value</dt>
+        <dd>{{ value }}</dd>
+      </div>
+      <div>
+        <dt>Probability</dt>
+        <dd>{{ probability }}</dd>
+      </div>
+      <div class="{{ touchClass }}">
+        <dt>Next touch</dt>
+        <dd>{{ nextTouch }}</dd>
+      </div>
+      <div>
+        <dt>Rep</dt>
+        <dd>{{ representative }}</dd>
+      </div>
+    </dl>
+    <div class="latest">{{ latest }}</div>
+    <details class="more">
+      <summary>History, comments &amp; contacts</summary>
+      <div data-detail>Loading…</div>
+    </details>
+    <form
+      class="actions"
+      method="post"
+      action="{{ actionPath }}"
+      enctype="multipart/form-data"
+    >
+      <input type="hidden" name="csrf" value="{{ csrf }}" />
+      <input type="hidden" name="campaign" value="{{ id }}" />
+      <input type="hidden" name="mentions" value="[]" />
+      <div class="chips">
+        {{{ macros }}}
+        <label class="chip attach">
+          Attach
+          <input class="visually-hidden" type="file" name="files" multiple />
+        </label>
+      </div>
+      <div class="reasons" data-reasons hidden>
+        <select aria-label="Closed Lost Reason">
+          <option value="">Pick a Closed Lost Reason…</option>
+          {{{ reasons }}}
+        </select>
+      </div>
+      <div class="compose">
+        <textarea
+          name="text"
+          placeholder="Comment… use @ to mention someone; paste or drop a screenshot"
+          autocapitalize="sentences"
+        ></textarea>
+        <ul class="mention-list pick-list" role="listbox" hidden></ul>
+      </div>
+      <div class="thumbs" hidden></div>
+      <button type="submit">{{ submitLabel }}</button>
+      <div class="result" role="status"></div>
+    </form>
+  </div>
 </article>

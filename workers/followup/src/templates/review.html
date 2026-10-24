@@ -2,24 +2,49 @@
   <div class="mono">
     LP follow-ups · <span data-position>1</span> of {{ total }}
   </div>
-  <form method="post" action="{{ signOutPath }}">
-    <input type="hidden" name="csrf" value="{{ csrf }}" />
-    <button class="ghost" type="submit" title="{{ email }}">Sign out</button>
-  </form>
+  <div class="topbar-actions">
+    <button class="ghost" type="button" data-search-open title="Search ( / )">
+      Search
+    </button>
+    <form method="post" action="{{ signOutPath }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}" />
+      <button class="ghost" type="submit" title="{{ email }}">Sign out</button>
+    </form>
+  </div>
+</div>
+<div class="search" data-search hidden>
+  <input
+    type="search"
+    placeholder="Campaign, LP, contact or rep"
+    aria-label="Search the Follow Ups"
+    autocomplete="off"
+    enterkeyhint="go"
+  />
+  <ul class="pick-list" role="listbox"></ul>
 </div>
 <div class="progress"><span data-bar style="width: 0"></span></div>
 <div
   data-deck
   data-detail-path="{{ detailPath }}"
   data-csrf="{{ csrf }}"
+  data-user="{{ userId }}"
   data-people="{{ people }}"
+  data-index="{{ index }}"
+  data-limits="{{ limits }}"
 >
   {{{ cards }}}
 </div>
 <div class="nav">
+  <button class="ghost" type="button" data-first title="First (Home)">
+    ⇤ First
+  </button>
   <button class="ghost" type="button" data-prev>← Prev</button>
   <button class="ghost" type="button" data-next>Next →</button>
+  <button class="ghost" type="button" data-last title="Last (End)">
+    Last ⇥
+  </button>
 </div>
+{{{ helpers }}}
 <script>
   (() => {
     document.documentElement.classList.add("js");
@@ -28,26 +53,170 @@
     const position = document.querySelector("[data-position]");
     const bar = document.querySelector("[data-bar]");
     if (cards.length === 0) return;
-    let at = Math.max(
-      0,
-      cards.findIndex((c) => "#" + c.id === location.hash),
+    const ids = cards.map((c) => c.dataset.id);
+
+    // Where Jon was, per Airtable user, so a reload reopens the same Campaign
+    // (or, once it has left the view, whatever now sits where it was).
+    const POSITION_KEY = "followup-position:" + deck.dataset.user;
+    function loadPosition() {
+      try {
+        return JSON.parse(localStorage.getItem(POSITION_KEY) || "null");
+      } catch {
+        return null;
+      }
+    }
+    function savePosition() {
+      try {
+        localStorage.setItem(
+          POSITION_KEY,
+          JSON.stringify({ id: ids[at], index: at }),
+        );
+      } catch {}
+    }
+
+    const fromHash = cards.findIndex((c) => "#" + c.id === location.hash);
+    let at = fromHash >= 0 ? fromHash : restoreIndex(ids, loadPosition());
+
+    // On a wide screen the deck is a row: the selected card centered, its
+    // neighbours dimmed and read-only on either side. The same cards and the
+    // same show() serve the phone, where the row is one card wide.
+    const SLOT_PX = 416;
+    let visible = 1;
+    function measure() {
+      const width = document.documentElement.clientWidth - 28;
+      visible = visibleCount(width, SLOT_PX);
+      document.documentElement.style.setProperty("--visible", String(visible));
+      document.documentElement.classList.toggle("wide", visible > 1);
+    }
+    measure();
+    window.addEventListener("resize", () => {
+      const before = visible;
+      measure();
+      // A phone's keyboard resizes the viewport too; only a new column count
+      // re-lays the row, so typing never scrolls the page.
+      if (visible !== before) show(at);
+    });
+    cards.forEach((card, i) =>
+      card.addEventListener("click", () => {
+        if (card.classList.contains("neighbor")) show(i);
+      }),
     );
 
     function show(index) {
       at = Math.min(Math.max(index, 0), cards.length - 1);
-      cards.forEach((card, i) => (card.hidden = i !== at));
+      const slots = carouselSlots(at, cards.length, visible);
+      cards.forEach((card, i) => {
+        const slot = slots.indexOf(i);
+        const neighbor = slot >= 0 && i !== at;
+        card.hidden = slot < 0;
+        card.style.gridColumn = slot < 0 ? "" : String(slot + 1);
+        card.classList.toggle("current", i === at);
+        card.classList.toggle("neighbor", neighbor);
+        card.querySelector(".card-body").inert = neighbor;
+      });
       position.textContent = String(at + 1);
       bar.style.width = ((at + 1) / cards.length) * 100 + "%";
       history.replaceState(null, "", "#" + cards[at].id);
+      savePosition();
       window.scrollTo(0, 0);
     }
+    document.querySelector("[data-first]").onclick = () => show(0);
     document.querySelector("[data-prev]").onclick = () => show(at - 1);
     document.querySelector("[data-next]").onclick = () => show(at + 1);
+    document.querySelector("[data-last]").onclick = () =>
+      show(cards.length - 1);
+
+    // One highlight rule for both pick lists (mentions and search).
+    function highlight(list, index) {
+      [...list.querySelectorAll("[role=option]")].forEach((option, i) => {
+        option.classList.toggle("active", i === index);
+        option.setAttribute("aria-selected", String(i === index));
+        if (i === index) option.scrollIntoView({ block: "nearest" });
+      });
+    }
+    function optionButton(label, onPick) {
+      const li = document.createElement("li");
+      const option = document.createElement("button");
+      option.type = "button";
+      option.setAttribute("role", "option");
+      option.textContent = label;
+      // Keep the keyboard up: the tap must not take focus off the input.
+      option.addEventListener("mousedown", (e) => e.preventDefault());
+      option.addEventListener("click", onPick);
+      li.append(option);
+      return li;
+    }
+
+    // Search: finds a Campaign in the loaded view and jumps the deck to its
+    // real position. It never filters the deck.
+    const entries = JSON.parse(deck.dataset.index || "[]");
+    const search = document.querySelector("[data-search]");
+    const searchBox = search.querySelector("input");
+    const results = search.querySelector("ul");
+    let hits = [];
+    let hit = -1;
+    function openSearch() {
+      search.hidden = false;
+      searchBox.value = "";
+      renderHits();
+      searchBox.focus();
+    }
+    function closeSearch() {
+      search.hidden = true;
+      results.replaceChildren();
+    }
+    function jump(index) {
+      closeSearch();
+      show(index);
+    }
+    function renderHits() {
+      hits = searchDeck(entries, searchBox.value);
+      hit = hits.length ? 0 : -1;
+      results.replaceChildren(
+        ...hits.map((index) =>
+          optionButton(
+            [entries[index].name, entries[index].lp]
+              .filter(Boolean)
+              .join(" · "),
+            () => jump(index),
+          ),
+        ),
+      );
+      highlight(results, hit);
+    }
+    document.querySelector("[data-search-open]").onclick = () =>
+      search.hidden ? openSearch() : closeSearch();
+    searchBox.addEventListener("input", renderHits);
+    searchBox.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        hit = moveHighlight(hit, hits.length, e.key === "ArrowDown" ? 1 : -1);
+        highlight(results, hit);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (hit >= 0) jump(hits[hit]);
+      } else if (e.key === "Escape") {
+        closeSearch();
+      }
+    });
 
     document.addEventListener("keydown", (e) => {
       if (e.target.closest("textarea, input, select")) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === "ArrowRight" || e.key === "j") show(at + 1);
       if (e.key === "ArrowLeft" || e.key === "k") show(at - 1);
+      if (e.key === "Home") {
+        e.preventDefault();
+        show(0);
+      }
+      if (e.key === "End") {
+        e.preventDefault();
+        show(cards.length - 1);
+      }
+      if (e.key === "/") {
+        e.preventDefault();
+        openSearch();
+      }
     });
 
     let startX = null;
@@ -62,7 +231,7 @@
       const dy = e.changedTouches[0].clientY - startY;
       startX = null;
       if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-      if (e.target.closest("textarea, input")) return;
+      if (e.target.closest("textarea, input, .thumbs")) return;
       show(dx < 0 ? at + 1 : at - 1);
     });
 
@@ -99,10 +268,12 @@
         sessionStorage.setItem(PEOPLE_KEY, JSON.stringify(people));
       } catch {}
     }
+    // The server's list goes first so a renamed collaborator shows by their
+    // current Airtable name, not a name cached earlier in the session.
+    addPeople(JSON.parse(deck.dataset.people || "[]"));
     try {
       addPeople(JSON.parse(sessionStorage.getItem(PEOPLE_KEY) || "[]"));
     } catch {}
-    addPeople(JSON.parse(deck.dataset.people || "[]"));
 
     deck.addEventListener("detail-loaded", (e) => {
       const tag = e.target.querySelector("[data-people]");
@@ -131,20 +302,57 @@
         .slice(0, 6);
     }
 
+    const limits = JSON.parse(deck.dataset.limits || "{}");
+
+    // Airtable takes at most limits.maxBytes per file, so a bigger image is
+    // re-encoded as a smaller JPEG here, before it is sent. A browser that
+    // cannot draw it (HEIC outside Safari) leaves it too big, and the submit
+    // says so.
+    async function shrink(file) {
+      if (file.size <= limits.maxBytes || !shrinkable(file.type)) return file;
+      let bitmap;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch {
+        return file;
+      }
+      const canvas = document.createElement("canvas");
+      let scale = Math.min(1, 4096 / Math.max(bitmap.width, bitmap.height));
+      let blob = null;
+      for (let tries = 0; tries < 6; tries++) {
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas
+          .getContext("2d")
+          .drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        blob = await new Promise((done) =>
+          canvas.toBlob(done, "image/jpeg", 0.85),
+        );
+        if (blob.size <= limits.maxBytes) break;
+        scale *= shrinkScale(blob.size, limits.maxBytes);
+      }
+      const name = (file.name || "image").replace(/\.[^.]*$/, "") + ".jpg";
+      return new File([blob], name, { type: "image/jpeg" });
+    }
+
     deck.querySelectorAll("form.actions").forEach((form) => {
       const box = form.querySelector("textarea");
       const list = form.querySelector(".mention-list");
       const submit = form.querySelector("button[type=submit]");
+      const result = form.querySelector(".result");
       const reasons = form.querySelector("[data-reasons]");
       const reasonPick = reasons.querySelector("select");
-      const day = form.dataset.day;
+      const picker = form.querySelector("input[type=file]");
+      const thumbs = form.querySelector(".thumbs");
       const inserted = new Map();
       let pendingReason = null;
+      let lastMacro = null;
+      let found = [];
+      let highlighted = -1;
+      let attached = [];
 
       function syncLabel() {
-        submit.textContent = box.value.trim()
-          ? "Comment · next touch " + day
-          : "Mark handled · " + day;
+        submit.textContent = buttonLabel(box.value);
       }
 
       function remember(mentions) {
@@ -154,6 +362,8 @@
       function closeList() {
         list.hidden = true;
         list.replaceChildren();
+        found = [];
+        highlighted = -1;
       }
 
       function pick(person) {
@@ -172,44 +382,146 @@
 
       function openList() {
         const token = activeMention(box);
-        const found = token && people.length ? matching(token.query) : [];
+        found = token && people.length ? matching(token.query) : [];
         if (found.length === 0) return closeList();
         list.replaceChildren(
-          ...found.map((person) => {
-            const li = document.createElement("li");
-            const option = document.createElement("button");
-            option.type = "button";
-            option.setAttribute("role", "option");
-            option.textContent = person.name;
-            // Keep the keyboard up: the tap must not take focus off the box.
-            option.addEventListener("mousedown", (e) => e.preventDefault());
-            option.addEventListener("click", () => pick(person));
-            li.append(option);
-            return li;
-          }),
+          ...found.map((person) =>
+            optionButton(person.name, () => pick(person)),
+          ),
         );
+        highlighted = 0;
+        highlight(list, highlighted);
         list.hidden = false;
       }
 
       function fill(text, mentions) {
-        const current = box.value.replace(/\s+$/, "");
-        box.value = current ? current + "\n" + text : text;
+        box.value = applyMacro(box.value, lastMacro, text);
+        // Only a box the macro now owns outright can be replaced by the next.
+        lastMacro = box.value === text ? text : null;
         remember(mentions);
         box.focus();
         box.setSelectionRange(box.value.length, box.value.length);
         syncLabel();
       }
 
+      // Images show as thumbnails, anything else as a chip with its name;
+      // each has a × to drop it before posting.
+      function renderThumbs() {
+        thumbs.replaceChildren(
+          ...attached.map((item) => {
+            const figure = document.createElement("figure");
+            if (item.url) {
+              const img = document.createElement("img");
+              img.src = item.url;
+              img.alt = item.file.name || "Image";
+              figure.append(img);
+            } else {
+              figure.className = "file";
+              figure.textContent = item.file.name || "File";
+            }
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "remove";
+            remove.setAttribute(
+              "aria-label",
+              "Remove " + (item.file.name || "attachment"),
+            );
+            remove.textContent = "×";
+            remove.addEventListener("click", () => {
+              if (item.url) URL.revokeObjectURL(item.url);
+              attached = attached.filter((a) => a !== item);
+              renderThumbs();
+            });
+            figure.append(remove);
+            return figure;
+          }),
+        );
+        thumbs.hidden = attached.length === 0;
+      }
+
+      function addFiles(fileList) {
+        const incoming = [...fileList];
+        const { keep, rejected } = acceptFiles(
+          attached.map((a) => a.file),
+          incoming,
+          limits,
+        );
+        for (const i of keep) {
+          const file = incoming[i];
+          attached.push({
+            file,
+            url: /^image\//.test(file.type) ? URL.createObjectURL(file) : null,
+          });
+        }
+        renderThumbs();
+        result.className = rejected.length ? "result error" : "result";
+        result.textContent = rejected.length
+          ? "Skipped: " + rejected.join("; ") + "."
+          : "";
+      }
+
+      function clearAttached() {
+        for (const a of attached) if (a.url) URL.revokeObjectURL(a.url);
+        attached = [];
+        renderThumbs();
+      }
+
+      picker.addEventListener("change", () => {
+        addFiles(picker.files);
+        picker.value = "";
+      });
+      box.addEventListener("paste", (e) => {
+        const data = e.clipboardData;
+        if (!data) return;
+        const files = [...data.items]
+          .filter((item) => item.kind === "file")
+          .map((item) => item.getAsFile())
+          .filter(Boolean);
+        if (files.length === 0) return;
+        // A copied screenshot sometimes carries text too; keep that paste.
+        if (!data.getData("text/plain")) e.preventDefault();
+        addFiles(files);
+      });
+      form.addEventListener("dragover", (e) => {
+        if (![...e.dataTransfer.types].includes("Files")) return;
+        e.preventDefault();
+        form.classList.add("dropping");
+      });
+      form.addEventListener("dragleave", (e) => {
+        if (!form.contains(e.relatedTarget)) form.classList.remove("dropping");
+      });
+      form.addEventListener("drop", (e) => {
+        if (!e.dataTransfer.files.length) return;
+        e.preventDefault();
+        form.classList.remove("dropping");
+        addFiles(e.dataTransfer.files);
+      });
+
       box.addEventListener("input", () => {
         openList();
         syncLabel();
       });
       box.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeList();
+        if (list.hidden) return;
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          highlighted = moveHighlight(
+            highlighted,
+            found.length,
+            e.key === "ArrowDown" ? 1 : -1,
+          );
+          highlight(list, highlighted);
+        } else if ((e.key === "Enter" || e.key === "Tab") && highlighted >= 0) {
+          e.preventDefault();
+          pick(found[highlighted]);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          closeList();
+        }
       });
       box.addEventListener("blur", () => setTimeout(closeList, 150));
 
-      form.querySelectorAll(".chip").forEach((chip) => {
+      form.querySelectorAll(".chip[data-macro]").forEach((chip) => {
         chip.addEventListener("click", () => {
           const mentions = JSON.parse(chip.dataset.mentions || "[]");
           if (chip.dataset.reason) {
@@ -234,7 +546,6 @@
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const result = form.querySelector(".result");
         form.elements.mentions.value = JSON.stringify(
           [...inserted.values()].filter((p) =>
             box.value.includes("@" + p.name),
@@ -242,12 +553,25 @@
         );
         submit.disabled = true;
         result.className = "result";
-        result.textContent = "Working…";
+        result.textContent = attached.length ? "Uploading…" : "Working…";
         try {
+          const body = new FormData(form);
+          body.delete("files");
+          for (const a of attached) {
+            const file = await shrink(a.file);
+            if (file.size > limits.maxBytes) {
+              result.className = "result error";
+              result.textContent =
+                (file.name || "A file") +
+                " is still over Airtable's 5 MB limit. Remove it or use a smaller one.";
+              return;
+            }
+            body.append("files", file, file.name || "attachment");
+          }
           const res = await fetch(form.action, {
             method: "POST",
             headers: { Accept: "application/json" },
-            body: new URLSearchParams(new FormData(form)),
+            body,
           });
           const json = await res.json();
           result.textContent = json.message;
@@ -257,8 +581,10 @@
           }
           box.value = "";
           inserted.clear();
+          lastMacro = null;
+          clearAttached();
           syncLabel();
-          setTimeout(() => show(at + 1), 1400);
+          setTimeout(() => show(at + 1), 900);
         } catch {
           result.className = "result error";
           result.textContent = "That did not go through. Try again.";

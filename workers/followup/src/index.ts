@@ -26,7 +26,7 @@ import {
   configFrom,
 } from "./config.ts";
 import type { Config, Env } from "./config.ts";
-import { defaultNextTouch, nextTouchValue, shortDay } from "./dates.ts";
+import { nextTouchAfterSubmit, nextTouchValue, shortDay } from "./dates.ts";
 import {
   KB,
   choicePeople,
@@ -54,6 +54,12 @@ import {
   renderSignIn,
   renderUnconfigured,
 } from "./pages.ts";
+import {
+  attachmentComment,
+  saveAttachments,
+  uploadProblem,
+  uploadsOf,
+} from "./attachments.ts";
 import {
   SESSION_COOKIE,
   STATE_COOKIE,
@@ -212,13 +218,21 @@ async function handleReview(
   const lps = await airtable.recordsByIds(
     AIRTABLE.limitedPartners,
     campaigns.flatMap((c) => linkedIds(c, FIELD.limitedPartner)),
-    [FIELD.lpEntity],
+    [FIELD.lpEntity, FIELD.lpPrimaryContacts],
+  );
+  // Contact names only, for search; the full contact cards load per card.
+  const contacts = await airtable.recordsByIds(
+    AIRTABLE.contacts,
+    lps.flatMap((lp) => linkedIds(lp, FIELD.lpPrimaryContacts)),
+    [FIELD.contactName],
   );
   const interactions = await airtable.recordsByIds(
     AIRTABLE.interactions,
     campaigns.flatMap((c) => linkedIds(c, FIELD.interactions)),
     INTERACTION_FIELDS,
   );
+  // Read on every page load, never cached: a Closed Lost Reason added in
+  // Airtable shows on the next reload.
   const schema = await airtable.tableFields(AIRTABLE.campaigns);
 
   const lpNames = new Map(
@@ -227,8 +241,21 @@ async function handleReview(
   const lines = new Map<string, InteractionLine>(
     interactions.map((r) => [r.id, interactionLine(r)]),
   );
+  const contactName = new Map(
+    contacts.map((c) => [c.id, String(c.fields[FIELD.contactName] ?? "")]),
+  );
+  const contactNames = new Map(
+    lps.map((lp) => [
+      lp.id,
+      linkedIds(lp, FIELD.lpPrimaryContacts)
+        .map((id) => contactName.get(id) ?? "")
+        .filter(Boolean),
+    ]),
+  );
   const now = Date.now();
-  const cards = campaigns.map((c) => cardOf(c, lpNames, lines, now));
+  const cards = campaigns.map((c) =>
+    cardOf(c, lpNames, lines, now, contactNames),
+  );
   const people = mergePeople(
     recordPeople(campaigns, PEOPLE_FIELDS),
     recordPeople(interactions, [FIELD.triggeredBy]),
@@ -239,7 +266,6 @@ async function handleReview(
       csrf: session.csrf,
       closedLostReasons: selectOptions(schema, FIELD.closedLostReason),
       people,
-      nextTouchDay: defaultNextTouch(now),
     }),
   );
 }
@@ -276,10 +302,13 @@ async function handleDetail(airtable: Airtable, id: string): Promise<Response> {
   );
 }
 
-/** Every submit moves the Campaign's Next Touch Point to the default day,
- * which is what takes it down the Follow Ups list; a non-empty box is also
- * posted as the user's comment, exactly as typed but for its mentions. KB
- * reads every comment and moves the date again when one implies another. */
+/** Every submit keeps the Campaign's Next Touch Point at least a week out,
+ * which is what takes it down the Follow Ups list (dates.ts
+ * nextTouchAfterSubmit). A non-empty box is posted as the user's comment,
+ * exactly as typed but for its mentions. Attachments are saved on a new
+ * Interaction first, and the comment then also asks KB to fill it in
+ * (attachments.ts). KB reads every comment and moves the date again when one
+ * implies another. */
 async function handleAction(
   request: Request,
   airtable: Airtable,
@@ -296,16 +325,44 @@ async function handleAction(
   }
   const id = String(form.get("campaign") ?? "");
   if (!RECORD_ID.test(id)) return reply(false, "Unknown Campaign.", 400);
-  const comment = serializeComment(
+  const typed = serializeComment(
     String(form.get("text") ?? "").trim(),
     parseMentions(form.get("mentions")),
   );
-  const day = defaultNextTouch(Date.now());
+  const files = uploadsOf(form);
+  const problem = uploadProblem(files);
+  if (problem) return reply(false, problem, 400);
+  const comment = files.length ? attachmentComment(typed) : typed;
+  const now = Date.now();
 
   // The date first: the comment wakes KB, whose own date write must land after.
-  await airtable.updateRecord(AIRTABLE.campaigns, id, {
-    [FIELD.nextTouch]: nextTouchValue(day),
-  });
+  const campaign = await airtable.getRecord(AIRTABLE.campaigns, id);
+  const day = nextTouchAfterSubmit(campaign.fields[FIELD.nextTouch], now);
+  if (day) {
+    await airtable.updateRecord(AIRTABLE.campaigns, id, {
+      [FIELD.nextTouch]: nextTouchValue(day),
+    });
+  }
+  const next = day ? `Next touch ${shortDay(day)}.` : "Next touch unchanged.";
+  // Then the files, so the Interaction exists when KB reads the comment.
+  if (files.length) {
+    try {
+      await saveAttachments(airtable, id, files, now);
+    } catch (err) {
+      console.error(
+        JSON.stringify({
+          event: "followup_attachments_failed",
+          id,
+          error: String(err),
+        }),
+      );
+      return reply(
+        false,
+        `${next} But the attachments did not save, so nothing was posted. Try again.`,
+        502,
+      );
+    }
+  }
   if (comment) {
     try {
       await airtable.createComment(AIRTABLE.campaigns, id, comment);
@@ -319,7 +376,9 @@ async function handleAction(
       );
       return reply(
         false,
-        `Next touch moved to ${shortDay(day)}, but the comment did not post. Try it again.`,
+        files.length
+          ? `${next} The attachments are saved on a new Interaction, but the comment did not post, so KB was not asked to read them. Post a comment asking it to.`
+          : `${next} But the comment did not post. Try it again.`,
         502,
       );
     }
@@ -329,17 +388,19 @@ async function handleAction(
       event: "followup_action",
       campaign: id,
       commented: Boolean(comment),
+      attachments: files.length,
       by: session.email,
     }),
   );
   if (!wantsJson(request)) return redirect(`${TOOL_PATH}#c-${id}`, [], 303);
-  const next = `Next touch ${shortDay(day)}.`;
-  const message = !comment
-    ? `Marked handled. ${next}`
-    : mentionsUser(comment, KB.id)
-      ? `Comment posted. ${next} KB will reply in the thread.`
-      : `Comment posted. ${next}`;
-  return json({ ok: true, message });
+  const lead = files.length
+    ? `${files.length === 1 ? "Attachment" : `${files.length} attachments`} saved. KB will log the Interaction and reply in the thread.`
+    : !comment
+      ? "Marked handled."
+      : mentionsUser(comment, KB.id)
+        ? "Comment posted. KB will reply in the thread."
+        : "Comment posted.";
+  return json({ ok: true, message: `${lead} ${next}` });
 }
 
 async function route(

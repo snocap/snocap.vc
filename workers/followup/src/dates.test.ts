@@ -4,9 +4,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   defaultNextTouch,
+  nextTouchAfterSubmit,
   nextTouchValue,
   pacificDayPlus,
-  submitLabel,
 } from "./dates.ts";
 
 test("the default is a week after today's Pacific date", () => {
@@ -51,11 +51,49 @@ test("the day is written at 16:00 UTC, the same day in Pacific time", () => {
   assert.equal(nextTouchValue("2026-10-30"), "2026-10-30T16:00:00.000Z");
 });
 
-test("the button says what a press does and the day it sets", () => {
-  assert.equal(submitLabel("", "2026-10-30"), "Mark handled · Oct 30");
-  assert.equal(submitLabel("  \n", "2026-10-30"), "Mark handled · Oct 30");
+const NOW = Date.parse("2026-10-23T18:00:00Z"); // Oct 23, Pacific
+
+test("a past Next Touch Point moves to today + 7", () => {
   assert.equal(
-    submitLabel("commitment is now $250K", "2026-10-30"),
-    "Comment · next touch Oct 30",
+    nextTouchAfterSubmit("2026-10-01T16:00:00.000Z", NOW),
+    "2026-10-30",
   );
+  // Earlier today is not the future either.
+  assert.equal(
+    nextTouchAfterSubmit("2026-10-23T16:00:00.000Z", NOW),
+    "2026-10-30",
+  );
+});
+
+test("an unset or unreadable Next Touch Point moves to today + 7", () => {
+  assert.equal(nextTouchAfterSubmit(undefined, NOW), "2026-10-30");
+  assert.equal(nextTouchAfterSubmit("not a date", NOW), "2026-10-30");
+});
+
+test("a future date earlier than today + 7 moves to today + 7, never +7 on itself", () => {
+  assert.equal(
+    nextTouchAfterSubmit("2026-10-26T16:00:00.000Z", NOW),
+    "2026-10-30",
+  );
+});
+
+test("a future date later than today + 7 is kept", () => {
+  assert.equal(nextTouchAfterSubmit("2026-11-20T16:00:00.000Z", NOW), null);
+  // Exactly today + 7 is the floor either way.
+  assert.equal(
+    nextTouchAfterSubmit("2026-10-30T16:00:00.000Z", NOW),
+    "2026-10-30",
+  );
+});
+
+test("the comparison is by Pacific date across a DST change", () => {
+  // Oct 29, 11:30pm PDT; PST starts Nov 1, so today + 7 is Nov 5.
+  const now = Date.parse("2026-10-30T06:30:00Z");
+  // 11:30pm PST Nov 4 is Nov 5 in UTC but Nov 4 in Pacific: earlier → floor.
+  assert.equal(
+    nextTouchAfterSubmit("2026-11-05T07:30:00.000Z", now),
+    "2026-11-05",
+  );
+  // 1am PST Nov 6 is Nov 6 in Pacific: later → kept.
+  assert.equal(nextTouchAfterSubmit("2026-11-06T09:00:00.000Z", now), null);
 });

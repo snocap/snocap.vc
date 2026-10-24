@@ -4,7 +4,8 @@
 // the collaborators the user's own token already sees: the Representative and
 // Created By values on the loaded Campaigns, the collaborator field's schema
 // choices when Airtable returns any, and the authors and mentions in comment
-// threads. KB is always on it. The page caches the merged list for the browser
+// threads. KB is always on it, like everyone else under its Airtable display
+// name. The page caches the merged list for the browser
 // session and grows it as threads load.
 //
 // In the box a mention is a visible `@Name`; on submit the page sends the people
@@ -19,7 +20,9 @@ export interface Person {
   name: string;
 }
 
-export const KB: Person = { id: AIRTABLE.kbUserId, name: "KB" };
+/** KB under its Airtable display name. Only a fallback: a name Airtable
+ * returns for the same id wins, so a rename shows as soon as the page sees it. */
+export const KB: Person = { id: AIRTABLE.kbUserId, name: "Kernel Bottie" };
 
 const USER_ID = /^usr[A-Za-z0-9]{14}$/;
 
@@ -65,15 +68,15 @@ export function commentPeople(comments: AirtableComment[]): Person[] {
   ]);
 }
 
-/** One entry per user id: KB first under its own name, the rest by name. */
+/** One entry per user id, by Airtable display name, sorted by name. KB is
+ * always included so a macro can mention it, under the name Airtable gives
+ * when one of the sources carries it. */
 export function mergePeople(...sources: Person[][]): Person[] {
   const byId = new Map<string, Person>();
-  for (const person of sources.flat()) {
-    if (person.id !== KB.id && !byId.has(person.id))
-      byId.set(person.id, person);
+  for (const person of [...sources.flat(), KB]) {
+    if (!byId.has(person.id)) byId.set(person.id, person);
   }
-  const rest = [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
-  return [KB, ...rest];
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** The people the page says it inserted, from the form's JSON; junk is dropped. */

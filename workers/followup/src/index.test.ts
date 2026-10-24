@@ -31,7 +31,9 @@ interface Call {
   body: string;
 }
 
-function fakeAirtable(opts: { noAccess?: boolean } = {}) {
+function fakeAirtable(
+  opts: { noAccess?: boolean; reasons?: string[]; uploadStatus?: number } = {},
+) {
   const calls: Call[] = [];
   let issued = 0;
   const records: Record<
@@ -59,7 +61,13 @@ function fakeAirtable(opts: { noAccess?: boolean } = {}) {
       },
     ],
     [AIRTABLE.limitedPartners]: [
-      { id: "recLP", fields: { Entity: "Zeta LP" } },
+      {
+        id: "recLP",
+        fields: { Entity: "Zeta LP", "Primary Contacts": ["recContact1"] },
+      },
+    ],
+    [AIRTABLE.contacts]: [
+      { id: "recContact1", fields: { Name: "Zoë Ångström" } },
     ],
     [AIRTABLE.interactions]: [
       {
@@ -94,6 +102,12 @@ function fakeAirtable(opts: { noAccess?: boolean } = {}) {
     const path = url.pathname.replace(/^\/v0/, "");
     if (path === "/meta/whoami")
       return Response.json({ id: "usrJon", email: "jon@sno.llc" });
+    if (url.hostname === "content.airtable.com") {
+      return Response.json(
+        { id: url.pathname.split("/")[3], fields: {} },
+        { status: opts.uploadStatus ?? 200 },
+      );
+    }
     if (path === `/meta/bases/${AIRTABLE.base}/tables`) {
       return Response.json({
         tables: [
@@ -103,7 +117,11 @@ function fakeAirtable(opts: { noAccess?: boolean } = {}) {
               { name: FIELD.representative, type: "singleCollaborator" },
               {
                 name: FIELD.closedLostReason,
-                options: { choices: [{ name: "Non-Responsive" }] },
+                options: {
+                  choices: (opts.reasons ?? ["Non-Responsive"]).map((name) => ({
+                    name,
+                  })),
+                },
               },
             ],
           },
@@ -117,6 +135,12 @@ function fakeAirtable(opts: { noAccess?: boolean } = {}) {
       return call.method === "POST"
         ? Response.json({ id: "com1", text: JSON.parse(call.body).text })
         : Response.json({ comments: [] });
+    }
+    if (!id && call.method === "POST") {
+      return Response.json({
+        id: "recNewInteract01",
+        ...JSON.parse(call.body),
+      });
     }
     if (id) {
       const record = records[table]?.find((r) => r.id === id);
@@ -133,7 +157,7 @@ function fakeAirtable(opts: { noAccess?: boolean } = {}) {
     );
     return Response.json({ records: list });
   }) as typeof fetch;
-  return { calls, impl };
+  return { calls, impl, records };
 }
 
 const realFetch = globalThis.fetch;
@@ -141,7 +165,7 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
-function useAirtable(opts?: { noAccess?: boolean }) {
+function useAirtable(opts?: Parameters<typeof fakeAirtable>[0]) {
   const fake = fakeAirtable(opts);
   globalThis.fetch = fake.impl;
   return fake;
@@ -298,7 +322,19 @@ function actionRequest(
   cookie: string,
   fields: Record<string, string>,
   origin = "https://snocap.vc",
+  files: File[] = [],
 ) {
+  if (files.length) {
+    // The page posts multipart when it carries photos.
+    const body = new FormData();
+    for (const [k, v] of Object.entries(fields)) body.append(k, v);
+    for (const file of files) body.append("files", file, file.name);
+    return new Request(`${ROOT}/action`, {
+      method: "POST",
+      headers: { Cookie: cookie, Origin: origin, Accept: "application/json" },
+      body,
+    });
+  }
   return new Request(`${ROOT}/action`, {
     method: "POST",
     headers: {
@@ -457,6 +493,11 @@ test("an empty submit only marks the card handled: the date moves, no comment po
   assert.deepEqual(w.comments, []);
 });
 
+function attr(body: string, name: string): unknown {
+  const raw = body.match(new RegExp(`${name}="([^"]*)"`))?.[1] ?? "";
+  return JSON.parse(raw.replaceAll("&quot;", '"').replaceAll("&amp;", "&"));
+}
+
 test("the deck renders the mention list and each card's macro prefills", async () => {
   useAirtable();
   const { cookie } = await sessionFor();
@@ -465,16 +506,242 @@ test("the deck renders the mention list and each card's macro prefills", async (
     ENV,
   );
   const body = await response.text();
-  const people = body.match(/data-people="([^"]*)"/)?.[1] ?? "";
-  const list = JSON.parse(people.replaceAll("&quot;", '"'));
-  assert.deepEqual(list, [{ id: AIRTABLE.kbUserId, name: "KB" }, NATE]);
-  assert.match(body, /Comment… use @ to mention KB or a teammate/);
-  assert.match(body, /Mark handled · \w{3} \d+/);
+  // Everyone by their Airtable display name, KB included; no alias.
+  assert.deepEqual(attr(body, "data-people"), [
+    { id: AIRTABLE.kbUserId, name: "Kernel Bottie" },
+    NATE,
+  ]);
+  assert.match(body, /use @ to mention someone; paste or drop a screenshot/);
+  assert.doesNotMatch(body, /@KB\b/);
   assert.match(body, /data-template="@Nate any update here\?"/);
-  assert.match(body, /data-template="@KB close lost: \{reason\}"/);
+  assert.match(body, /data-template="@Kernel Bottie close lost: \{reason\}"/);
   assert.match(body, /<option value="Non-Responsive">/);
   // Alpha has no Representative, so it gets no Ping rep chip.
   assert.equal(body.match(/data-macro="ping-rep"/g)?.length, 1);
+});
+
+test("the button is just 'Mark handled' at first, with no date on it", async () => {
+  useAirtable();
+  const { cookie } = await sessionFor();
+  const body = await (
+    await worker.fetch(new Request(ROOT, { headers: { Cookie: cookie } }), ENV)
+  ).text();
+  const labels = [
+    ...body.matchAll(/<button type="submit">([^<]*)<\/button>/g),
+  ].map((m) => m[1].trim());
+  assert.deepEqual(labels, ["Mark handled", "Mark handled"]);
+});
+
+test("Closed Lost Reasons come from the live schema on every load", async () => {
+  const { cookie } = await sessionFor();
+  const load = async () =>
+    (
+      await worker.fetch(
+        new Request(ROOT, { headers: { Cookie: cookie } }),
+        ENV,
+      )
+    ).text();
+  useAirtable({ reasons: ["Non-Responsive"] });
+  assert.doesNotMatch(await load(), /Fund Size/);
+  useAirtable({ reasons: ["Non-Responsive", "Fund Size"] });
+  assert.match(await load(), /<option value="Fund Size">Fund Size<\/option>/);
+});
+
+test("the deck carries a search entry per card, in view order, with contact names", async () => {
+  useAirtable();
+  const { cookie } = await sessionFor();
+  const body = await (
+    await worker.fetch(new Request(ROOT, { headers: { Cookie: cookie } }), ENV)
+  ).text();
+  assert.deepEqual(attr(body, "data-index"), [
+    {
+      name: "Zeta Partners",
+      lp: "Zeta LP",
+      contacts: ["Zoë Ångström"],
+      rep: "Nate",
+    },
+    { name: "Alpha Family Office", lp: "", contacts: [], rep: "" },
+  ]);
+  assert.match(body, /data-user="usrJon"/);
+  // The page runs the tested helpers themselves.
+  assert.match(body, /const searchDeck = /);
+  assert.match(body, /const carouselSlots = /);
+});
+
+const PNG = () =>
+  new File([new Uint8Array([137, 80, 78, 71, 1, 2, 3])], "shot.png", {
+    type: "image/png",
+  });
+
+test("a future Next Touch Point later than a week out is kept, not punted", async () => {
+  const fake = useAirtable();
+  const { session, cookie } = await sessionFor();
+  const record = fake.records[AIRTABLE.campaigns].find(
+    (r) => r.id === CAMPAIGN_A,
+  )!;
+  record.fields[FIELD.nextTouch] = new Date(
+    Date.now() + 30 * 86_400_000,
+  ).toISOString();
+  const response = await worker.fetch(
+    actionRequest(cookie, {
+      campaign: CAMPAIGN_A,
+      text: "",
+      csrf: session.csrf,
+    }),
+    ENV,
+  );
+  assert.match((await response.json()).message, /Next touch unchanged\./);
+  assert.deepEqual(writes(fake).patches, []);
+});
+
+const PDF = () =>
+  new File([new Uint8Array([37, 80, 68, 70])], "memo.pdf", {
+    type: "application/pdf",
+  });
+const INSTRUCTION =
+  "@[usrt57orTxVb75I3W] extract and update relevant information from recent interaction";
+
+function attachmentRequest(
+  cookie: string,
+  csrf: string,
+  text: string,
+  files: File[],
+) {
+  return actionRequest(
+    cookie,
+    { campaign: CAMPAIGN_A, text, csrf },
+    "https://snocap.vc",
+    files,
+  );
+}
+
+test("attachments with no text: one Interaction, the uploads, then just the @KB instruction", async () => {
+  const fake = useAirtable();
+  const { session, cookie } = await sessionFor();
+  const response = await worker.fetch(
+    attachmentRequest(cookie, session.csrf, "", [PNG(), PDF()]),
+    ENV,
+  );
+  assert.equal(response.status, 200);
+  const { ok, message } = await response.json();
+  assert.equal(ok, true);
+  assert.match(
+    message,
+    /^2 attachments saved\. KB will log the Interaction and reply in the thread\. Next touch /,
+  );
+
+  const create = fake.calls.find(
+    (c) =>
+      c.method === "POST" &&
+      c.url.pathname === `/v0/${AIRTABLE.base}/${AIRTABLE.interactions}`,
+  );
+  assert.ok(create, "an Interaction is created");
+  const created = JSON.parse(create.body);
+  assert.equal(created.typecast, false);
+  assert.deepEqual(created.fields, {
+    Campaign: [CAMPAIGN_A],
+    "Triggered By": { id: "usrJon" },
+    "Occurred on": created.fields["Occurred on"],
+    Summary: "New Interaction Attachment",
+  });
+  assert.match(
+    created.fields["Occurred on"],
+    /^\d{4}-\d{2}-\d{2}T16:00:00\.000Z$/,
+  );
+  assert.equal(created.fields.Channel, undefined, "Channel is left for KB");
+
+  const uploads = fake.calls.filter(
+    (c) => c.url.hostname === "content.airtable.com",
+  );
+  assert.equal(uploads.length, 2);
+  assert.equal(
+    uploads[0].url.pathname,
+    `/v0/${AIRTABLE.base}/recNewInteract01/Attachments/uploadAttachment`,
+  );
+  assert.equal(uploads[0].auth, "Bearer access-0", "the user's own token");
+  assert.deepEqual(JSON.parse(uploads[0].body), {
+    contentType: "image/png",
+    filename: "shot.png",
+    file: Buffer.from([137, 80, 78, 71, 1, 2, 3]).toString("base64"),
+  });
+  assert.equal(JSON.parse(uploads[1].body).contentType, "application/pdf");
+
+  const w = writes(fake);
+  assert.deepEqual(w.comments, [INSTRUCTION]);
+  // Date, then the Interaction, then the comment that sends KB to it.
+  const order = fake.calls
+    .filter((c) => c.method !== "GET")
+    .map(
+      (c) =>
+        `${c.method} ${c.url.hostname === "content.airtable.com" ? "upload" : c.url.pathname.split("/").slice(3).join("/")}`,
+    );
+  assert.deepEqual(order, [
+    `PATCH ${AIRTABLE.campaigns}/${CAMPAIGN_A}`,
+    `POST ${AIRTABLE.interactions}`,
+    "POST upload",
+    "POST upload",
+    `POST ${AIRTABLE.campaigns}/${CAMPAIGN_A}/comments`,
+  ]);
+});
+
+test("attachments with text: the typed comment, mentions serialized, then the instruction line", async () => {
+  const fake = useAirtable();
+  const { session, cookie } = await sessionFor();
+  const response = await worker.fetch(
+    actionRequest(
+      cookie,
+      {
+        campaign: CAMPAIGN_A,
+        text: "@Nate they replied on WhatsApp",
+        mentions: JSON.stringify([NATE]),
+        csrf: session.csrf,
+      },
+      "https://snocap.vc",
+      [PNG()],
+    ),
+    ENV,
+  );
+  assert.match(
+    (await response.json()).message,
+    /^Attachment saved\. KB will log the Interaction/,
+  );
+  assert.deepEqual(writes(fake).comments, [
+    `@[${NATE.id}] they replied on WhatsApp\n${INSTRUCTION}`,
+  ]);
+});
+
+test("a failed upload posts no comment, so KB is never sent to a half-saved record", async () => {
+  const fake = useAirtable({ uploadStatus: 422 });
+  const { session, cookie } = await sessionFor();
+  const response = await worker.fetch(
+    attachmentRequest(cookie, session.csrf, "hello", [PNG()]),
+    ENV,
+  );
+  assert.equal(response.status, 502);
+  assert.match((await response.json()).message, /attachments did not save/);
+  assert.deepEqual(writes(fake).comments, []);
+});
+
+test("a file over 5 MB or too many files is refused before anything is written", async () => {
+  const fake = useAirtable();
+  const { session, cookie } = await sessionFor();
+  const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "deck.pdf", {
+    type: "application/pdf",
+  });
+  for (const files of [[big], Array.from({ length: 11 }, PNG)]) {
+    const response = await worker.fetch(
+      attachmentRequest(cookie, session.csrf, "", files),
+      ENV,
+    );
+    assert.equal(response.status, 400);
+    const { ok, message } = await response.json();
+    assert.equal(ok, false);
+    assert.match(message, /5 MB|at most 10/);
+  }
+  assert.deepEqual(
+    fake.calls.filter((c) => c.method !== "GET"),
+    [],
+  );
 });
 
 test("an expired access token is refreshed mid-visit and the new pair re-set", async () => {

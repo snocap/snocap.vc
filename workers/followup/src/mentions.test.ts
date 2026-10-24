@@ -17,12 +17,16 @@ const JON = { id: "usrJonJonJonJon01", name: "Jon Azoff" };
 const NATE = { id: "usrNateNateNate01", name: "Nate" };
 const SHRINA = { id: "usrShrinaShrina01", name: "Shrina" };
 
-test("KB is always mentionable, under its own name, first", () => {
+test("KB is always mentionable, by its Airtable display name like anyone", () => {
   assert.equal(KB.id, "usrt57orTxVb75I3W");
+  assert.equal(KB.name, "Kernel Bottie");
   assert.deepEqual(mergePeople(), [KB]);
-  assert.deepEqual(mergePeople([{ id: KB.id, name: "Kernel Bottie" }, NATE]), [
-    KB,
-    NATE,
+  // Sorted with everyone else, not pinned first.
+  const ANNA = { id: "usrAnnaAnnaAnna01", name: "Anna" };
+  assert.deepEqual(mergePeople([NATE, ANNA]), [ANNA, KB, NATE]);
+  // A name Airtable returns for KB's id wins over the fallback.
+  assert.deepEqual(mergePeople([{ id: KB.id, name: "KB Renamed" }]), [
+    { id: KB.id, name: "KB Renamed" },
   ]);
 });
 
@@ -67,8 +71,8 @@ test("the list merges every source once per user, sorted by name", () => {
   ]);
   assert.deepEqual(fromComments, [JON, SHRINA]);
   assert.deepEqual(mergePeople(fromRecords, fromSchema, fromComments), [
-    KB,
     JON,
+    KB,
     NATE,
     { id: SHRINA.id, name: "shrina@x.vc" },
   ]);
@@ -96,8 +100,11 @@ test("a typed @Name is serialized to @[usr…]; nothing else is added", () => {
     serializeComment("@Natel is not @Nate", [NATE]),
     `@Natel is not @[${NATE.id}]`,
   );
-  assert.equal(serializeComment("cc @KB", [KB]), "cc @[usrt57orTxVb75I3W]");
-  assert.ok(mentionsUser(serializeComment("cc @KB", [KB]), KB.id));
+  assert.equal(
+    serializeComment("cc @Kernel Bottie", [KB]),
+    "cc @[usrt57orTxVb75I3W]",
+  );
+  assert.ok(mentionsUser(serializeComment("cc @Kernel Bottie", [KB]), KB.id));
   assert.ok(!mentionsUser(serializeComment("@Nate hi", [NATE]), KB.id));
 });
 
