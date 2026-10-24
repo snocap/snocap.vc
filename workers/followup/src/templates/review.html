@@ -350,6 +350,7 @@
       let found = [];
       let highlighted = -1;
       let attached = [];
+      let busy = false;
 
       function syncLabel() {
         submit.textContent = buttonLabel(box.value);
@@ -381,6 +382,7 @@
       }
 
       function openList() {
+        if (busy) return closeList();
         const token = activeMention(box);
         found = token && people.length ? matching(token.query) : [];
         if (found.length === 0) return closeList();
@@ -440,6 +442,7 @@
       }
 
       function addFiles(fileList) {
+        if (busy) return;
         const incoming = [...fileList];
         const { keep, rejected } = acceptFiles(
           attached.map((a) => a.file),
@@ -523,6 +526,7 @@
 
       form.querySelectorAll(".chip[data-macro]").forEach((chip) => {
         chip.addEventListener("click", () => {
+          if (busy) return;
           const mentions = JSON.parse(chip.dataset.mentions || "[]");
           if (chip.dataset.reason) {
             pendingReason = { template: chip.dataset.template, mentions };
@@ -544,53 +548,72 @@
         reasons.hidden = true;
       });
 
+      // While a submit is in flight nothing on the card can change what it
+      // sends: the box is read-only (a disabled one would drop out of the
+      // form), and the macros, reasons and attachment controls are disabled.
+      function lock(on) {
+        busy = on;
+        submit.disabled = on;
+        box.readOnly = on;
+        reasonPick.disabled = on;
+        picker.disabled = on;
+        form
+          .querySelectorAll(".chip[data-macro], .thumbs .remove")
+          .forEach((control) => (control.disabled = on));
+        form.classList.toggle("busy", on);
+        if (on) closeList();
+      }
+
+      async function send(files, onEvent) {
+        const body = new FormData(form);
+        body.delete("files");
+        for (const file of files) {
+          body.append("files", file, file.name || "attachment");
+        }
+        const res = await fetch(form.action, {
+          method: "POST",
+          headers: { Accept: "application/x-ndjson, application/json" },
+          body,
+        });
+        // A refusal before any write (stale page, signed out, a bad file)
+        // comes back as plain JSON; a submit that ran streams its steps.
+        const type = res.headers.get("Content-Type") || "";
+        if (!type.includes("ndjson")) return res.json();
+        return readSubmit(res.body, onEvent);
+      }
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
+        if (busy) return;
         form.elements.mentions.value = JSON.stringify(
           [...inserted.values()].filter((p) =>
             box.value.includes("@" + p.name),
           ),
         );
-        submit.disabled = true;
-        result.className = "result";
-        result.textContent = attached.length ? "Uploading…" : "Working…";
-        try {
-          const body = new FormData(form);
-          body.delete("files");
-          for (const a of attached) {
-            const file = await shrink(a.file);
-            if (file.size > limits.maxBytes) {
-              result.className = "result error";
-              result.textContent =
-                (file.name || "A file") +
-                " is still over Airtable's 5 MB limit. Remove it or use a smaller one.";
-              return;
-            }
-            body.append("files", file, file.name || "attachment");
-          }
-          const res = await fetch(form.action, {
-            method: "POST",
-            headers: { Accept: "application/json" },
-            body,
-          });
-          const json = await res.json();
-          result.textContent = json.message;
-          if (!json.ok) {
-            result.className = "result error";
-            return;
-          }
-          box.value = "";
-          inserted.clear();
-          lastMacro = null;
-          clearAttached();
-          syncLabel();
-          setTimeout(() => show(at + 1), 900);
-        } catch {
-          result.className = "result error";
-          result.textContent = "That did not go through. Try again.";
-        } finally {
-          submit.disabled = false;
-        }
+        const card = form.closest(".card");
+        await submitFlow({
+          files: attached.map((a) => a.file),
+          maxBytes: limits.maxBytes,
+          commenting: box.value.trim() !== "",
+          lock,
+          label: (text) => (submit.textContent = text),
+          detail: (text) => {
+            result.className = text ? "result error" : "result";
+            result.textContent = text;
+          },
+          prepare: shrink,
+          send,
+          posted: () =>
+            setTimeout(() => {
+              box.value = "";
+              inserted.clear();
+              lastMacro = null;
+              clearAttached();
+              lock(false);
+              syncLabel();
+              show(cards.indexOf(card) + 1);
+            }, 900),
+        });
       });
     });
 

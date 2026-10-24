@@ -668,7 +668,8 @@ test("attachments with no text: one Interaction, the uploads, then just the @KB 
 
   const w = writes(fake);
   assert.deepEqual(w.comments, [INSTRUCTION]);
-  // Date, then the Interaction, then the comment that sends KB to it.
+  // The Interaction and its files, then the date, then the comment that sends
+  // KB to them.
   const order = fake.calls
     .filter((c) => c.method !== "GET")
     .map(
@@ -676,10 +677,10 @@ test("attachments with no text: one Interaction, the uploads, then just the @KB 
         `${c.method} ${c.url.hostname === "content.airtable.com" ? "upload" : c.url.pathname.split("/").slice(3).join("/")}`,
     );
   assert.deepEqual(order, [
-    `PATCH ${AIRTABLE.campaigns}/${CAMPAIGN_A}`,
     `POST ${AIRTABLE.interactions}`,
     "POST upload",
     "POST upload",
+    `PATCH ${AIRTABLE.campaigns}/${CAMPAIGN_A}`,
     `POST ${AIRTABLE.campaigns}/${CAMPAIGN_A}/comments`,
   ]);
 });
@@ -710,7 +711,7 @@ test("attachments with text: the typed comment, mentions serialized, then the in
   ]);
 });
 
-test("a failed upload posts no comment, so KB is never sent to a half-saved record", async () => {
+test("a failed upload posts no comment and leaves the date, so KB is never sent to a half-saved record", async () => {
   const fake = useAirtable({ uploadStatus: 422 });
   const { session, cookie } = await sessionFor();
   const response = await worker.fetch(
@@ -718,8 +719,74 @@ test("a failed upload posts no comment, so KB is never sent to a half-saved reco
     ENV,
   );
   assert.equal(response.status, 502);
-  assert.match((await response.json()).message, /attachments did not save/);
+  const { message, reason } = await response.json();
+  assert.match(message, /attachments did not save/);
+  assert.equal(reason, "upload failed");
   assert.deepEqual(writes(fake).comments, []);
+  assert.deepEqual(writes(fake).patches, []);
+});
+
+/** A submit read the way the page reads it: the NDJSON lines, in order. */
+async function streamed(request: Request): Promise<Record<string, unknown>[]> {
+  request.headers.set("Accept", "application/x-ndjson, application/json");
+  const response = await worker.fetch(request, ENV);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Content-Type"), "application/x-ndjson");
+  return (await response.text())
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+}
+
+test("a streamed submit reports each upload, then the date, then the comment, as they start", async () => {
+  useAirtable();
+  const { session, cookie } = await sessionFor();
+  const lines = await streamed(
+    attachmentRequest(cookie, session.csrf, "hi", [PNG(), PDF()]),
+  );
+  assert.deepEqual(lines.slice(0, -1), [
+    { phase: "upload", n: 1, of: 2 },
+    { phase: "upload", n: 2, of: 2 },
+    { phase: "date" },
+    { phase: "comment" },
+  ]);
+  assert.equal(lines.at(-1)?.done, true);
+  assert.equal(lines.at(-1)?.ok, true);
+  assert.match(String(lines.at(-1)?.message), /^2 attachments saved/);
+});
+
+test("a streamed Mark handled has only the date phase", async () => {
+  useAirtable();
+  const { session, cookie } = await sessionFor();
+  const lines = await streamed(
+    actionRequest(cookie, {
+      campaign: CAMPAIGN_A,
+      text: "",
+      csrf: session.csrf,
+    }),
+  );
+  assert.deepEqual(
+    lines.map((l) => l.phase ?? "done"),
+    ["date", "done"],
+  );
+});
+
+test("a streamed failure arrives in the last line with a short reason", async () => {
+  useAirtable({ uploadStatus: 422 });
+  const { session, cookie } = await sessionFor();
+  const lines = await streamed(
+    attachmentRequest(cookie, session.csrf, "", [PNG()]),
+  );
+  assert.deepEqual(lines.at(-1), {
+    done: true,
+    ok: false,
+    reason: "upload failed",
+    message: "The attachments did not save, so nothing was posted. Try again.",
+  });
+  assert.equal(
+    lines.some((l) => l.phase === "comment"),
+    false,
+  );
 });
 
 test("a file over 5 MB or too many files is refused before anything is written", async () => {

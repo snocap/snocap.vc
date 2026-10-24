@@ -152,3 +152,117 @@ export function carouselSlots(
     return index >= 0 && index < total ? index : -1;
   });
 }
+
+/** One line of a streamed submit: a phase as it starts, or, last, the
+ * outcome (`done`). */
+export interface SubmitEvent {
+  phase?: "upload" | "date" | "comment";
+  n?: number;
+  of?: number;
+  done?: boolean;
+  ok?: boolean;
+  message?: string;
+  reason?: string;
+}
+
+/** Reads a streamed submit's NDJSON body, handing each phase to `onEvent`,
+ * and resolves with the closing outcome line. A body that ends without one
+ * was cut off, which throws. */
+export async function readSubmit(
+  body: ReadableStream<Uint8Array>,
+  onEvent: (event: SubmitEvent) => void,
+): Promise<SubmitEvent> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffered = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    buffered += decoder.decode(value, { stream: !done });
+    const lines = buffered.split("\n");
+    buffered = done ? "" : (lines.pop() ?? "");
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const event: SubmitEvent = JSON.parse(line);
+      if (event.done) return event;
+      onEvent(event);
+    }
+    if (done) throw new Error("The submit ended without an outcome.");
+  }
+}
+
+/** What the page lends a submit: its attachments, the button and the inputs
+ * around it, and the two network-facing steps. */
+export interface SubmitIO<F extends { name: string; size: number }> {
+  files: F[];
+  maxBytes: number;
+  /** Whether the box holds a comment, so success reads Posted, not Handled. */
+  commenting: boolean;
+  /** Disables the button and freezes the box, macros, reasons, attachments
+   * and mention list; `false` gives them back as they were. */
+  lock(busy: boolean): void;
+  label(text: string): void;
+  /** The longer error under the button; "" clears it. */
+  detail(text: string): void;
+  /** The file as it will be sent: an oversized photo re-encoded smaller. */
+  prepare(file: F): Promise<F>;
+  send(files: F[], onEvent: (event: SubmitEvent) => void): Promise<SubmitEvent>;
+  /** Clears the card and moves on; called once the button reads its ✓. */
+  posted(): void;
+}
+
+/** One press of the submit button. The controls lock at once, so a second
+ * press cannot double-post, and the button's label follows the steps the
+ * Worker reports as it takes them. A failure gives every control back with
+ * the typed text and attachments untouched, the reason in the button and the
+ * full sentence under it, and the deck stays on this card. */
+export async function submitFlow<F extends { name: string; size: number }>(
+  io: SubmitIO<F>,
+): Promise<boolean> {
+  io.lock(true);
+  io.detail("");
+  const fail = (reason: string, detail: string): boolean => {
+    io.lock(false);
+    io.label(`Failed: ${reason}, tap to retry`);
+    io.detail(detail);
+    return false;
+  };
+  const total = io.files.length;
+  const limit = `${Math.round(io.maxBytes / 1048576)} MB`;
+  try {
+    const files: F[] = [];
+    for (const [i, original] of io.files.entries()) {
+      if (original.size > io.maxBytes) {
+        io.label(`Shrinking ${i + 1} of ${total}…`);
+      }
+      const file = await io.prepare(original);
+      if (file.size > io.maxBytes) {
+        return fail(
+          `file over ${limit}`,
+          `${file.name || "A file"} is still over Airtable's ${limit} limit. Remove it or use a smaller one.`,
+        );
+      }
+      files.push(file);
+    }
+    io.label(total ? `Uploading 1 of ${total}…` : "Sending…");
+    const outcome = await io.send(files, (event) => {
+      if (event.phase === "upload") {
+        io.label(`Uploading ${event.n} of ${event.of}…`);
+      } else if (event.phase === "date") {
+        io.label("Updating next touch…");
+      } else if (event.phase === "comment") {
+        io.label("Posting comment…");
+      }
+    });
+    if (!outcome.ok) {
+      return fail(
+        outcome.reason || "not saved",
+        outcome.message || "That did not go through. Try again.",
+      );
+    }
+  } catch {
+    return fail("network error", "That did not go through. Try again.");
+  }
+  io.label(io.commenting ? "Posted ✓" : "Handled ✓");
+  io.posted();
+  return true;
+}

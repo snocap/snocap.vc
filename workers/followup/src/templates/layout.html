@@ -414,6 +414,16 @@
       .pick-list button:active {
         background: rgba(241, 88, 0, 0.2);
       }
+      .actions.busy textarea,
+      .actions.busy .chips,
+      .actions.busy .thumbs {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .actions.busy button[type="submit"]:disabled {
+        opacity: 0.85;
+        cursor: progress;
+      }
       .result {
         margin-top: 10px;
         font-size: 14px;

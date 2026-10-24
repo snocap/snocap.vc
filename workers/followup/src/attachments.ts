@@ -54,13 +54,15 @@ export function attachmentComment(typed: string): string {
   return text ? `${text}\n${EXTRACT_INSTRUCTION}` : EXTRACT_INSTRUCTION;
 }
 
-/** The placeholder Interaction with the files on it. Throws when Airtable
- * refuses a write. */
+/** The placeholder Interaction with the files on it. `onFile` hears each
+ * file's 1-based number as its upload starts. Throws when Airtable refuses a
+ * write. */
 export async function saveAttachments(
   airtable: Airtable,
   campaign: string,
   files: Upload[],
   now: number,
+  onFile: (n: number) => void = () => {},
 ): Promise<string> {
   // Who is posting, from Airtable itself rather than the session cookie.
   const user = await airtable.whoami();
@@ -70,7 +72,8 @@ export async function saveAttachments(
     [FIELD.occurredOn]: nextTouchValue(pacificDay(now)),
     [FIELD.summary]: PLACEHOLDER_SUMMARY,
   });
-  for (const file of files) {
+  for (const [i, file] of files.entries()) {
+    onFile(i + 1);
     await airtable.uploadAttachment(record.id, FIELD.attachments, {
       contentType: file.type || "application/octet-stream",
       filename: file.name || "attachment",

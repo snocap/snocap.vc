@@ -1,6 +1,6 @@
 // The page's pure rules: search, the restored position, the pick-list
 // highlight, macro replace-or-append, the button label, photo intake, and the
-// desktop row's window. Also that the copy the page actually runs (pages.ts
+// desktop row's window, and the submit button's states. Also that the copy the page actually runs (pages.ts
 // clientScript) is these same functions.
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -11,12 +11,15 @@ import {
   buttonLabel,
   carouselSlots,
   moveHighlight,
+  readSubmit,
   restoreIndex,
   shrinkable,
   searchDeck,
   shrinkScale,
+  submitFlow,
   visibleCount,
 } from "./client.ts";
+import type { SubmitEvent } from "./client.ts";
 import { clientScript } from "./pages.ts";
 
 const DECK = [
@@ -194,4 +197,208 @@ test("the page's copy of the helpers is these functions, runnable on their own",
     slots: [-1, 0, 1],
     label: "Post comment",
   });
+});
+
+interface FakeFile {
+  name: string;
+  size: number;
+}
+
+/** A card for submitFlow: what it did to the controls, in order, with the
+ * Worker's answer scripted. `whileSending` runs mid-request, to look at the
+ * card while the submit is in flight. */
+function fakeCard(
+  opts: {
+    files?: FakeFile[];
+    commenting?: boolean;
+    events?: SubmitEvent[];
+    outcome?: SubmitEvent;
+    throws?: boolean;
+    prepare?: (file: FakeFile) => FakeFile;
+    whileSending?: () => void;
+  } = {},
+) {
+  const log: string[] = [];
+  const card = {
+    log,
+    locked: false,
+    labels: [] as string[],
+    detail: "",
+    sent: null as FakeFile[] | null,
+    advanced: false,
+  };
+  const io = {
+    files: opts.files ?? [],
+    maxBytes: 5 * MB,
+    commenting: opts.commenting ?? true,
+    lock(busy: boolean) {
+      card.locked = busy;
+      log.push(busy ? "lock" : "unlock");
+    },
+    label(text: string) {
+      card.labels.push(text);
+      log.push(text);
+    },
+    detail(text: string) {
+      card.detail = text;
+    },
+    prepare: async (file: FakeFile) => (opts.prepare ?? ((f) => f))(file),
+    async send(files: FakeFile[], onEvent: (e: SubmitEvent) => void) {
+      card.sent = files;
+      opts.whileSending?.();
+      if (opts.throws) throw new TypeError("Failed to fetch");
+      for (const event of opts.events ?? []) onEvent(event);
+      return opts.outcome ?? { done: true, ok: true, message: "Posted." };
+    },
+    posted() {
+      card.advanced = true;
+      log.push("advance");
+    },
+  };
+  return { card, io };
+}
+
+test("the button disables the moment it is pressed and stays so while the post is in flight", async () => {
+  let midFlight: boolean | null = null;
+  const { card, io } = fakeCard({
+    whileSending: () => (midFlight = card.locked),
+  });
+  const run = submitFlow(io);
+  assert.equal(card.log[0], "lock", "locked before anything awaits");
+  await run;
+  assert.equal(midFlight, true);
+  assert.equal(card.log.filter((l) => l === "unlock").length, 0);
+});
+
+test("the button steps through the real phases with attachments, then advances", async () => {
+  const { card, io } = fakeCard({
+    files: [
+      { name: "a.png", size: MB },
+      { name: "b.pdf", size: MB },
+    ],
+    events: [
+      { phase: "upload", n: 1, of: 2 },
+      { phase: "upload", n: 2, of: 2 },
+      { phase: "date" },
+      { phase: "comment" },
+    ],
+  });
+  assert.equal(await submitFlow(io), true);
+  assert.deepEqual(card.log, [
+    "lock",
+    "Uploading 1 of 2…",
+    "Uploading 1 of 2…",
+    "Uploading 2 of 2…",
+    "Updating next touch…",
+    "Posting comment…",
+    "Posted ✓",
+    "advance",
+  ]);
+});
+
+test("without attachments the button goes straight to the date and the comment", async () => {
+  const { card, io } = fakeCard({
+    events: [{ phase: "date" }, { phase: "comment" }],
+  });
+  await submitFlow(io);
+  assert.deepEqual(card.labels, [
+    "Sending…",
+    "Updating next touch…",
+    "Posting comment…",
+    "Posted ✓",
+  ]);
+  const handled = fakeCard({ commenting: false, events: [{ phase: "date" }] });
+  await submitFlow(handled.io);
+  assert.deepEqual(handled.card.labels, [
+    "Sending…",
+    "Updating next touch…",
+    "Handled ✓",
+  ]);
+});
+
+test("a failure re-enables the button with the reason in it, keeps the inputs, and stays on the card", async () => {
+  const files = [{ name: "a.png", size: MB }];
+  const { card, io } = fakeCard({
+    files,
+    events: [{ phase: "upload", n: 1, of: 1 }],
+    outcome: {
+      done: true,
+      ok: false,
+      reason: "upload failed",
+      message:
+        "The attachments did not save, so nothing was posted. Try again.",
+    },
+  });
+  assert.equal(await submitFlow(io), false);
+  assert.equal(card.locked, false);
+  assert.equal(card.labels.at(-1), "Failed: upload failed, tap to retry");
+  assert.match(card.detail, /did not save/);
+  assert.equal(card.advanced, false);
+  assert.deepEqual(io.files, files, "the attachments are still there");
+
+  const offline = fakeCard({ throws: true });
+  assert.equal(await submitFlow(offline.io), false);
+  assert.equal(offline.card.locked, false);
+  assert.equal(
+    offline.card.labels.at(-1),
+    "Failed: network error, tap to retry",
+  );
+  assert.equal(offline.card.advanced, false);
+});
+
+test("a photo still over 5 MB after shrinking re-enables the button and sends nothing", async () => {
+  const { card, io } = fakeCard({
+    files: [{ name: "huge.heic", size: 12 * MB }],
+    prepare: (file) => file,
+  });
+  assert.equal(await submitFlow(io), false);
+  assert.equal(card.sent, null, "nothing was posted");
+  assert.equal(card.locked, false);
+  assert.deepEqual(card.labels, [
+    "Shrinking 1 of 1…",
+    "Failed: file over 5 MB, tap to retry",
+  ]);
+  assert.match(card.detail, /huge\.heic is still over Airtable's 5 MB limit/);
+  assert.equal(card.advanced, false);
+});
+
+test("a shrunk photo goes up in place of the original", async () => {
+  const small = { name: "shot.jpg", size: 2 * MB };
+  const { card, io } = fakeCard({
+    files: [{ name: "shot.png", size: 9 * MB }],
+    prepare: () => small,
+  });
+  await submitFlow(io);
+  assert.deepEqual(card.sent, [small]);
+});
+
+function streamOf(...chunks: string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+      controller.close();
+    },
+  });
+}
+
+test("a streamed submit is read line by line, even split mid-line, to its outcome", async () => {
+  const seen: SubmitEvent[] = [];
+  const outcome = await readSubmit(
+    streamOf(
+      '{"phase":"upload","n":1,"of":1}\n{"pha',
+      'se":"date"}\n',
+      '{"done":true,"ok":true,"message":"Done."}\n',
+    ),
+    (event) => seen.push(event),
+  );
+  assert.deepEqual(seen, [{ phase: "upload", n: 1, of: 1 }, { phase: "date" }]);
+  assert.deepEqual(outcome, { done: true, ok: true, message: "Done." });
+});
+
+test("a stream cut off before its outcome is an error", async () => {
+  await assert.rejects(
+    readSubmit(streamOf('{"phase":"date"}\n'), () => {}),
+    /without an outcome/,
+  );
 });

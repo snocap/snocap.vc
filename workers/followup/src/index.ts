@@ -60,6 +60,7 @@ import {
   uploadProblem,
   uploadsOf,
 } from "./attachments.ts";
+import type { Upload } from "./attachments.ts";
 import {
   SESSION_COOKIE,
   STATE_COOKIE,
@@ -89,7 +90,10 @@ function html(body: string, status = 200, cookies: string[] = []): Response {
   return new Response(body, { status, headers });
 }
 
-function json(body: { ok: boolean; message: string }, status = 200): Response {
+function json(
+  body: { ok: boolean; message: string; reason?: string },
+  status = 200,
+): Response {
   return Response.json(body, { status, headers: BASE_HEADERS });
 }
 
@@ -302,52 +306,53 @@ async function handleDetail(airtable: Airtable, id: string): Promise<Response> {
   );
 }
 
+/** A step of a submit, as the page's button names it while it runs. */
+type Phase =
+  | { phase: "upload"; n: number; of: number }
+  | { phase: "date" }
+  | { phase: "comment" };
+
+/** How a submit ended: `reason` is the few words the button shows on a
+ * failure, `message` the full sentence. */
+interface Outcome {
+  ok: boolean;
+  message: string;
+  reason?: string;
+  status: number;
+}
+
+const failed = (status: number, reason: string, message: string): Outcome => ({
+  ok: false,
+  status,
+  reason,
+  message,
+});
+
 /** Every submit keeps the Campaign's Next Touch Point at least a week out,
  * which is what takes it down the Follow Ups list (dates.ts
  * nextTouchAfterSubmit). A non-empty box is posted as the user's comment,
  * exactly as typed but for its mentions. Attachments are saved on a new
  * Interaction first, and the comment then also asks KB to fill it in
  * (attachments.ts). KB reads every comment and moves the date again when one
- * implies another. */
-async function handleAction(
-  request: Request,
+ * implies another, so the comment is always the last write. */
+async function submit(
   airtable: Airtable,
   session: Session,
-): Promise<Response> {
-  const form = await request.formData();
-  const reply = (ok: boolean, message: string, status: number): Response =>
-    wantsJson(request)
-      ? json({ ok, message }, status)
-      : html(renderError(message), status);
-
-  if (!csrfOk(request, session, form.get("csrf"), ORIGIN)) {
-    return reply(false, "This page is stale. Reload it and try again.", 403);
-  }
-  const id = String(form.get("campaign") ?? "");
-  if (!RECORD_ID.test(id)) return reply(false, "Unknown Campaign.", 400);
-  const typed = serializeComment(
-    String(form.get("text") ?? "").trim(),
-    parseMentions(form.get("mentions")),
-  );
-  const files = uploadsOf(form);
-  const problem = uploadProblem(files);
-  if (problem) return reply(false, problem, 400);
+  id: string,
+  typed: string,
+  files: Upload[],
+  onPhase: (phase: Phase) => void,
+): Promise<Outcome> {
   const comment = files.length ? attachmentComment(typed) : typed;
   const now = Date.now();
 
-  // The date first: the comment wakes KB, whose own date write must land after.
-  const campaign = await airtable.getRecord(AIRTABLE.campaigns, id);
-  const day = nextTouchAfterSubmit(campaign.fields[FIELD.nextTouch], now);
-  if (day) {
-    await airtable.updateRecord(AIRTABLE.campaigns, id, {
-      [FIELD.nextTouch]: nextTouchValue(day),
-    });
-  }
-  const next = day ? `Next touch ${shortDay(day)}.` : "Next touch unchanged.";
-  // Then the files, so the Interaction exists when KB reads the comment.
+  // The files first, so the Interaction exists when KB reads the comment, and
+  // a failed upload leaves the Campaign untouched.
   if (files.length) {
     try {
-      await saveAttachments(airtable, id, files, now);
+      await saveAttachments(airtable, id, files, now, (n) =>
+        onPhase({ phase: "upload", n, of: files.length }),
+      );
     } catch (err) {
       console.error(
         JSON.stringify({
@@ -356,14 +361,25 @@ async function handleAction(
           error: String(err),
         }),
       );
-      return reply(
-        false,
-        `${next} But the attachments did not save, so nothing was posted. Try again.`,
+      return failed(
         502,
+        "upload failed",
+        "The attachments did not save, so nothing was posted. Try again.",
       );
     }
   }
+  // Then the date: the comment wakes KB, whose own date write must land after.
+  onPhase({ phase: "date" });
+  const campaign = await airtable.getRecord(AIRTABLE.campaigns, id);
+  const day = nextTouchAfterSubmit(campaign.fields[FIELD.nextTouch], now);
+  if (day) {
+    await airtable.updateRecord(AIRTABLE.campaigns, id, {
+      [FIELD.nextTouch]: nextTouchValue(day),
+    });
+  }
+  const next = day ? `Next touch ${shortDay(day)}.` : "Next touch unchanged.";
   if (comment) {
+    onPhase({ phase: "comment" });
     try {
       await airtable.createComment(AIRTABLE.campaigns, id, comment);
     } catch (err) {
@@ -374,12 +390,12 @@ async function handleAction(
           error: String(err),
         }),
       );
-      return reply(
-        false,
+      return failed(
+        502,
+        "comment did not post",
         files.length
           ? `${next} The attachments are saved on a new Interaction, but the comment did not post, so KB was not asked to read them. Post a comment asking it to.`
           : `${next} But the comment did not post. Try it again.`,
-        502,
       );
     }
   }
@@ -392,7 +408,6 @@ async function handleAction(
       by: session.email,
     }),
   );
-  if (!wantsJson(request)) return redirect(`${TOOL_PATH}#c-${id}`, [], 303);
   const lead = files.length
     ? `${files.length === 1 ? "Attachment" : `${files.length} attachments`} saved. KB will log the Interaction and reply in the thread.`
     : !comment
@@ -400,7 +415,108 @@ async function handleAction(
       : mentionsUser(comment, KB.id)
         ? "Comment posted. KB will reply in the thread."
         : "Comment posted.";
-  return json({ ok: true, message: `${lead} ${next}` });
+  return { ok: true, status: 200, message: `${lead} ${next}` };
+}
+
+/** What an Airtable failure mid-submit means to the person pressing the button. */
+function thrownOutcome(err: unknown): Outcome {
+  if (err instanceof AirtableError && err.status === 401) {
+    return failed(
+      401,
+      "signed out",
+      "Airtable signed you out. Reload and sign in again.",
+    );
+  }
+  if (isNoAccess(err)) {
+    return failed(
+      403,
+      "no access",
+      "Your Airtable account cannot write to this Campaign.",
+    );
+  }
+  console.error(
+    JSON.stringify({
+      event: "followup_error",
+      path: ACTION_PATH,
+      error: String(err),
+    }),
+  );
+  return failed(
+    502,
+    "Airtable error",
+    "Airtable did not answer as expected. Try again in a moment.",
+  );
+}
+
+/** The submit as NDJSON: one line per phase as it starts, then the outcome
+ * with `done: true`. The status is already sent by then, so a failure is
+ * carried in that last line, never in the status. */
+function streamSubmit(
+  run: (onPhase: (p: Phase) => void) => Promise<Outcome>,
+): Response {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const line = (value: object) =>
+        controller.enqueue(encoder.encode(`${JSON.stringify(value)}\n`));
+      void run(line)
+        .catch(thrownOutcome)
+        .then(({ ok, message, reason }) => {
+          line({ done: true, ok, message, reason });
+          controller.close();
+        });
+    },
+  });
+  return new Response(body, {
+    headers: { ...BASE_HEADERS, "Content-Type": "application/x-ndjson" },
+  });
+}
+
+async function handleAction(
+  request: Request,
+  airtable: Airtable,
+  session: Session,
+): Promise<Response> {
+  const form = await request.formData();
+  const reply = (outcome: Outcome): Response =>
+    wantsJson(request)
+      ? json(
+          { ok: outcome.ok, message: outcome.message, reason: outcome.reason },
+          outcome.status,
+        )
+      : html(renderError(outcome.message), outcome.status);
+
+  if (!csrfOk(request, session, form.get("csrf"), ORIGIN)) {
+    return reply(
+      failed(
+        403,
+        "page is stale",
+        "This page is stale. Reload it and try again.",
+      ),
+    );
+  }
+  const id = String(form.get("campaign") ?? "");
+  if (!RECORD_ID.test(id)) {
+    return reply(failed(400, "unknown Campaign", "Unknown Campaign."));
+  }
+  const typed = serializeComment(
+    String(form.get("text") ?? "").trim(),
+    parseMentions(form.get("mentions")),
+  );
+  const files = uploadsOf(form);
+  const problem = uploadProblem(files);
+  if (problem) return reply(failed(400, "attachments refused", problem));
+
+  if ((request.headers.get("Accept") ?? "").includes("application/x-ndjson")) {
+    return streamSubmit((onPhase) =>
+      submit(airtable, session, id, typed, files, onPhase),
+    );
+  }
+  const outcome = await submit(airtable, session, id, typed, files, () => {});
+  if (outcome.ok && !wantsJson(request)) {
+    return redirect(`${TOOL_PATH}#c-${id}`, [], 303);
+  }
+  return reply(outcome);
 }
 
 async function route(
@@ -430,7 +546,11 @@ async function route(
       : undefined;
     if (request.method === "POST" && wantsJson(request)) {
       return json(
-        { ok: false, message: "Signed out. Reload and sign in again." },
+        {
+          ok: false,
+          reason: "signed out",
+          message: "Signed out. Reload and sign in again.",
+        },
         401,
       );
     }
@@ -478,7 +598,7 @@ async function route(
     const message =
       "Airtable did not answer as expected. Try again in a moment.";
     return wantsJson(request)
-      ? json({ ok: false, message }, 502)
+      ? json({ ok: false, reason: "Airtable error", message }, 502)
       : html(renderError(message), 502);
   }
   if (fresh.refreshed) {
