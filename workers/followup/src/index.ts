@@ -22,6 +22,7 @@ import {
   timeline,
 } from "./campaigns.ts";
 import type { InteractionLine } from "./campaigns.ts";
+import { hashForCard } from "./client.ts";
 import {
   AIRTABLE,
   FIELD,
@@ -523,7 +524,7 @@ async function handleAction(
   }
   const outcome = await submit(airtable, session, id, typed, files, () => {});
   if (outcome.ok && !wantsJson(request)) {
-    return redirect(`${TOOL_PATH}#c-${id}`, [], 303);
+    return redirect(`${TOOL_PATH}${hashForCard(id)}`, [], 303);
   }
   return reply(outcome);
 }

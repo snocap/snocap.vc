@@ -1,4 +1,4 @@
-// The page's pure rules: search, the restored position, the pick-list
+// The page's pure rules: search, the shown card's URL hash, the pick-list
 // highlight, macro replace-or-append, the button label, photo intake, and the
 // desktop row's window, and the submit button's states. Also that the copy the page actually runs (pages.ts
 // clientScript) is these same functions.
@@ -10,9 +10,10 @@ import {
   canPost,
   applyMacro,
   carouselSlots,
+  cardIdFromHash,
+  hashForCard,
   moveHighlight,
   readSubmit,
-  restoreIndex,
   shrinkable,
   searchDeck,
   shrinkScale,
@@ -71,22 +72,26 @@ test("search keeps deck order, needs every word, and matches word starts", () =>
   assert.deepEqual(searchDeck(DECK, "a", 2).length, 2, "capped at the limit");
 });
 
-const IDS = ["recA", "recB", "recC", "recD"];
-
-test("a reload reopens the remembered Campaign wherever it now sits", () => {
-  assert.equal(restoreIndex(IDS, { id: "recC", index: 0 }), 2);
+test("a card's hash is its id under a slash, URL-encoded", () => {
+  assert.equal(hashForCard("recA"), "#/recA");
+  assert.equal(hashForCard("rec/weird id"), "#/rec%2Fweird%20id");
 });
 
-test("a Campaign that left the view opens whatever sits at its old index, clamped", () => {
-  assert.equal(restoreIndex(IDS, { id: "recGone", index: 1 }), 1);
-  assert.equal(restoreIndex(IDS, { id: "recGone", index: 9 }), 3);
-  assert.equal(restoreIndex(IDS, { id: "recGone", index: -2 }), 0);
+test("the new hash form parses back to the id", () => {
+  assert.equal(cardIdFromHash("#/recA"), "recA");
+  assert.equal(cardIdFromHash("#/rec%2Fweird%20id"), "rec/weird id");
 });
 
-test("no or malformed memory opens the first card", () => {
-  assert.equal(restoreIndex(IDS, null), 0);
-  assert.equal(restoreIndex(IDS, { index: "x" }), 0);
-  assert.equal(restoreIndex([], { id: "recA", index: 0 }), 0);
+test("the legacy element-id hash still parses", () => {
+  assert.equal(cardIdFromHash("#c-recA"), "recA");
+});
+
+test("no hash or junk parses to null", () => {
+  assert.equal(cardIdFromHash(""), null);
+  assert.equal(cardIdFromHash("#"), null);
+  assert.equal(cardIdFromHash("#/"), null);
+  assert.equal(cardIdFromHash("#nonsense"), null);
+  assert.equal(cardIdFromHash("#/%"), null, "an undecodable hash is junk too");
 });
 
 test("arrow keys move the highlight and wrap", () => {

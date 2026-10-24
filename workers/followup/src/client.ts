@@ -37,20 +37,24 @@ export function searchDeck(
   return found;
 }
 
-/** Where the deck opens: the remembered Campaign if it is still in the view,
- * otherwise whatever now sits at its old index, clamped to the list. A
- * malformed memory opens the first card. */
-export function restoreIndex(
-  ids: string[],
-  saved: { id?: unknown; index?: unknown } | null,
-): number {
-  if (ids.length === 0) return 0;
-  if (!saved || typeof saved !== "object") return 0;
-  const found = typeof saved.id === "string" ? ids.indexOf(saved.id) : -1;
-  if (found >= 0) return found;
-  const index = Number(saved.index);
-  if (!Number.isInteger(index)) return 0;
-  return Math.min(Math.max(index, 0), ids.length - 1);
+/** The URL hash for a shown card: the one record of which Campaign is open,
+ * so it is visible in the address bar and shareable. Not an element id, so
+ * the browser never scroll-jumps to it on load. */
+export function hashForCard(id: string): string {
+  return "#/" + encodeURIComponent(id);
+}
+
+/** The Campaign a URL hash names, or null if it names none: the current
+ * `#/<id>` form, the legacy `#c-<id>` form an old bookmark may still carry,
+ * or anything else (no hash, junk). */
+export function cardIdFromHash(hash: string): string | null {
+  const m = /^#\/(.+)$/.exec(hash) ?? /^#c-(.+)$/.exec(hash);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]) || null;
+  } catch {
+    return null;
+  }
 }
 
 /** The highlighted option after an arrow key, wrapping at both ends; -1 means

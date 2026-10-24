@@ -23,6 +23,7 @@
   <ul class="pick-list" role="listbox"></ul>
 </div>
 <div class="progress"><span data-bar style="width: 0"></span></div>
+<p class="result error" data-not-found hidden></p>
 <div
   data-deck
   data-detail-path="{{ detailPath }}"
@@ -52,30 +53,27 @@
     const cards = [...deck.querySelectorAll(".card")];
     const position = document.querySelector("[data-position]");
     const bar = document.querySelector("[data-bar]");
+    const notFound = document.querySelector("[data-not-found]");
     if (cards.length === 0) return;
     const ids = cards.map((c) => c.dataset.id);
 
-    // Where Jon was, per Airtable user, so a reload reopens the same Campaign
-    // (or, once it has left the view, whatever now sits where it was).
-    const POSITION_KEY = "followup-position:" + deck.dataset.user;
-    function loadPosition() {
-      try {
-        return JSON.parse(localStorage.getItem(POSITION_KEY) || "null");
-      } catch {
-        return null;
-      }
+    // The URL hash is the only record of which Campaign is open, so it is
+    // visible and shareable rather than hidden in localStorage.
+    function openGone() {
+      notFound.textContent =
+        "That Campaign is no longer in Follow Ups. Showing the first one instead.";
+      notFound.hidden = false;
+      return 0;
     }
-    function savePosition() {
-      try {
-        localStorage.setItem(
-          POSITION_KEY,
-          JSON.stringify({ id: ids[at], index: at }),
-        );
-      } catch {}
+    function resolveHash(hash) {
+      if (!hash) return 0;
+      const id = cardIdFromHash(hash);
+      if (id === null) return 0;
+      const index = ids.indexOf(id);
+      return index >= 0 ? index : openGone();
     }
 
-    const fromHash = cards.findIndex((c) => "#" + c.id === location.hash);
-    let at = fromHash >= 0 ? fromHash : restoreIndex(ids, loadPosition());
+    let at = resolveHash(location.hash);
 
     // On a wide screen the deck is a row: the selected card centered, its
     // neighbours dimmed and read-only on either side. The same cards and the
@@ -116,8 +114,9 @@
       });
       position.textContent = String(at + 1);
       bar.style.width = ((at + 1) / cards.length) * 100 + "%";
-      history.replaceState(null, "", "#" + cards[at].id);
-      savePosition();
+      // replaceState (never pushState) so this never fires "hashchange" —
+      // Back leaves the page instead of stepping through every prior card.
+      history.replaceState(null, "", hashForCard(ids[at]));
       window.scrollTo(0, 0);
     }
     document.querySelector("[data-first]").onclick = () => show(0);
@@ -125,6 +124,13 @@
     document.querySelector("[data-next]").onclick = () => show(at + 1);
     document.querySelector("[data-last]").onclick = () =>
       show(cards.length - 1);
+
+    // Pasting or editing a #/<id> URL in this same tab jumps the deck there.
+    // show()'s own update is a replaceState, which never fires this event.
+    window.addEventListener("hashchange", () => {
+      notFound.hidden = true;
+      show(resolveHash(location.hash));
+    });
 
     // One highlight rule for both pick lists (mentions and search).
     function highlight(list, index) {
