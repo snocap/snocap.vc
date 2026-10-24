@@ -11,13 +11,67 @@ const CONTENT_API = "https://content.airtable.com/v0";
 export class AirtableError extends Error {
   readonly status: number;
   readonly path: string;
+  /** Airtable's error code from the body, e.g. INVALID_FILTER_BY_FORMULA. */
+  readonly type: string;
 
   constructor(status: number, path: string, body: string) {
     super(`Airtable ${status} on ${path}: ${body.slice(0, 200)}`);
     this.status = status;
     this.path = path;
+    this.type = errorType(body);
+  }
+
+  /** "Airtable 429 RATE_LIMIT_REACHED": the small print on an error page. */
+  get label(): string {
+    return ["Airtable", this.status, this.type].filter(Boolean).join(" ");
   }
 }
+
+/** The code out of any of Airtable's three error shapes: `{error: "CODE"}`,
+ * `{error: {type: "CODE"}}` and `{errors: [{error: "CODE"}]}`. */
+function errorType(body: string): string {
+  let parsed: {
+    error?: string | { type?: unknown };
+    errors?: { error?: unknown }[];
+  } | null;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return ""; // Not JSON (a proxy's HTML page): the status alone says it.
+  }
+  const code =
+    typeof parsed?.error === "string"
+      ? parsed.error
+      : (parsed?.error?.type ?? parsed?.errors?.[0]?.error);
+  return typeof code === "string" ? code : "";
+}
+
+/** A 429 that outlasted every retry. */
+export function isRateLimited(err: unknown): boolean {
+  return err instanceof AirtableError && err.status === 429;
+}
+
+export interface Clock {
+  now(): number;
+  sleep(ms: number): Promise<void>;
+}
+
+/** The wall clock. Mutable so a test can swap in a virtual one rather than
+ * really waiting out the pacing. */
+export const clock: Clock = {
+  now: () => Date.now(),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+};
+
+/** Airtable allows five requests a second per base, and a 429 locks the base
+ * out for thirty seconds. Every call waits its turn, at most four a second,
+ * which leaves room for KB's own jobs on the same base. */
+export const CALL_SPACING_MS = 250;
+/** The waits before each retry of a 429 when Airtable sends no Retry-After. */
+const RETRY_DELAYS_MS = [1_000, 2_000, 4_000, 8_000];
+/** All the 429 waiting one request may do, so the page still answers well
+ * inside the time a person (and the Worker) will wait. */
+export const RETRY_BUDGET_MS = 15_000;
 
 export interface AirtableRecord {
   id: string;
@@ -43,14 +97,32 @@ export interface AirtableField {
   options?: { choices?: unknown[] };
 }
 
-/** Records per OR(RECORD_ID()=…) lookup; keeps the formula well inside the
- * URL length Airtable accepts. */
-const IDS_PER_LOOKUP = 40;
+/** Airtable refuses a URL over 16,000 characters; this leaves a margin. */
+export const MAX_URL_LENGTH = 15_000;
+/** A page holds at most 100 records, so a bigger chunk only adds offset pages. */
+const PAGE_SIZE = 100;
+/** Room for the offset a later page of a lookup carries. */
+const OFFSET_ALLOWANCE = 100;
+
+/** How many ids one OR(RECORD_ID()=…) lookup can carry: as many as fit under
+ * the URL cap, given the URL with no ids and the longest id, up to one page. */
+export function idsPerLookup(emptyUrlLength: number, idLength: number): number {
+  const perId =
+    new URLSearchParams({
+      f: `RECORD_ID()='${"r".repeat(idLength)}',`,
+    }).toString().length - "f=".length;
+  const fit = Math.floor((MAX_URL_LENGTH - emptyUrlLength) / perId);
+  return Math.max(1, Math.min(PAGE_SIZE, fit));
+}
 
 export class Airtable {
   private readonly token: string;
   private readonly fetchImpl: typeof fetch;
   private readonly base: string;
+  /** When the next call may start. One instance serves one request, so this is
+   * the per-request limiter, and it holds across lookups run side by side. */
+  private nextCallAt = 0;
+  private retryBudgetMs = RETRY_BUDGET_MS;
 
   // fetchImpl is resolved at call time, not bound here, so a test that stubs
   // globalThis.fetch after construction still reaches the stub.
@@ -64,23 +136,53 @@ export class Airtable {
     this.base = base;
   }
 
+  /** Waits for this call's slot. The slot is claimed before the wait, so calls
+   * started together still go out CALL_SPACING_MS apart. */
+  private async turn(): Promise<void> {
+    const now = clock.now();
+    const at = Math.max(now, this.nextCallAt);
+    this.nextCallAt = at + CALL_SPACING_MS;
+    if (at > now) await clock.sleep(at - now);
+  }
+
+  /** One paced request, retried on a 429 while the retry budget lasts. */
   private async call<T>(
     path: string,
     init: RequestInit = {},
     host: string = API,
   ): Promise<T> {
-    const response = await this.fetchImpl(`${host}${path}`, {
-      ...init,
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        "Content-Type": "application/json",
-        ...(init.headers ?? {}),
-      },
-    });
-    if (!response.ok) {
-      throw new AirtableError(response.status, path, await response.text());
+    for (let attempt = 0; ; attempt++) {
+      await this.turn();
+      const response = await this.fetchImpl(`${host}${path}`, {
+        ...init,
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+          ...(init.headers ?? {}),
+        },
+      });
+      if (response.ok) return (await response.json()) as T;
+      const error = new AirtableError(
+        response.status,
+        path,
+        await response.text(),
+      );
+      const wait =
+        response.status === 429 ? retryWait(response, attempt) : null;
+      if (wait === null || wait > this.retryBudgetMs) throw error;
+      this.retryBudgetMs -= wait;
+      console.warn(
+        JSON.stringify({
+          event: "followup_airtable_retry",
+          status: error.status,
+          type: error.type,
+          path: path.split("?")[0],
+          attempt: attempt + 1,
+          waitMs: wait,
+        }),
+      );
+      await clock.sleep(wait);
     }
-    return (await response.json()) as T;
   }
 
   whoami(): Promise<{ id: string; email?: string }> {
@@ -100,6 +202,7 @@ export class Airtable {
       const query = new URLSearchParams({ view });
       for (const field of fields) query.append("fields[]", field);
       if (maxRecords) query.set("maxRecords", String(maxRecords));
+      query.set("pageSize", String(PAGE_SIZE));
       if (offset) query.set("offset", offset);
       const page = await this.call<{
         records: AirtableRecord[];
@@ -122,25 +225,31 @@ export class Airtable {
     fields: string[],
   ): Promise<AirtableRecord[]> {
     const unique = [...new Set(ids)].filter((id) => /^rec\w+$/.test(id));
+    const lookup = (chunk: string[], offset?: string): string => {
+      const query = new URLSearchParams({
+        filterByFormula: `OR(${chunk.map((id) => `RECORD_ID()='${id}'`).join(",")})`,
+        pageSize: String(PAGE_SIZE),
+      });
+      for (const field of fields) query.append("fields[]", field);
+      if (offset) query.set("offset", offset);
+      return `/${this.base}/${table}?${query}`;
+    };
+    const size = idsPerLookup(
+      `${API}${lookup([])}`.length + OFFSET_ALLOWANCE,
+      Math.max(0, ...unique.map((id) => id.length)),
+    );
     const chunks: string[][] = [];
-    for (let i = 0; i < unique.length; i += IDS_PER_LOOKUP) {
-      chunks.push(unique.slice(i, i + IDS_PER_LOOKUP));
+    for (let i = 0; i < unique.length; i += size) {
+      chunks.push(unique.slice(i, i + size));
     }
-    // One chunk at a time: Airtable allows five requests a second per base, and
-    // a 429 costs a thirty-second lockout.
     const records: AirtableRecord[] = [];
     for (const chunk of chunks) {
       let offset: string | undefined;
       do {
-        const query = new URLSearchParams({
-          filterByFormula: `OR(${chunk.map((id) => `RECORD_ID()='${id}'`).join(",")})`,
-        });
-        for (const field of fields) query.append("fields[]", field);
-        if (offset) query.set("offset", offset);
         const page = await this.call<{
           records: AirtableRecord[];
           offset?: string;
-        }>(`/${this.base}/${table}?${query}`);
+        }>(lookup(chunk, offset));
         records.push(...page.records);
         offset = page.offset;
       } while (offset);
@@ -229,6 +338,14 @@ export class Airtable {
     }>(`/meta/bases/${this.base}/tables`);
     return schema.tables.find((t) => t.id === table)?.fields ?? [];
   }
+}
+
+/** How long to wait before retrying a 429: Retry-After when Airtable sends one,
+ * else the next step of the backoff; null once the steps run out. */
+function retryWait(response: Response, attempt: number): number | null {
+  if (attempt >= RETRY_DELAYS_MS.length) return null;
+  const seconds = Number(response.headers.get("Retry-After"));
+  return seconds > 0 ? seconds * 1000 : RETRY_DELAYS_MS[attempt];
 }
 
 /** A select field's live option names. */

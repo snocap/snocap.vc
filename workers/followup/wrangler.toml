@@ -24,3 +24,8 @@ globs = ["**/*.html"]
 #   npx wrangler secret put FOLLOWUP_SESSION_SECRET  # a fresh random string; NOT
 #                                                    # any other worker's secret
 # Until all three are set, every path answers a 503 "not configured yet" page.
+
+# Workers Logs: every console line (followup_error carries Airtable's status and
+# error code) is kept and searchable in the Cloudflare dashboard.
+[observability]
+enabled = true
