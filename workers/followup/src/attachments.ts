@@ -68,7 +68,7 @@ export async function saveAttachments(
   const user = await airtable.whoami();
   const record = await airtable.createRecord(AIRTABLE.interactions, {
     [FIELD.interactionCampaign]: [campaign],
-    [FIELD.triggeredBy]: { id: user.id },
+    [FIELD.triggeredBy]: [{ id: user.id }],
     [FIELD.occurredOn]: dayValue(pacificDay(now)),
     [FIELD.summary]: PLACEHOLDER_SUMMARY,
   });
