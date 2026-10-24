@@ -42,26 +42,29 @@ test("the registry is data: unique ids, a label and a template per entry", () =>
   }
 });
 
-test("Snooze to date, Draft follow-up and Log interaction prefill an @KB instruction", () => {
+test("Snooze to date, Draft follow-up and Log interaction prefill an @Kernel Bottie instruction", () => {
   assert.deepEqual(prefill("snooze"), {
-    text: "@KB snooze next touch point to ",
+    text: "@Kernel Bottie snooze next touch point to ",
     mentions: [KB],
   });
   assert.deepEqual(prefill("draft-followup"), {
-    text: "@KB draft a follow-up email for me to send: ",
+    text: "@Kernel Bottie draft a follow-up email for me to send: ",
     mentions: [KB],
   });
   assert.deepEqual(prefill("log-interaction"), {
-    text: "@KB log this interaction: ",
+    text: "@Kernel Bottie log this interaction: ",
     mentions: [KB],
   });
 });
 
 test("Close lost waits for a reason, then fills it in", () => {
   assert.equal(macroById("close-lost")?.reason, true);
-  assert.equal(prefill("close-lost").text, "@KB close lost: {reason}");
+  assert.equal(
+    prefill("close-lost").text,
+    "@Kernel Bottie close lost: {reason}",
+  );
   assert.deepEqual(prefill("close-lost", { reason: "Market Timing" }), {
-    text: "@KB close lost: Market Timing",
+    text: "@Kernel Bottie close lost: Market Timing",
     mentions: [KB],
   });
 });

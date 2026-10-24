@@ -34,6 +34,14 @@ export const TOOL_PATH = "/fundraising/followup";
 export const OAUTH_PATH = `${TOOL_PATH}/oauth`;
 export const REDIRECT_URI = `${ORIGIN}${OAUTH_PATH}/callback`;
 
+/** What a submit may carry. maxBytes is Airtable's uploadAttachment limit: the
+ * page re-encodes a larger image as a smaller JPEG before it is sent and
+ * refuses any other file over it, and this Worker refuses anything still over. */
+export const ATTACHMENT_LIMITS = {
+  maxFiles: 10,
+  maxBytes: 5 * 1024 * 1024,
+};
+
 export const SCOPES = [
   "data.records:read",
   "data.records:write",
@@ -67,6 +75,8 @@ export const FIELD = {
   nextTouch: "Next Touch Point",
   probability: "Probability",
   interactions: "Interactions",
+  interactionCampaign: "Campaign",
+  attachments: "Attachments",
   closedLostReason: "Closed Lost Reason",
   createdBy: "Created By",
   lpEntity: "Entity",

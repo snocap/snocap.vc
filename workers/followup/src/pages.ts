@@ -1,9 +1,11 @@
 // Page rendering. The markup lives in templates/*.html; this module only passes
 // values in through renderTemplate, which escapes them (workers/shared/template.ts).
 
-import { OAUTH_PATH, TOOL_PATH } from "./config.ts";
+import { ATTACHMENT_LIMITS, OAUTH_PATH, TOOL_PATH } from "./config.ts";
 import type { Card, ContactCard, TimelineEntry } from "./campaigns.ts";
-import { formatDay, shortDay, submitLabel } from "./dates.ts";
+import * as client from "./client.ts";
+import type { SearchEntry } from "./client.ts";
+import { formatDay } from "./dates.ts";
 import { MACROS, macroEffect } from "./macros.ts";
 import type { Person } from "./mentions.ts";
 import { renderTemplate } from "../../shared/template.ts";
@@ -87,8 +89,27 @@ export interface DeckContext {
   csrf: string;
   closedLostReasons: string[];
   people: Person[];
-  /** The day a submit sets Next Touch Point to, YYYY-MM-DD. */
-  nextTouchDay: string;
+}
+
+/** The page's pure helpers (client.ts), each as its own source text so the
+ * browser runs the exact functions the tests cover. `__name` is the no-op
+ * esbuild's keepNames (on in wrangler) wraps nested functions with. */
+export function clientScript(): string {
+  const helpers = Object.entries(client)
+    .filter(([, value]) => typeof value === "function")
+    .map(([name, fn]) => `const ${name} = ${String(fn)};`)
+    .join("\n");
+  return `<script>\nvar __name = (fn) => fn;\n${helpers}\n</script>`;
+}
+
+/** What search matches a card on. */
+export function searchEntry(card: Card): SearchEntry {
+  return {
+    name: card.name,
+    lp: card.lp,
+    contacts: card.contacts,
+    rep: card.representative,
+  };
 }
 
 export function renderCard(
@@ -115,8 +136,6 @@ export function renderCard(
     latest,
     actionPath: ACTION_PATH,
     csrf: deck.csrf,
-    nextTouchDay: shortDay(deck.nextTouchDay),
-    submitLabel: submitLabel("", deck.nextTouchDay),
     macros: macroChips(card, deck.people),
     reasons: deck.closedLostReasons
       .map((reason) => renderTemplate(reasonTemplate, { reason }))
@@ -126,7 +145,7 @@ export function renderCard(
 
 export function renderReview(
   cards: Card[],
-  session: { email: string },
+  session: { email: string; userId: string },
   deck: DeckContext,
 ): string {
   const body = cards.length
@@ -141,7 +160,11 @@ export function renderReview(
       cards: body,
       csrf: deck.csrf,
       email: session.email,
+      userId: session.userId,
       people: JSON.stringify(deck.people),
+      index: JSON.stringify(cards.map(searchEntry)),
+      limits: JSON.stringify(ATTACHMENT_LIMITS),
+      helpers: clientScript(),
       signOutPath: SIGN_OUT_PATH,
       detailPath: DETAIL_PATH,
     }),

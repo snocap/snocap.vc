@@ -5,6 +5,8 @@
 import { AIRTABLE } from "./config.ts";
 
 const API = "https://api.airtable.com/v0";
+/** uploadAttachment lives on its own host. */
+const CONTENT_API = "https://content.airtable.com/v0";
 
 export class AirtableError extends Error {
   readonly status: number;
@@ -62,8 +64,12 @@ export class Airtable {
     this.base = base;
   }
 
-  private async call<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const response = await this.fetchImpl(`${API}${path}`, {
+  private async call<T>(
+    path: string,
+    init: RequestInit = {},
+    host: string = API,
+  ): Promise<T> {
+    const response = await this.fetchImpl(`${host}${path}`, {
       ...init,
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -184,6 +190,38 @@ export class Airtable {
     });
   }
 
+  /** typecast stays off, as in updateRecord. */
+  createRecord(
+    table: string,
+    fields: Record<string, unknown>,
+  ): Promise<AirtableRecord> {
+    return this.call(`/${this.base}/${table}`, {
+      method: "POST",
+      body: JSON.stringify({ fields, typecast: false }),
+    });
+  }
+
+  /** Appends one file to a record's attachment field (Airtable's
+   * uploadAttachment: base64 in JSON, at most 5 MB a file). */
+  uploadAttachment(
+    recordId: string,
+    field: string,
+    file: { contentType: string; filename: string; bytes: Uint8Array },
+  ): Promise<unknown> {
+    return this.call(
+      `/${this.base}/${encodeURIComponent(recordId)}/${encodeURIComponent(field)}/uploadAttachment`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          contentType: file.contentType,
+          filename: file.filename,
+          file: base64(file.bytes),
+        }),
+      },
+      CONTENT_API,
+    );
+  }
+
   /** A table's fields as the base schema describes them. */
   async tableFields(table: string): Promise<AirtableField[]> {
     const schema = await this.call<{
@@ -202,4 +240,14 @@ export function selectOptions(
   return (choices ?? [])
     .map((c) => (c as { name?: unknown }).name)
     .filter((n): n is string => typeof n === "string");
+}
+
+/** Bytes → base64, a chunk at a time so a 5 MB photo does not overflow the
+ * argument list of String.fromCharCode. */
+export function base64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
 }

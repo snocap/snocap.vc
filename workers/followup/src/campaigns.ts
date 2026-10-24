@@ -24,6 +24,8 @@ export interface Card {
   value: string;
   probability: string;
   representative: string;
+  /** The LP's primary contacts' names, for search. */
+  contacts: string[];
   /** The Representative as a mention target, for Ping rep. */
   rep: Person | null;
   nextTouch: string | null;
@@ -103,13 +105,15 @@ export function cardOf(
   lpNames: Map<string, string>,
   interactions: Map<string, InteractionLine>,
   now: number,
+  contactNames: Map<string, string[]> = new Map(),
 ): Card {
   const f = campaign.fields;
   const nextTouch = text(f[FIELD.nextTouch]) || null;
+  const lpIds = linkedIds(campaign, FIELD.limitedPartner);
   return {
     id: campaign.id,
     name: text(f[FIELD.campaign]) || "(unnamed Campaign)",
-    lp: linkedIds(campaign, FIELD.limitedPartner)
+    lp: lpIds
       .map((id) => lpNames.get(id) ?? "")
       .filter(Boolean)
       .join(", "),
@@ -117,6 +121,7 @@ export function cardOf(
     value: valueLabel(f[FIELD.dealValue]),
     probability: probabilityLabel(f[FIELD.probability]),
     representative: names(f[FIELD.representative]),
+    contacts: lpIds.flatMap((id) => contactNames.get(id) ?? []),
     rep: personOf(f[FIELD.representative]),
     nextTouch,
     nextTouchLabel: nextTouch ? formatDay(nextTouch) : "Not set",

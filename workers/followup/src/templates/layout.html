@@ -37,6 +37,43 @@
         max-width: 560px;
         margin: 0 auto;
       }
+      /* A wide screen shows the deck as a row of --visible cards (an odd count,
+         set by the page script), the selected one centered. */
+      .wide main {
+        max-width: calc(var(--visible) * 416px);
+      }
+      .js [data-deck] {
+        display: grid;
+        grid-template-columns: repeat(var(--visible, 1), minmax(0, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+      .js [data-deck] > .card {
+        grid-row: 1;
+      }
+      .wide .card.current {
+        border-color: #f15800;
+        box-shadow: 0 0 0 1px #f15800;
+      }
+      .card.neighbor {
+        opacity: 0.4;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .card.neighbor:hover {
+        opacity: 0.65;
+      }
+      .card.neighbor .card-body {
+        pointer-events: none;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
       a {
         color: #f15800;
       }
@@ -89,6 +126,11 @@
         gap: 12px;
         margin-bottom: 12px;
       }
+      .topbar-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .topbar-actions button,
       .topbar form button {
         padding: 6px 10px;
         font-size: 12px;
@@ -238,24 +280,125 @@
         margin-bottom: 10px;
         color-scheme: dark;
       }
+      /* An open select's options are drawn by the browser, and without their
+         own colors they inherit the white text over the OS's own (often white)
+         popup. Set both, per OS theme: options.test.ts checks the contrast. */
+      select option,
+      select optgroup {
+        background-color: #1d1d1d;
+        color: #ffffff;
+      }
+      @media (prefers-color-scheme: light) {
+        select option,
+        select optgroup {
+          background-color: #ffffff;
+          color: #111111;
+        }
+      }
       textarea {
         min-height: 96px;
         resize: vertical;
       }
       .reasons[hidden],
-      .mention-list[hidden] {
+      .search[hidden],
+      .thumbs[hidden],
+      .pick-list[hidden] {
         display: none;
+      }
+      .search {
+        position: relative;
+        margin-bottom: 12px;
+      }
+      .search input {
+        width: 100%;
+        padding: 11px 12px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(241, 88, 0, 0.6);
+        color: #fff;
+        font:
+          16px "Inter",
+          system-ui,
+          sans-serif;
+        color-scheme: dark;
+      }
+      .search .pick-list {
+        margin: 0;
+      }
+      .search .pick-list:empty {
+        display: none;
+      }
+      .thumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .thumbs figure {
+        position: relative;
+        width: 72px;
+        height: 72px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .thumbs figure.file {
+        width: auto;
+        height: 36px;
+        max-width: 200px;
+        padding: 0 30px 0 10px;
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+        color: #ddd;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .thumbs figure.file .remove {
+        top: 50%;
+        right: 4px;
+        margin-top: -13px;
+      }
+      .thumbs img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .thumbs .remove {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border-radius: 50%;
+        background: #0a0a0a;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: #fff;
+        font-size: 16px;
+        line-height: 1;
+      }
+      .actions.dropping {
+        outline: 2px dashed #f15800;
+        outline-offset: 4px;
+      }
+      .chips .attach {
+        cursor: pointer;
+        border-style: dashed;
+        font-size: 13px;
+        border: 1px dashed rgba(255, 255, 255, 0.3);
+        color: #ddd;
+        padding: 8px 11px;
       }
       .compose {
         position: relative;
       }
-      .mention-list {
+      .pick-list {
         list-style: none;
         margin: -6px 0 10px;
         border: 1px solid rgba(241, 88, 0, 0.6);
         background: #1d1d1d;
       }
-      .mention-list button {
+      .pick-list button {
         display: block;
         width: 100%;
         text-align: left;
@@ -264,11 +407,22 @@
         padding: 12px 14px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
-      .mention-list li:first-child button {
+      .pick-list li:first-child button {
         border-top: 0;
       }
-      .mention-list button:active {
+      .pick-list button.active,
+      .pick-list button:active {
         background: rgba(241, 88, 0, 0.2);
+      }
+      .actions.busy textarea,
+      .actions.busy .chips,
+      .actions.busy .thumbs {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .actions.busy button[type="submit"]:disabled {
+        opacity: 0.85;
+        cursor: progress;
       }
       .result {
         margin-top: 10px;
@@ -284,8 +438,15 @@
         gap: 10px;
         margin-top: 14px;
       }
+      .nav {
+        max-width: 560px;
+        margin-left: auto;
+        margin-right: auto;
+      }
       .nav button {
         flex: 1;
+        padding: 12px 6px;
+        white-space: nowrap;
       }
       .empty {
         color: #bdbdbd;

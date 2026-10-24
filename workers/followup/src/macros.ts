@@ -1,6 +1,6 @@
 // The shortcuts on a card. A macro never posts or writes on its own: it fills
-// (or appends to) the comment box with an editable template, and Jon edits it
-// and presses Comment. Adding a macro is one entry in MACROS; the page renders
+// (or replaces) the comment box with an editable template, and Jon edits it
+// and presses Post comment. Adding a macro is one entry in MACROS; the page renders
 // its chip from what macroEffect says the entry does.
 //
 // A template is comment text, with `{@kb}`, `{@rep}` (the Campaign's
