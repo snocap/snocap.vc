@@ -518,8 +518,8 @@ test("every card's button is Post comment, disabled until there is something to 
     ...body.matchAll(/<button type="submit"([^>]*)>([^<]*)<\/button>/g),
   ].map((m) => [m[1].trim(), m[2].trim()]);
   assert.deepEqual(buttons, [
-    ["disabled", "Post comment"],
-    ["disabled", "Post comment"],
+    ['disabled title="Ctrl+Enter"', "Post comment"],
+    ['disabled title="Ctrl+Enter"', "Post comment"],
   ]);
   assert.doesNotMatch(body, /Mark handled/);
 });
