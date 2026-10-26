@@ -35,7 +35,8 @@ foreign `Origin` is refused.
 ## Navigating
 
 On a phone the deck shows one card: swipe, or the **First / Prev / Next / Last**
-buttons under it. On a keyboard: ← → (or j k), **Home** and **End**.
+buttons under it. On a keyboard: ← → (or j k) for Prev/Next, ↑ and **Home** for
+First, ↓ and **End** for Last.
 
 On a wide screen it is a row. As many 400px cards as fit show side by side,
 always an odd number (1, 3 or 5) so the selected card sits in the center,
