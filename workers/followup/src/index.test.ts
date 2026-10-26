@@ -611,7 +611,7 @@ test("attachments with no text: one Interaction, the uploads, then just the @KB 
   assert.equal(created.typecast, false);
   assert.deepEqual(created.fields, {
     Campaign: [CAMPAIGN_A],
-    "Triggered By": { id: "usrJon" },
+    "Triggered By": [{ id: "usrJon" }],
     "Occurred on": created.fields["Occurred on"],
     Summary: "New Interaction Attachment",
   });
