@@ -35,12 +35,12 @@
   {{{ cards }}}
 </div>
 <div class="nav">
-  <button class="ghost" type="button" data-first title="First (Home)">
+  <button class="ghost" type="button" data-first title="First (Up arrow / Home)">
     ⇤ First
   </button>
-  <button class="ghost" type="button" data-prev>← Prev</button>
-  <button class="ghost" type="button" data-next>Next →</button>
-  <button class="ghost" type="button" data-last title="Last (End)">
+  <button class="ghost" type="button" data-prev title="Prev (Left arrow)">← Prev</button>
+  <button class="ghost" type="button" data-next title="Next (Right arrow)">Next →</button>
+  <button class="ghost" type="button" data-last title="Last (Down arrow / End)">
     Last ⇥
   </button>
 </div>
@@ -205,11 +205,11 @@
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === "ArrowRight" || e.key === "j") show(at + 1);
       if (e.key === "ArrowLeft" || e.key === "k") show(at - 1);
-      if (e.key === "Home") {
+      if (e.key === "Home" || e.key === "ArrowUp") {
         e.preventDefault();
         show(0);
       }
-      if (e.key === "End") {
+      if (e.key === "End" || e.key === "ArrowDown") {
         e.preventDefault();
         show(cards.length - 1);
       }
