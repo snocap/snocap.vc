@@ -44,11 +44,10 @@ export function hashForCard(id: string): string {
   return "#/" + encodeURIComponent(id);
 }
 
-/** The Campaign a URL hash names, or null if it names none: the current
- * `#/<id>` form, the legacy `#c-<id>` form an old bookmark may still carry,
- * or anything else (no hash, junk). */
+/** The Campaign a `#/<id>` URL hash names, or null for anything else (no
+ * hash, junk). */
 export function cardIdFromHash(hash: string): string | null {
-  const m = /^#\/(.+)$/.exec(hash) ?? /^#c-(.+)$/.exec(hash);
+  const m = /^#\/(.+)$/.exec(hash);
   if (!m) return null;
   try {
     return decodeURIComponent(m[1]) || null;

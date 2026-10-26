@@ -60,8 +60,7 @@ not hidden in `localStorage`. Every way of picking a card (Prev/Next, First/Last
 the keyboard, a neighbor click, a search pick, the auto-advance after posting)
 updates it with `history.replaceState`, never `pushState`, so Back leaves the
 page instead of stepping back through every prior card. Pasting or editing a
-`#/<id>` URL in the same tab jumps the deck there (`hashchange`); an old
-`#c-<id>` bookmark still opens the right card. A hash naming a Campaign that has
+`#/<id>` URL in the same tab jumps the deck there (`hashchange`). A hash naming a Campaign that has
 left Follow Ups opens the first card instead, with a brief notice saying so; no
 hash, or one that names nothing recognizable, just opens the first card.
 

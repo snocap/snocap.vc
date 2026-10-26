@@ -82,15 +82,12 @@ test("the new hash form parses back to the id", () => {
   assert.equal(cardIdFromHash("#/rec%2Fweird%20id"), "rec/weird id");
 });
 
-test("the legacy element-id hash still parses", () => {
-  assert.equal(cardIdFromHash("#c-recA"), "recA");
-});
-
 test("no hash or junk parses to null", () => {
   assert.equal(cardIdFromHash(""), null);
   assert.equal(cardIdFromHash("#"), null);
   assert.equal(cardIdFromHash("#/"), null);
   assert.equal(cardIdFromHash("#nonsense"), null);
+  assert.equal(cardIdFromHash("#c-recA"), null, "the element-id form too");
   assert.equal(cardIdFromHash("#/%"), null, "an undecodable hash is junk too");
 });
 
