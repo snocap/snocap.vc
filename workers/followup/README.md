@@ -54,11 +54,15 @@ work in the results, and so does a tap. Picking one jumps the deck to that
 Campaign's real place in the view; the deck itself is never filtered, so
 Prev/Next carry on from there.
 
-**Where you were** is remembered per Airtable user in `localStorage`
-(`followup-position:<user id>`: the Campaign's record id and its index), on every
-move. A reload reopens that Campaign if it is still in Follow Ups; if it has left,
-the page opens whatever now sits at its old index, clamped to the list. Storage
-that is unavailable or holds junk just opens the first card.
+**Where you were** is the URL hash, `#/<recordId>` — the only record of which
+Campaign is open, so the position is visible in the address bar and shareable,
+not hidden in `localStorage`. Every way of picking a card (Prev/Next, First/Last,
+the keyboard, a neighbor click, a search pick, the auto-advance after posting)
+updates it with `history.replaceState`, never `pushState`, so Back leaves the
+page instead of stepping back through every prior card. Pasting or editing a
+`#/<id>` URL in the same tab jumps the deck there (`hashchange`). A hash naming a Campaign that has
+left Follow Ups opens the first card instead, with a brief notice saying so; no
+hash, or one that names nothing recognizable, just opens the first card.
 
 ## Commenting
 
