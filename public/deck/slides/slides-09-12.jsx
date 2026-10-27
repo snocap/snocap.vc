@@ -168,19 +168,6 @@ function Slide09_Team() {
 }
 
 // ============= SLIDE 10: Who we work with =============
-const VENTURE_PARTNERS = [
-  {
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/HBS_Shield.svg/200px-HBS_Shield.svg.png",
-    alt: "Harvard Business School",
-    label: "Harvard\nBusiness School",
-  },
-  {
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Wharton_logo.svg/240px-Wharton_logo.svg.png",
-    alt: "Wharton",
-    label: "Wharton",
-  },
-];
-
 function LogoCell({ children, h = 80 }) {
   return (
     <div

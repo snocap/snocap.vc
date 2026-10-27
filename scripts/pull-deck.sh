@@ -11,7 +11,8 @@
 #
 # Design is the source of truth: public/deck/ is replaced wholesale and git
 # diff shows what changed. Left out of the site copy: _ref/ and uploads/
-# (Design working files), CLAUDE.md, .thumbnail, and deck.pdf (CI renders it).
+# (Design working files), CLAUDE.md, .thumbnail, deck.pdf (CI renders it), and
+# any file over 15 MB, which the claude.ai artifact copy cannot hold either.
 #
 # Usage: scripts/pull-deck.sh <download dir | project.zip>
 set -euo pipefail
@@ -35,6 +36,7 @@ done
 
 cp -R "$src" "$tmp/deck"
 rm -rf "$tmp/deck/_ref" "$tmp/deck/uploads" "$tmp/deck/CLAUDE.md" "$tmp/deck/.thumbnail" "$tmp/deck/deck.pdf"
+find "$tmp/deck" -type f -size +15M -print -delete | sed "s#^$tmp/deck/#pull-deck: dropped (over 15 MB): #"
 rm -rf "$dest"
 mv "$tmp/deck" "$dest"
 
@@ -46,5 +48,5 @@ cd "$repo"
 npx prettier --write --log-level warn 'public/deck/**/*.{html,css,js,jsx}'
 npm run --silent verify-deck
 
-echo "pull-deck: public/deck rebuilt from $src. Check the #speaker-notes JSON in index.html against the slides; Design does not update it."
+echo "pull-deck: public/deck rebuilt from $src."
 git status --short public/deck | tail -20
