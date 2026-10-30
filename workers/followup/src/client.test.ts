@@ -8,6 +8,7 @@ import { runInNewContext } from "node:vm";
 import {
   acceptFiles,
   canPost,
+  prefillComment,
   applyMacro,
   carouselSlots,
   cardIdFromHash,
@@ -125,6 +126,31 @@ test("Post comment is disabled while the box is empty and nothing is attached", 
   assert.equal(canPost(" \n ", 0), false);
   assert.equal(canPost("hi", 0), true);
   assert.equal(canPost("", 1), true, "attachments alone can be posted");
+});
+
+test("the prefill alone is nothing to post; anything typed after it is", () => {
+  const prefill = prefillComment("Kernel Bottie");
+  assert.equal(prefill, "@Kernel Bottie ");
+  assert.equal(canPost(prefill, 0, prefill), false);
+  assert.equal(canPost("@Kernel Bottie", 0, prefill), false);
+  assert.equal(canPost(prefill + "snooze a week", 0, prefill), true);
+  assert.equal(
+    canPost(prefill, 1, prefill),
+    true,
+    "an attachment asks KB to read it",
+  );
+});
+
+test("a macro replaces the untouched prefill and appends once something is typed after it", () => {
+  const prefill = prefillComment("KB");
+  assert.equal(
+    applyMacro(prefill, prefill, "@KB snooze to "),
+    "@KB snooze to ",
+  );
+  assert.equal(
+    applyMacro(prefill + "they said Q1", prefill, "@KB snooze to "),
+    "@KB they said Q1\n@KB snooze to ",
+  );
 });
 
 const LIMITS = { maxFiles: 3, maxBytes: 5 * 1048576 };

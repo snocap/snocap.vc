@@ -82,10 +82,18 @@ export function applyMacro(
   return current.replace(/\s+$/, "") + "\n" + text;
 }
 
+/** What every comment box starts with: KB's mention and a space, so moving to
+ * the next card and dictating asks KB without saying its name. */
+export function prefillComment(kbName: string): string {
+  return `@${kbName} `;
+}
+
 /** Whether there is anything to post: the button stays disabled while the
- * box is empty and nothing is attached, since a submit only ever posts. */
-export function canPost(text: string, files: number): boolean {
-  return text.trim() !== "" || files > 0;
+ * box is empty or still holds only the prefill, and nothing is attached,
+ * since a submit only ever posts. */
+export function canPost(text: string, files: number, prefill = ""): boolean {
+  const said = text.trim();
+  return (said !== "" && said !== prefill.trim()) || files > 0;
 }
 
 /** Whether the page can shrink this file by re-encoding it as a JPEG: any

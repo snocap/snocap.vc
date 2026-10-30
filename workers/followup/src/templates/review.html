@@ -30,6 +30,7 @@
   data-csrf="{{ csrf }}"
   data-user="{{ userId }}"
   data-people="{{ people }}"
+  data-kb="{{ kb }}"
   data-index="{{ index }}"
   data-limits="{{ limits }}"
 >
@@ -101,7 +102,7 @@
       measure();
       // A phone's keyboard resizes the viewport too; only a new column count
       // re-lays the row, so typing never scrolls the page.
-      if (visible !== before) show(at);
+      if (visible !== before) show(at, false);
     });
     cards.forEach((card, i) =>
       card.addEventListener("click", () => {
@@ -109,7 +110,10 @@
       }),
     );
 
-    function show(index) {
+    // Moving to a card puts the caret at the end of its box, after the KB
+    // prefill, so a dictation tool can start talking at once. A re-layout
+    // (resize) moves nothing and takes no focus.
+    function show(index, focus = true) {
       at = Math.min(Math.max(index, 0), cards.length - 1);
       const slots = carouselSlots(at, cards.length, visible);
       cards.forEach((card, i) => {
@@ -127,6 +131,11 @@
       // Back leaves the page instead of stepping through every prior card.
       history.replaceState(null, "", hashForCard(ids[at]));
       window.scrollTo(0, 0);
+      const box = cards[at].querySelector("form.actions textarea");
+      if (focus && box && !box.readOnly) {
+        box.focus({ preventScroll: true });
+        box.setSelectionRange(box.value.length, box.value.length);
+      }
     }
     document.querySelector("[data-first]").onclick = () => show(0);
     document.querySelector("[data-prev]").onclick = () => show(at - 1);
@@ -350,6 +359,9 @@
       return new File([blob], name, { type: "image/jpeg" });
     }
 
+    const kb = JSON.parse(deck.dataset.kb);
+    const PREFILL = prefillComment(kb.name);
+
     deck.querySelectorAll("form.actions").forEach((form) => {
       const box = form.querySelector("textarea");
       const list = form.querySelector(".mention-list");
@@ -361,6 +373,7 @@
       const thumbs = form.querySelector(".thumbs");
       const inserted = new Map();
       let pendingReason = null;
+      // The prefill counts as a macro's own text, so the first macro replaces it.
       let lastMacro = null;
       let found = [];
       let highlighted = -1;
@@ -368,12 +381,20 @@
       let busy = false;
 
       function syncButton() {
-        submit.disabled = busy || !canPost(box.value, attached.length);
+        submit.disabled = busy || !canPost(box.value, attached.length, PREFILL);
       }
 
       function remember(mentions) {
         for (const p of mentions) inserted.set(p.id, p);
       }
+
+      function resetBox() {
+        box.value = PREFILL;
+        inserted.clear();
+        remember([kb]);
+        lastMacro = PREFILL;
+      }
+      resetBox();
 
       function closeList() {
         list.hidden = true;
@@ -626,9 +647,7 @@
           send,
           posted: () =>
             setTimeout(() => {
-              box.value = "";
-              inserted.clear();
-              lastMacro = null;
+              resetBox();
               clearAttached();
               submit.textContent = "Post comment";
               lock(false);

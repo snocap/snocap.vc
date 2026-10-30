@@ -7,7 +7,7 @@ import * as client from "./client.ts";
 import type { SearchEntry } from "./client.ts";
 import { formatDay } from "./dates.ts";
 import { MACROS, macroEffect } from "./macros.ts";
-import type { Person } from "./mentions.ts";
+import { KB, type Person } from "./mentions.ts";
 import { renderTemplate } from "../../shared/template.ts";
 import cardTemplate from "./templates/card.html";
 import contactLinkTemplate from "./templates/contact-link.html";
@@ -174,6 +174,7 @@ export function renderReview(
       email: session.email,
       userId: session.userId,
       people: JSON.stringify(deck.people),
+      kb: JSON.stringify(deck.people.find((p) => p.id === KB.id) ?? KB),
       index: JSON.stringify(cards.map(searchEntry)),
       limits: JSON.stringify(ATTACHMENT_LIMITS),
       helpers: clientScript(),
