@@ -38,6 +38,12 @@ export const MACROS: Macro[] = [
       "{@kb} do some research on the contact and their firm, tee up a draft message to send them that connects our last touch point, their work and ours",
   },
   {
+    id: "reconcile",
+    label: "Reconcile",
+    template:
+      "{@kb} reconcile this record: reconnect the LP, contacts and interactions with ",
+  },
+  {
     id: "log-interaction",
     label: "Log interaction",
     template: "{@kb} log this interaction: ",
