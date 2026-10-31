@@ -36,7 +36,7 @@ const interactions = new Map(
   ].map((r) => [r.id, interactionLine(r)]),
 );
 
-test("a card carries the Campaign's facts, the LP's name and the latest Interaction that was a touch, not Background research", () => {
+test("a card carries the Campaign's facts, the LP's name and the latest Interaction", () => {
   const card = cardOf(
     {
       id: "recC1",
@@ -48,24 +48,11 @@ test("a card carries the Campaign's facts, the LP's name and the latest Interact
         Probability: "2 - High",
         Representative: { id: "usr1", name: "Jon Azoff" },
         "Next Touch Point": "2026-10-20T16:00:00.000Z",
-        Interactions: ["recI1", "recI2", "recI3"],
+        Interactions: ["recI1", "recI2"],
       },
     },
     new Map([["recL1", "Acme Family Office"]]),
-    new Map([
-      ...interactions,
-      [
-        "recI3",
-        interactionLine({
-          id: "recI3",
-          fields: {
-            Summary: "Research: Acme",
-            Channel: "Background",
-            "Occurred on": "2026-10-12T17:00:00.000Z",
-          },
-        }),
-      ],
-    ]),
+    interactions,
     NOW,
   );
   assert.equal(card.lp, "Acme Family Office");
@@ -157,4 +144,21 @@ test("a contact with nothing reachable gets no links, and unsafe URLs are droppe
       .links,
     [],
   );
+});
+
+test("the Campaign's created day is the timeline's first entry, even with nothing else on it", () => {
+  const created = "2026-08-15T17:00:00.000Z";
+  const entries = timeline([...interactions.values()], [], created);
+  assert.deepEqual(entries.at(-1), {
+    kind: "created",
+    at: created,
+    who: "",
+    title: "Added to the Campaign Tracker",
+    body: "",
+  });
+  assert.deepEqual(
+    timeline([], [], created).map((e) => e.kind),
+    ["created"],
+  );
+  assert.equal(timeline([], []).length, 0);
 });

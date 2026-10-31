@@ -44,6 +44,7 @@ function fakeAirtable(
       // View order, deliberately not alphabetical.
       {
         id: CAMPAIGN_B,
+        createdTime: "2026-08-15T17:00:00.000Z",
         fields: {
           Campaign: "Zeta Partners",
           Representative: { id: "usrNateNateNate01", name: "Nate" },
@@ -810,7 +811,12 @@ test("the expanded card merges history and lists the LP's contacts", async () =>
     ENV,
   );
   assert.equal(response.status, 200);
-  assert.match(await response.text(), /Email · Sent the deck/);
+  const page = await response.text();
+  assert.match(page, /Email · Sent the deck/);
+  assert.match(
+    page,
+    /Aug 15, 2026 · —<\/div>\s*<div>Added to the Campaign Tracker<\/div>/,
+  );
 });
 
 /** The fake Airtable, but every read of the Follow Ups view answers `status`. */

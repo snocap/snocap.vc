@@ -309,7 +309,11 @@ async function handleDetail(airtable: Airtable, id: string): Promise<Response> {
   return html(
     renderDetail(
       contacts.map(contactCard),
-      timeline(interactions.map(interactionLine), comments),
+      timeline(
+        interactions.map(interactionLine),
+        comments,
+        campaign.createdTime,
+      ),
       mergePeople(
         recordPeople([campaign], PEOPLE_FIELDS),
         recordPeople(interactions, [FIELD.triggeredBy]),

@@ -87,9 +87,7 @@ function time(iso: string | null): number {
   return Number.isNaN(t) ? 0 : t;
 }
 
-/** The Campaign's most recent touch among the Interactions fetched, by
- * Occurred on. Background rows (KB's research, ingest provenance) are notes
- * about the LP, not a touch, so they never stand in for the last one. */
+/** The Campaign's most recent Interaction among those fetched, by Occurred on. */
 export function latestInteraction(
   campaign: AirtableRecord,
   interactions: Map<string, InteractionLine>,
@@ -97,8 +95,7 @@ export function latestInteraction(
   let latest: InteractionLine | null = null;
   for (const id of linkedIds(campaign, FIELD.interactions)) {
     const line = interactions.get(id);
-    if (!line || line.channel === "Background") continue;
-    if (!latest || time(line.at) > time(latest.at)) latest = line;
+    if (line && (!latest || time(line.at) > time(latest.at))) latest = line;
   }
   return latest;
 }
@@ -134,7 +131,7 @@ export function cardOf(
 }
 
 export interface TimelineEntry {
-  kind: "interaction" | "comment";
+  kind: "interaction" | "comment" | "created";
   at: string;
   who: string;
   title: string;
@@ -150,10 +147,13 @@ export function renderMentions(comment: AirtableComment): string {
   });
 }
 
-/** Interactions and the comment thread on one line, newest first. */
+/** Interactions, the comment thread and the day the Campaign was created on
+ * one line, newest first, so a Campaign with no Interactions yet still shows
+ * when it was added. */
 export function timeline(
   interactions: InteractionLine[],
   comments: AirtableComment[],
+  created?: string,
 ): TimelineEntry[] {
   const entries: TimelineEntry[] = [
     ...interactions.map((i) => ({
@@ -170,6 +170,17 @@ export function timeline(
       title: "Comment",
       body: renderMentions(c),
     })),
+    ...(created
+      ? [
+          {
+            kind: "created" as const,
+            at: created,
+            who: "",
+            title: "Added to the Campaign Tracker",
+            body: "",
+          },
+        ]
+      : []),
   ];
   return entries.sort((a, b) => time(b.at) - time(a.at));
 }
