@@ -131,7 +131,7 @@ export function cardOf(
 }
 
 export interface TimelineEntry {
-  kind: "interaction" | "comment";
+  kind: "interaction" | "comment" | "created";
   at: string;
   who: string;
   title: string;
@@ -147,10 +147,13 @@ export function renderMentions(comment: AirtableComment): string {
   });
 }
 
-/** Interactions and the comment thread on one line, newest first. */
+/** Interactions, the comment thread and the day the Campaign was created on
+ * one line, newest first, so a Campaign with no Interactions yet still shows
+ * when it was added. */
 export function timeline(
   interactions: InteractionLine[],
   comments: AirtableComment[],
+  created?: string,
 ): TimelineEntry[] {
   const entries: TimelineEntry[] = [
     ...interactions.map((i) => ({
@@ -167,6 +170,17 @@ export function timeline(
       title: "Comment",
       body: renderMentions(c),
     })),
+    ...(created
+      ? [
+          {
+            kind: "created" as const,
+            at: created,
+            who: "",
+            title: "Added to the Campaign Tracker",
+            body: "",
+          },
+        ]
+      : []),
   ];
   return entries.sort((a, b) => time(b.at) - time(a.at));
 }

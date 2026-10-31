@@ -145,3 +145,20 @@ test("a contact with nothing reachable gets no links, and unsafe URLs are droppe
     [],
   );
 });
+
+test("the Campaign's created day is the timeline's first entry, even with nothing else on it", () => {
+  const created = "2026-08-15T17:00:00.000Z";
+  const entries = timeline([...interactions.values()], [], created);
+  assert.deepEqual(entries.at(-1), {
+    kind: "created",
+    at: created,
+    who: "",
+    title: "Added to the Campaign Tracker",
+    body: "",
+  });
+  assert.deepEqual(
+    timeline([], [], created).map((e) => e.kind),
+    ["created"],
+  );
+  assert.equal(timeline([], []).length, 0);
+});
