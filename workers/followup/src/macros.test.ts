@@ -29,6 +29,7 @@ test("the registry is data: unique ids, a label and a template per entry", () =>
     "snooze",
     "draft-followup",
     "research",
+    "reconcile",
     "log-interaction",
     "close-lost",
     "ping-rep",
@@ -54,6 +55,13 @@ test("Snooze to date, Draft follow-up and Log interaction prefill an @Kernel Bot
   });
   assert.deepEqual(prefill("log-interaction"), {
     text: "@Kernel Bottie log this interaction: ",
+    mentions: [KB],
+  });
+});
+
+test("Reconcile asks KB to reconnect the record with whoever Jon names", () => {
+  assert.deepEqual(prefill("reconcile"), {
+    text: "@Kernel Bottie reconcile this record: reconnect the LP, contacts and interactions with ",
     mentions: [KB],
   });
 });
