@@ -36,7 +36,7 @@ const interactions = new Map(
   ].map((r) => [r.id, interactionLine(r)]),
 );
 
-test("a card carries the Campaign's facts, the LP's name and the latest Interaction", () => {
+test("a card carries the Campaign's facts, the LP's name and the latest Interaction that was a touch, not Background research", () => {
   const card = cardOf(
     {
       id: "recC1",
@@ -48,11 +48,24 @@ test("a card carries the Campaign's facts, the LP's name and the latest Interact
         Probability: "2 - High",
         Representative: { id: "usr1", name: "Jon Azoff" },
         "Next Touch Point": "2026-10-20T16:00:00.000Z",
-        Interactions: ["recI1", "recI2"],
+        Interactions: ["recI1", "recI2", "recI3"],
       },
     },
     new Map([["recL1", "Acme Family Office"]]),
-    interactions,
+    new Map([
+      ...interactions,
+      [
+        "recI3",
+        interactionLine({
+          id: "recI3",
+          fields: {
+            Summary: "Research: Acme",
+            Channel: "Background",
+            "Occurred on": "2026-10-12T17:00:00.000Z",
+          },
+        }),
+      ],
+    ]),
     NOW,
   );
   assert.equal(card.lp, "Acme Family Office");

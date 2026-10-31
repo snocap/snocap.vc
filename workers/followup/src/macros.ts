@@ -32,6 +32,12 @@ export const MACROS: Macro[] = [
     template: "{@kb} draft a follow-up email for me to send: ",
   },
   {
+    id: "research",
+    label: "Research",
+    template:
+      "{@kb} do some research on the contact and their firm, tee up a draft message to send them that connects our last touch point, their work and ours",
+  },
+  {
     id: "log-interaction",
     label: "Log interaction",
     template: "{@kb} log this interaction: ",

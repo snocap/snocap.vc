@@ -87,7 +87,9 @@ function time(iso: string | null): number {
   return Number.isNaN(t) ? 0 : t;
 }
 
-/** The Campaign's most recent Interaction among those fetched, by Occurred on. */
+/** The Campaign's most recent touch among the Interactions fetched, by
+ * Occurred on. Background rows (KB's research, ingest provenance) are notes
+ * about the LP, not a touch, so they never stand in for the last one. */
 export function latestInteraction(
   campaign: AirtableRecord,
   interactions: Map<string, InteractionLine>,
@@ -95,7 +97,8 @@ export function latestInteraction(
   let latest: InteractionLine | null = null;
   for (const id of linkedIds(campaign, FIELD.interactions)) {
     const line = interactions.get(id);
-    if (line && (!latest || time(line.at) > time(latest.at))) latest = line;
+    if (!line || line.channel === "Background") continue;
+    if (!latest || time(line.at) > time(latest.at)) latest = line;
   }
   return latest;
 }

@@ -28,6 +28,7 @@ test("the registry is data: unique ids, a label and a template per entry", () =>
   assert.deepEqual(ids, [
     "snooze",
     "draft-followup",
+    "research",
     "log-interaction",
     "close-lost",
     "ping-rep",
@@ -53,6 +54,13 @@ test("Snooze to date, Draft follow-up and Log interaction prefill an @Kernel Bot
   });
   assert.deepEqual(prefill("log-interaction"), {
     text: "@Kernel Bottie log this interaction: ",
+    mentions: [KB],
+  });
+});
+
+test("Research asks KB to research the contact and firm and tee up a message", () => {
+  assert.deepEqual(prefill("research"), {
+    text: "@Kernel Bottie do some research on the contact and their firm, tee up a draft message to send them that connects our last touch point, their work and ours",
     mentions: [KB],
   });
 });
