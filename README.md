@@ -21,10 +21,12 @@ the rest are run directly.
 
 ### The deck pipeline
 
-`public/deck/` holds the deck exactly as the DesignSync pull brought it out of
-Claude Design — pristine, and never optimized in place, because the next pull would
-clobber any hand-editing. Everything that makes the deck small happens on the
-way to `dist/`, in this order:
+`public/deck/` is the deck's source of truth (since 2026-11-10). Edit the slide
+sources and assets in place and commit; there is no Claude Design pull any
+more, so nothing will clobber a hand edit. The Claude Design project and its
+claude.ai artifact are historical copies and are not updated. Keep
+`public/deck/` full-res and unoptimized: everything that makes the deck small
+happens on the way to `dist/`, in this order:
 
 ```
 npm run verify-deck    # pulled assets decode cleanly
