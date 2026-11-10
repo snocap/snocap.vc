@@ -303,20 +303,28 @@ function PhotoCorners({ src, alt, height = 280, color = COLORS.snow }) {
 }
 
 // ============= SLIDE 4: Our Homegrown Advantages =============
+// Where Fund I's dealflow came from, share of deals, from the appendix deck.
+// Founder referrals plus direct applications are the 48% in box 2's title.
+const DEALFLOW_SOURCES = [
+  { label: "Investor referral", pct: 36 },
+  { label: "Direct application", pct: 31, highlight: true },
+  { label: "Founder referral", pct: 17, highlight: true },
+  { label: "Incubator", pct: 12 },
+  { label: "Market intelligence", pct: 2 },
+];
+const DEALFLOW_PULLED = "Q3 2026";
+
 const ADVANTAGES = [
   {
     n: "1",
-    title: "Our incubation facilities\nfostered over $800M\nin value creation",
+    title: "Our incubators fostered\n$800M+ in value creation",
     img: "assets/result-1-incubator-opt.jpg",
     objectPosition: "center 18%",
-    objectFit: "cover",
   },
   {
     n: "2",
-    title: "A brand founders love:\n30% of new dealflow comes direct.",
-    img: "assets/result-2-deal-sourcing.png",
-    objectPosition: "center",
-    objectFit: "cover",
+    title: "Brand value: 48% of new deals\ncome from founders or directs",
+    chart: DEALFLOW_SOURCES,
   },
   {
     n: "3",
@@ -324,33 +332,111 @@ const ADVANTAGES = [
     img: "assets/result-3-political-crop-opt.jpg",
     // Shifted up 20px from the centred 27% crop to keep more of the chin in frame.
     objectPosition: "center calc(27% - 20px)",
-    objectFit: "cover",
   },
   {
     n: "4",
-    title:
-      "30% MoM growth in private\nprofessional networks,\nacross major US metros",
+    title: "30% MoM growth in private\nnetworks across US metros",
     img: "assets/result-4-talent-crop-opt.jpg",
     objectPosition: "center",
-    objectFit: "cover",
   },
   {
     n: "5",
-    title:
-      "Ten different university\npartnerships, with four\ncohorts since inception",
+    title: "10 university partnerships,\n4 cohorts since inception",
     img: "assets/result-5-bench-opt.jpg",
     objectPosition: "center",
-    objectFit: "cover",
   },
   {
     n: "6",
-    title:
-      "An international film festival\nwith a focus on storytelling\nand innovation",
+    title: "Support for storytelling through\nglobal film and prize festivals",
     img: "assets/result-6-festival-award-opt.jpg",
+    // A portrait photo: shown whole (hair to the cheque's amount) on black
+    // pillars, since the landscape box cannot hold both his face and the
+    // cheque in a cover crop.
     objectPosition: "center",
-    objectFit: "cover",
+    fit: "contain",
   },
 ];
+
+// Box 2's panel: the dealflow chart drawn in the slide's own type, on an
+// off-white card so it stands apart from the dark slide.
+function DealflowChart({ rows, pulled }) {
+  const max = Math.max(...rows.map((r) => r.pct));
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+        padding: "22px 26px 18px",
+        background: COLORS.snow,
+        color: COLORS.ink,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: FONT.mono,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          color: COLORS.graphite,
+        }}
+      >
+        Where our dealflow comes from
+      </div>
+      <div
+        style={{
+          flex: 1,
+          display: "grid",
+          gridTemplateColumns: "auto 1fr 48px",
+          alignItems: "center",
+          columnGap: 18,
+          marginTop: 10,
+        }}
+      >
+        {rows.map((r) => {
+          const color = r.highlight ? COLORS.orange : COLORS.ink;
+          return (
+            <React.Fragment key={r.label}>
+              <span style={{ fontSize: 16, color }}>{r.label}</span>
+              <span
+                style={{
+                  display: "block",
+                  height: 12,
+                  background: COLORS.fog,
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    height: "100%",
+                    width: `${(r.pct / max) * 100}%`,
+                    background: r.highlight ? COLORS.orange : COLORS.graphite,
+                  }}
+                />
+              </span>
+              <span style={{ fontSize: 16, color, textAlign: "right" }}>
+                {r.pct}%
+              </span>
+            </React.Fragment>
+          );
+        })}
+      </div>
+      <div
+        style={{
+          fontSize: 9,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          color: COLORS.stone,
+          textAlign: "right",
+        }}
+      >
+        Last pulled: {pulled}
+      </div>
+    </div>
+  );
+}
 
 function Slide04_HomegrownAdvantages() {
   return (
@@ -405,9 +491,9 @@ function Slide04_HomegrownAdvantages() {
                 gridTemplateColumns: "48px 1fr",
                 alignItems: "center",
                 gap: 16,
-                // Fixed to fit three title lines, so every image box in a row
-                // is the same height whatever its title's line count.
-                height: 108,
+                // Fixed to fit the two title lines every box has, so the
+                // image boxes in a row line up and get the rest of the row.
+                height: 82,
                 boxSizing: "border-box",
               }}
             >
@@ -446,23 +532,23 @@ function Slide04_HomegrownAdvantages() {
                 border: `1px solid ${COLORS.mist}`,
               }}
             >
-              <img
-                src={a.img}
-                alt=""
-                style={{
-                  ...{
+              {a.chart ? (
+                <DealflowChart rows={a.chart} pulled={DEALFLOW_PULLED} />
+              ) : (
+                <img
+                  src={a.img}
+                  alt=""
+                  style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: a.objectFit,
+                    objectFit: a.fit || "cover",
                     objectPosition: a.objectPosition,
                     display: "block",
                     filter: "grayscale(0.15)",
-                    background:
-                      a.objectFit === "contain" ? COLORS.black : "transparent",
-                  },
-                  objectFit: "cover",
-                }}
-              />
+                    background: a.fit === "contain" ? COLORS.black : "none",
+                  }}
+                />
+              )}
             </div>
           </div>
         ))}

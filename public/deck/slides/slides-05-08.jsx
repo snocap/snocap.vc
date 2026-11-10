@@ -3,7 +3,7 @@
 // ============= SLIDE 5: Early access to the best Scientific IP =============
 const SCIENTIFIC_CARDS = [
   {
-    badge: "Moats built on scientific IP,\nnot software",
+    badge: "Scientific IP moats, not software",
     logo: "assets/portfolio/logo-sofab.png",
     logoH: 56,
     date: "Oct '24 Pre-Seed",
@@ -19,7 +19,7 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Price reductions we can see, today",
+    badge: "Price reductions we can prove, today",
     logo: "assets/portfolio/logo-revivbio.png",
     logoH: 64,
     date: "Oct '23 Seed",
@@ -35,7 +35,7 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Deliver more value\nwhile demanding less input",
+    badge: "Demand less inputs, for the same or better outputs",
     centered: true,
     logo: "assets/portfolio/logo-trimagnetix.png",
     logoH: 56,
@@ -58,7 +58,7 @@ function ScientificCard({ badge, logo, logoH, date, body, centered }) {
   return (
     <div
       style={{
-        width: 781,
+        width: 834,
         position: "relative",
         display: "flex",
         flexDirection: "column",
@@ -79,11 +79,12 @@ function ScientificCard({ badge, logo, logoH, date, body, centered }) {
         <span
           style={{
             fontFamily: FONT.mono,
-            fontSize: 38,
+            // Sized so the longest badge stays on one line inside the card.
+            fontSize: 29,
             letterSpacing: "-0.06em",
             lineHeight: 1.0,
             color: COLORS.white,
-            whiteSpace: "pre-line",
+            whiteSpace: "nowrap",
           }}
         >
           {badge}
