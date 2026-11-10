@@ -195,7 +195,7 @@ function Slide03_Manifesto() {
           textTransform: "uppercase",
         }}
       >
-        our unique advantage
+        Our Mission
       </div>
 
       {/* Big manifesto sentence — top right, leaves room for photos below */}
@@ -306,44 +306,48 @@ function PhotoCorners({ src, alt, height = 280, color = COLORS.snow }) {
 const ADVANTAGES = [
   {
     n: "1",
-    title: "Over $700M in\nvalue creation",
+    title: "Our incubation facilities\nfostered over $800M\nin value creation",
     img: "assets/result-1-incubator-opt.jpg",
     objectPosition: "center 18%",
     objectFit: "cover",
   },
   {
     n: "2",
-    title: "Hundreds of deals,\none third by direct application",
-    img: "assets/result-2-deals.png",
-    objectPosition: "center top",
+    title: "A brand founders love:\n30% of new dealflow comes direct.",
+    img: "assets/result-2-deal-sourcing.png",
+    objectPosition: "center",
     objectFit: "cover",
   },
   {
     n: "3",
     title: "Direct political\nexperience and connections",
     img: "assets/result-3-political-crop-opt.jpg",
-    objectPosition: "center 27%",
+    // Shifted up 20px from the centred 27% crop to keep more of the chin in frame.
+    objectPosition: "center calc(27% - 20px)",
     objectFit: "cover",
   },
   {
     n: "4",
-    title: "50K+ professionals\nacross private networks",
+    title:
+      "30% MoM growth in private\nprofessional networks,\nacross major US metros",
     img: "assets/result-4-talent-crop-opt.jpg",
     objectPosition: "center",
     objectFit: "cover",
   },
   {
     n: "5",
-    title: "GP track venture program,\nmultiple fellowship cohorts",
+    title:
+      "Ten different university\npartnerships, with four\ncohorts since inception",
     img: "assets/result-5-bench-opt.jpg",
     objectPosition: "center",
     objectFit: "cover",
   },
   {
     n: "6",
-    title: "A platform for founder\nstorytelling and mass media",
-    img: "assets/result-6-storytelling-opt.jpg",
-    objectPosition: "center 45%",
+    title:
+      "An international film festival\nwith a focus on storytelling\nand innovation",
+    img: "assets/result-6-festival-award-opt.jpg",
+    objectPosition: "center",
     objectFit: "cover",
   },
 ];
@@ -366,19 +370,19 @@ function Slide04_HomegrownAdvantages() {
         }}
       />
       <SlideTitle style={{ color: COLORS.snow }}>
-        Over a decade of results
+        Our Unique Advantages
       </SlideTitle>
       <div
         style={{
           position: "absolute",
           left: 72,
           right: 72,
-          top: 220,
-          bottom: 68,
+          top: 200,
+          bottom: 46,
           display: "grid",
           gridTemplateColumns: "1fr 1fr 1fr",
           gridTemplateRows: "1fr 1fr",
-          gap: "32px 24px",
+          gap: "24px 24px",
         }}
       >
         {ADVANTAGES.map((a) => (
@@ -396,12 +400,15 @@ function Slide04_HomegrownAdvantages() {
             <div
               style={{
                 border: `1px solid ${COLORS.mist}`,
-                padding: "20px 24px",
+                padding: "14px 24px",
                 display: "grid",
                 gridTemplateColumns: "48px 1fr",
                 alignItems: "center",
                 gap: 16,
-                minHeight: 88,
+                // Fixed to fit three title lines, so every image box in a row
+                // is the same height whatever its title's line count.
+                height: 108,
+                boxSizing: "border-box",
               }}
             >
               <span

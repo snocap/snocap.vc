@@ -3,13 +3,13 @@
 // ============= SLIDE 5: Early access to the best Scientific IP =============
 const SCIENTIFIC_CARDS = [
   {
-    badge: "Creates the best viable fix",
+    badge: "Moats built on scientific IP,\nnot software",
     logo: "assets/portfolio/logo-sofab.png",
     logoH: 56,
     date: "Oct '24 Pre-Seed",
     body: (
       <>
-        IP-protected chemistries solved a critical bottleneck for solar panels —
+        IP-protected chemistries solved a critical bottleneck for solar panels,
         reducing manufacturing costs and increasing longevity.{" "}
         <strong>
           POs totaling over $30M, including the world's largest perovskite
@@ -19,7 +19,7 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Fundamentally resets pricing",
+    badge: "Price reductions we can see, today",
     logo: "assets/portfolio/logo-revivbio.png",
     logoH: 64,
     date: "Oct '23 Seed",
@@ -35,23 +35,8 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Generates revenue from day one",
-    logo: "assets/logo-sparxell.png",
-    logoH: 60,
-    date: "Nov '23 Seed",
-    body: (
-      <>
-        Developed novel colorant IP that was a "drop-in" to existing
-        manufacturing, allowing them to generate revenue from day one.{" "}
-        <strong>
-          24 paid pilots including LVMH, Hugo Boss, and H&amp;M, and over $1M in
-          revenue.
-        </strong>
-      </>
-    ),
-  },
-  {
-    badge: "Solves using first principles",
+    badge: "Deliver more value\nwhile demanding less input",
+    centered: true,
     logo: "assets/portfolio/logo-trimagnetix.png",
     logoH: 56,
     date: "Jun '25 First Check",
@@ -69,7 +54,7 @@ const SCIENTIFIC_CARDS = [
   },
 ];
 
-function ScientificCard({ badge, logo, logoH, date, body }) {
+function ScientificCard({ badge, logo, logoH, date, body, centered }) {
   return (
     <div
       style={{
@@ -78,6 +63,8 @@ function ScientificCard({ badge, logo, logoH, date, body }) {
         display: "flex",
         flexDirection: "column",
         gap: 19,
+        // A lone card on the last row spans both columns and sits centred.
+        ...(centered ? { gridColumn: "1 / -1", justifySelf: "center" } : {}),
       }}
     >
       {/* orange badge */}
@@ -96,6 +83,7 @@ function ScientificCard({ badge, logo, logoH, date, body }) {
             letterSpacing: "-0.06em",
             lineHeight: 1.0,
             color: COLORS.white,
+            whiteSpace: "pre-line",
           }}
         >
           {badge}
@@ -164,16 +152,16 @@ function Slide05_ScientificIP() {
           opacity: 0.55,
         }}
       />
-      <SlideTitle>What makes scientific IP great</SlideTitle>
+      <SlideTitle>How we screen for potential</SlideTitle>
       <div
         style={{
           position: "absolute",
           left: 96,
-          top: 200,
+          top: 190,
           right: 96,
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "44px 60px",
+          gap: "28px 60px",
         }}
       >
         {SCIENTIFIC_CARDS.map((c, i) => (
@@ -185,7 +173,7 @@ function Slide05_ScientificIP() {
           position: "absolute",
           left: 96,
           right: 96,
-          bottom: 56,
+          bottom: 40,
           textAlign: "center",
           fontFamily: FONT.sans,
           fontSize: 11,
