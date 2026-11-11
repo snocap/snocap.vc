@@ -123,6 +123,10 @@ const pagesBefore = pageCount(PDF);
 
 const result = gs([
   "-sDEVICE=pdfwrite",
+  // gs defaults to /PageByPage, rotating any slide whose text it judges mostly
+  // vertical (the closing slide came out landscape-on-its-side). Slides are
+  // always 16:9 as laid out, so keep every page as printed.
+  "-dAutoRotatePages=/None",
   "-dCompatibilityLevel=1.7",
   "-dNOPAUSE",
   "-dBATCH",
