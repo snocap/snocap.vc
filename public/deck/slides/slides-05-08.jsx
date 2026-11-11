@@ -35,7 +35,7 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Reduced demand on inputs, while yielding better output.",
+    badge: "Reduced demand on inputs, while yielding better output",
     centered: true,
     logo: "assets/portfolio/logo-trimagnetix.png",
     logoH: 56,
