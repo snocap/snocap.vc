@@ -1,15 +1,15 @@
 /**
  * Optimize deck images in dist/ after build, before PDF generation.
  *
- * Runs on dist/deck/ only — public/deck/ holds the pristine assets pulled from
- * Claude Design (via DesignSync), so every optimization here is
- * repeatable and a re-pull can never clobber it. Nothing in public/ is touched.
+ * Runs on dist/deck/ only — public/deck/ is the deck's source of truth and holds
+ * the pristine full-res assets, so every optimization here is repeatable and
+ * never degrades the source. Nothing in public/ is touched.
  *
  * Two jobs:
  *
  * 1. Cap resolution. The deck stage is a 1920x1080 canvas, so an asset stored
  *    wider than 1920px cannot show a single extra pixel — it only costs bytes
- *    (the pulled assets run up to 5712px wide).
+ *    (the source assets run up to 5712px wide).
  *
  * 2. Pick the right codec per image, instead of re-encoding every PNG as a PNG.
  *    The old version ran sharp's `png({ quality })`, which silently turns on

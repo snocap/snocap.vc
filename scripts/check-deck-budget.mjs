@@ -4,8 +4,8 @@
  * The deck.pdf handed to LPs reached 35MB once (a 147MB source asset directory,
  * plus Chrome embedding every composited slide layer as a lossless 300 DPI
  * bitmap — see scripts/compress-pdf.mjs). Both halves of that are fixed in the
- * pipeline, and nothing about a re-pulled deck would make a regression obvious,
- * so the budgets are asserted here instead of being remembered.
+ * pipeline, and nothing about a deck edit would make a regression obvious, so
+ * the budgets are asserted here instead of being remembered.
  *
  * Four budgets, all measured on dist/ after `npm run pdf`:
  *
@@ -21,9 +21,9 @@
  *
  * Anything past DECK_BUDGET_WARN_PCT of its budget (default 90%) prints a
  * warning without failing. The PDF first breached its budget by 20KB, with no
- * signal on the run before — the deck is re-pulled from Claude Design and its
- * weight drifts, so the useful time to hear about that is the cycle before it
- * turns the build red.
+ * signal on the run before — the deck is edited in place under public/deck/ and
+ * its weight drifts with every new asset, so the useful time to hear about that
+ * is the cycle before it turns the build red.
  *
  * Usage: node scripts/check-deck-budget.mjs
  */

@@ -1,31 +1,32 @@
 /**
- * Verify deck image assets are intact after a sync.
+ * Verify deck image assets are intact before a build.
  *
- * Guards the headless DesignSync pull path: DesignSync's get_file caps every
- * file at 256 KiB (exactly 262144 bytes) and truncates larger ones SILENTLY —
- * no error, just a short file. list_files exposes no size and no hash, so there
- * is no server-side checksum to match against. The only integrity signal we
- * control is the image's own format validity: a truncated PNG/JPEG fails a full
- * pixel decode (incomplete scan data / missing chunk, so libpng/libjpeg error
- * on the trailing CRC). That decode IS the checksum we lean on.
+ * Written for the retired Claude Design pull path (public/deck/ has been edited
+ * in place since 2026-11-10): DesignSync's get_file capped every file at
+ * 256 KiB (exactly 262144 bytes) and truncated larger ones SILENTLY — no error,
+ * just a short file — and the assets it left behind are still the ones in the
+ * tree. The integrity signal is the image's own format validity: a truncated
+ * PNG/JPEG fails a full pixel decode (incomplete scan data / missing chunk, so
+ * libpng/libjpeg error on the trailing CRC). That decode IS the checksum we
+ * lean on, and it catches a hand-added asset that was cut short just as well.
  *
  * An asset is flagged SUSPECT when EITHER:
- *   (a) its size is exactly 262144 bytes — the DesignSync truncation boundary; or
+ *   (a) its size is exactly 262144 bytes — the old truncation boundary; or
  *   (b) sharp cannot fully decode it (.stats() forces a full-pixel decode).
  *
  * Usage:
  *   node scripts/verify-deck-assets.mjs [dir]     # default: public/deck
  *
- * Exits non-zero if any asset is flagged, so a sync pipeline can gate on it.
+ * Exits non-zero if any asset is flagged, so CI can gate on it.
  */
 import sharp from "sharp";
 import { readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
-// DesignSync get_file cap. A file landing at exactly this size is almost
-// certainly a truncation, not a coincidence.
+// The retired DesignSync get_file cap. A file landing at exactly this size is
+// almost certainly a truncation, not a coincidence.
 export const TRUNCATION_BOUNDARY = 256 * 1024; // 262144
-// WebP is here for dist/ (scripts/optimize-deck-images.mjs emits it); the pulled
+// WebP is here for dist/ (scripts/optimize-deck-images.mjs emits it); the source
 // assets under public/ are only ever PNG or JPEG.
 const IMAGE_RE = /\.(png|jpe?g|webp)$/i;
 
@@ -98,10 +99,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`  ✗ ${relative(process.cwd(), file)} — ${reason}`);
   }
   console.error(
-    "\nThese assets are corrupt or truncated: DesignSync get_file caps every file\n" +
-      "at 256 KiB. Re-derive the asset from the full-res original in public/deck if\n" +
-      "there is one (sharp, matching the widths of its -opt siblings); otherwise ask\n" +
-      "a human to supply the file directly. The browser handoff-token path is gone.",
+    "\nThese assets are corrupt or truncated. Re-derive the asset from the full-res\n" +
+      "original in public/deck if there is one (sharp, matching the widths of its\n" +
+      "-opt siblings); otherwise ask a human to supply the file directly and commit\n" +
+      "it to public/deck, which is the deck's source of truth.",
   );
   process.exit(1);
 }

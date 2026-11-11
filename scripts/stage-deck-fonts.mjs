@@ -1,10 +1,7 @@
 /**
  * Mirror the brand fonts into dist/deck/fonts/ after a build.
  *
- * The deck is an imported Claude Design artifact: everything under public/deck/
- * is overwritten by the next DesignSync pull, so nothing we author can
- * live there and be relied upon. Design's own stylesheet asks for the fonts
- * relatively —
+ * The deck's own stylesheet asks for the fonts relatively —
  *
  *   dist/deck/colors_and_type.css:  url("./fonts/NB Akademie Std/...woff2")
  *
@@ -14,10 +11,12 @@
  * were silently falling back to system type — on slide 9 the team names collapse
  * into smears at the mono face's -0.04em tracking.
  *
- * Staging into dist/ at build time satisfies Design's reference without putting
- * a single file inside the directory it owns. If Design ever renames the fonts
- * or moves the reference, scripts/check-deck-budget.mjs fails the build on the
- * unresolved url() rather than shipping fallback type again.
+ * Staging into dist/ at build time satisfies the deck's reference without
+ * keeping a second copy of the font files under public/deck/ (public/deck/ is
+ * the deck's source of truth, edited in place since 2026-11-10; the Claude
+ * Design pull that used to overwrite it is retired). If a deck edit ever
+ * renames the fonts or moves the reference, scripts/check-deck-budget.mjs fails
+ * the build on the unresolved url() rather than shipping fallback type again.
  */
 import { cp, mkdir, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";

@@ -107,8 +107,8 @@ try {
 
   // fonts.ready also resolves when a face FAILED to load, so assert the faces
   // the deck declares are actually usable. Derived from the stylesheet rather
-  // than hardcoded, so a Claude Design re-pull that renames a family asserts
-  // the new name instead of silently passing. Cross-origin sheets (Google
+  // than hardcoded, so a deck edit that renames a family asserts the new name
+  // instead of silently passing. Cross-origin sheets (Google
   // Fonts) throw on cssRules and are skipped.
   const missingFaces = await page.evaluate(async () => {
     const declared = [...document.styleSheets]

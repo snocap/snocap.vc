@@ -35,7 +35,7 @@
  *    96     0.25   4:4:4  3.99MB   over the 4MB budget
  *    96     0.30   4:4:4  3.74MB
  *    96     0.35   4:4:4  3.50MB   <- shipped
- *    96     0.40   4:4:4  3.31MB   next step if a re-pull eats the headroom
+ *    96     0.40   4:4:4  3.31MB   next step if a new asset eats the headroom
  *    96     0.25   4:2:0  3.67MB   saves less than the QFactor step, see below
  *    84     0.25   4:4:4  3.45MB   softens every image
  *    72     0.25   4:4:4  2.95MB
