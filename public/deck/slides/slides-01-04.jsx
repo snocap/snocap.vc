@@ -351,11 +351,97 @@ const ADVANTAGES = [
     img: "assets/result-6-festival-award-opt.jpg",
     // A portrait photo: shown whole (hair to the cheque's amount) on black
     // pillars, since the landscape box cannot hold both his face and the
-    // cheque in a cover crop.
+    // cheque in a cover crop. The pillars are drawn as a film strip (below).
     objectPosition: "center",
     fit: "contain",
   },
 ];
+
+// Box 6's panel: the photo on its black pillars, each pillar carrying a column
+// of sprocket holes so the pair reads as a film strip. The holes drift upward
+// slowly; print and reduced-motion viewers get them standing still. Pure CSS,
+// no image asset: the holes are spans, the loop is one hole pitch of translate.
+const FILM_HOLE = 14; // px, each square hole
+const FILM_PITCH = 30; // px, hole to hole
+// Enough holes to cover any pillar the grid can produce, plus the spare one
+// the loop scrolls in from the bottom.
+const FILM_HOLE_COUNT = 30;
+const FILM_STRIP_CSS = `
+@keyframes deck-film-scroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-${FILM_PITCH}px); }
+}
+.deck-film-holes { animation: deck-film-scroll 2.4s linear infinite; }
+@media print, (prefers-reduced-motion: reduce) {
+  .deck-film-holes { animation: none; }
+}
+`;
+
+function FilmPillar() {
+  return (
+    <div
+      style={{
+        flex: "1 1 0",
+        minWidth: 0,
+        height: "100%",
+        overflow: "hidden",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        className="deck-film-holes"
+        style={{ paddingTop: (FILM_PITCH - FILM_HOLE) / 2 }}
+      >
+        {Array.from({ length: FILM_HOLE_COUNT }, (_, i) => (
+          <span
+            key={i}
+            style={{
+              display: "block",
+              width: FILM_HOLE,
+              height: FILM_HOLE,
+              borderRadius: 3,
+              background: COLORS.snow,
+              marginBottom: FILM_PITCH - FILM_HOLE,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FilmStrip({ src, objectPosition }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "stretch",
+        background: COLORS.black,
+      }}
+    >
+      <style>{FILM_STRIP_CSS}</style>
+      <FilmPillar />
+      <img
+        src={src}
+        alt=""
+        style={{
+          flex: "0 0 auto",
+          height: "100%",
+          width: "auto",
+          maxWidth: "100%",
+          objectFit: "contain",
+          objectPosition,
+          display: "block",
+          filter: "grayscale(0.15)",
+        }}
+      />
+      <FilmPillar />
+    </div>
+  );
+}
 
 // Box 2's panel: the dealflow chart drawn in the slide's own type, on an
 // off-white card so it stands apart from the dark slide.
@@ -536,6 +622,8 @@ function Slide04_HomegrownAdvantages() {
             >
               {a.chart ? (
                 <DealflowChart rows={a.chart} pulled={DEALFLOW_PULLED} />
+              ) : a.fit === "contain" ? (
+                <FilmStrip src={a.img} objectPosition={a.objectPosition} />
               ) : (
                 <img
                   src={a.img}
@@ -543,11 +631,10 @@ function Slide04_HomegrownAdvantages() {
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: a.fit || "cover",
+                    objectFit: "cover",
                     objectPosition: a.objectPosition,
                     display: "block",
                     filter: "grayscale(0.15)",
-                    background: a.fit === "contain" ? COLORS.black : "none",
                   }}
                 />
               )}
