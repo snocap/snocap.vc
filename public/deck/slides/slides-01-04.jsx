@@ -317,7 +317,7 @@ const DEALFLOW_PULLED = "Q3 2026";
 const ADVANTAGES = [
   {
     n: "1",
-    title: "Partner incubators fostered\n$800M+ in value creation",
+    title: "Partner incubator fostered\n$800M+ in value creation",
     img: "assets/result-1-incubator-opt.jpg",
     objectPosition: "center 18%",
   },
@@ -328,14 +328,15 @@ const ADVANTAGES = [
   },
   {
     n: "3",
-    title: "Real campaign experience,\ndirect political connections",
+    title: "Direct political connections\nand real campaign experience",
     img: "assets/result-3-political-crop-opt.jpg",
     // Shifted up 20px from the centred 27% crop to keep more of the chin in frame.
     objectPosition: "center calc(27% - 20px)",
   },
   {
     n: "4",
-    title: "30%+ monthly growth in private\nnetworks across US metros",
+    title:
+      "Launched private professional networks\nin 3 major US metros, 30%/mo growth",
     img: "assets/result-4-talent-crop-opt.jpg",
     objectPosition: "center",
   },
@@ -351,31 +352,23 @@ const ADVANTAGES = [
     img: "assets/result-6-festival-award-opt.jpg",
     // A portrait photo: shown whole (hair to the cheque's amount) on black
     // pillars, since the landscape box cannot hold both his face and the
-    // cheque in a cover crop. The pillars are drawn as a film strip (below).
+    // cheque in a cover crop. The pillars are drawn as a film strip (below),
+    // in the photo's own backdrop blue.
     objectPosition: "center",
     fit: "contain",
   },
 ];
 
-// Box 6's panel: the photo on its black pillars, each pillar carrying a column
-// of sprocket holes so the pair reads as a film strip. The holes drift upward
-// slowly; print and reduced-motion viewers get them standing still. Pure CSS,
-// no image asset: the holes are spans, the loop is one hole pitch of translate.
-const FILM_HOLE = 14; // px, each square hole
-const FILM_PITCH = 30; // px, hole to hole
-// Enough holes to cover any pillar the grid can produce, plus the spare one
-// the loop scrolls in from the bottom.
-const FILM_HOLE_COUNT = 30;
-const FILM_STRIP_CSS = `
-@keyframes deck-film-scroll {
-  from { transform: translateY(0); }
-  to { transform: translateY(-${FILM_PITCH}px); }
-}
-.deck-film-holes { animation: deck-film-scroll 2.4s linear infinite; }
-@media print, (prefers-reduced-motion: reduce) {
-  .deck-film-holes { animation: none; }
-}
-`;
+// Box 6's panel: the photo on two pillars, each carrying a column of sprocket
+// holes so the pair reads as a film strip. The holes stand still and are spread
+// evenly over the pillar's height, whatever height the grid gives it. Pure
+// JSX, no image asset and no animation. The pillar colour is the photo's own
+// stage backdrop (the mean of its top-left corner), the holes a lighter tint
+// of it, so the strip reads as part of the picture rather than a frame on it.
+const FILM_HOLE = 24; // px, each square hole
+const FILM_HOLE_COUNT = 7;
+const FILM_BAR = "#242f44";
+const FILM_HOLE_COLOR = "#3d4e6b";
 
 function FilmPillar() {
   return (
@@ -384,29 +377,24 @@ function FilmPillar() {
         flex: "1 1 0",
         minWidth: 0,
         height: "100%",
-        overflow: "hidden",
         display: "flex",
-        justifyContent: "center",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-evenly",
       }}
     >
-      <div
-        className="deck-film-holes"
-        style={{ paddingTop: (FILM_PITCH - FILM_HOLE) / 2 }}
-      >
-        {Array.from({ length: FILM_HOLE_COUNT }, (_, i) => (
-          <span
-            key={i}
-            style={{
-              display: "block",
-              width: FILM_HOLE,
-              height: FILM_HOLE,
-              borderRadius: 3,
-              background: COLORS.snow,
-              marginBottom: FILM_PITCH - FILM_HOLE,
-            }}
-          />
-        ))}
-      </div>
+      {Array.from({ length: FILM_HOLE_COUNT }, (_, i) => (
+        <span
+          key={i}
+          style={{
+            display: "block",
+            width: FILM_HOLE,
+            height: FILM_HOLE,
+            borderRadius: 4,
+            background: FILM_HOLE_COLOR,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -419,10 +407,9 @@ function FilmStrip({ src, objectPosition }) {
         height: "100%",
         display: "flex",
         alignItems: "stretch",
-        background: COLORS.black,
+        background: FILM_BAR,
       }}
     >
-      <style>{FILM_STRIP_CSS}</style>
       <FilmPillar />
       <img
         src={src}
@@ -597,9 +584,10 @@ function Slide04_HomegrownAdvantages() {
               <span
                 style={{
                   fontFamily: FONT.mono,
-                  // 22px at -0.04em so the longest title line (box 5's
-                  // "10+ university partners, 4 cohorts") holds on one line.
-                  fontSize: 22,
+                  // 20px at -0.04em so the longest title line (box 4's
+                  // "Launched private professional networks", 38 characters)
+                  // holds on one line in the 449px the title column has.
+                  fontSize: 20,
                   lineHeight: 1.1,
                   letterSpacing: "-0.04em",
                   color: COLORS.snow,

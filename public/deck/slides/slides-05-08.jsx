@@ -3,7 +3,7 @@
 // ============= SLIDE 5: Early access to the best Scientific IP =============
 const SCIENTIFIC_CARDS = [
   {
-    badge: "Scientific IP moats, not software",
+    badge: "Defensible moats built on scientific IP, not software",
     logo: "assets/portfolio/logo-sofab.png",
     logoH: 56,
     date: "Oct '24 Pre-Seed",
@@ -35,7 +35,7 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Demands less inputs, while producing better outputs",
+    badge: "Reduced demand on inputs, while yielding better output.",
     centered: true,
     logo: "assets/portfolio/logo-trimagnetix.png",
     logoH: 56,
@@ -79,8 +79,9 @@ function ScientificCard({ badge, logo, logoH, date, body, centered }) {
         <span
           style={{
             fontFamily: FONT.mono,
-            // Sized so the longest badge stays on one line inside the card.
-            fontSize: 29,
+            // Sized so the longest badge (box 3's, 55 characters) stays on
+            // one line inside the 834px card.
+            fontSize: 26,
             letterSpacing: "-0.06em",
             lineHeight: 1.0,
             color: COLORS.white,
@@ -153,7 +154,7 @@ function Slide05_ScientificIP() {
           opacity: 0.55,
         }}
       />
-      <SlideTitle>How we screen for potential</SlideTitle>
+      <SlideTitle>What makes our companies great?</SlideTitle>
       <div
         style={{
           position: "absolute",
