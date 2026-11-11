@@ -317,7 +317,7 @@ const DEALFLOW_PULLED = "Q3 2026";
 const ADVANTAGES = [
   {
     n: "1",
-    title: "Our incubators fostered\n$800M+ in value creation",
+    title: "Partner incubators fostered\n$800M+ in value creation",
     img: "assets/result-1-incubator-opt.jpg",
     objectPosition: "center 18%",
   },
@@ -328,26 +328,26 @@ const ADVANTAGES = [
   },
   {
     n: "3",
-    title: "Direct political\nexperience and connections",
+    title: "Real campaign experience,\ndirect political connections",
     img: "assets/result-3-political-crop-opt.jpg",
     // Shifted up 20px from the centred 27% crop to keep more of the chin in frame.
     objectPosition: "center calc(27% - 20px)",
   },
   {
     n: "4",
-    title: "30% MoM growth in private\nnetworks across US metros",
+    title: "30%+ monthly growth in private\nnetworks across US metros",
     img: "assets/result-4-talent-crop-opt.jpg",
     objectPosition: "center",
   },
   {
     n: "5",
-    title: "10 university partnerships,\n4 cohorts since inception",
+    title: "10+ university partners, 4 cohorts\nand 16+ venture fellows",
     img: "assets/result-5-bench-opt.jpg",
     objectPosition: "center",
   },
   {
     n: "6",
-    title: "Support for storytelling through\nglobal film and prize festivals",
+    title: "Narrative support through\nglobal film and prize festivals",
     img: "assets/result-6-festival-award-opt.jpg",
     // A portrait photo: shown whole (hair to the cheque's amount) on black
     // pillars, since the landscape box cannot hold both his face and the
@@ -511,9 +511,11 @@ function Slide04_HomegrownAdvantages() {
               <span
                 style={{
                   fontFamily: FONT.mono,
-                  fontSize: 24,
+                  // 22px at -0.04em so the longest title line (box 5's
+                  // "10+ university partners, 4 cohorts") holds on one line.
+                  fontSize: 22,
                   lineHeight: 1.1,
-                  letterSpacing: "-0.02em",
+                  letterSpacing: "-0.04em",
                   color: COLORS.snow,
                   whiteSpace: "pre-line",
                   textTransform: "uppercase",

@@ -19,7 +19,7 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Price reductions we can prove, today",
+    badge: "Provable cost savings, without requiring scale",
     logo: "assets/portfolio/logo-revivbio.png",
     logoH: 64,
     date: "Oct '23 Seed",
@@ -35,7 +35,7 @@ const SCIENTIFIC_CARDS = [
     ),
   },
   {
-    badge: "Demand less inputs, for the same or better outputs",
+    badge: "Demands less inputs, while producing better outputs",
     centered: true,
     logo: "assets/portfolio/logo-trimagnetix.png",
     logoH: 56,
