@@ -15,7 +15,10 @@ permissions:
 
 jobs:
   lint-and-build:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, whose ghostscript 10.06 cannot open
+    # compress-pdf.mjs's output file ("Unable to open the initial device"), and the
+    # deck size budget is calibrated against noble's gs 10.02.1.
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
