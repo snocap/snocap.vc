@@ -13,6 +13,13 @@ permissions:
   contents: write
   id-token: write
 
+# Two merges seconds apart each start a run, and the older run's auto-commit
+# push is rejected as non-fast-forward. A newer push to the same branch cancels
+# the older run instead.
+concurrency:
+  group: lint-and-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-build:
     # Pinned: ubuntu-latest moved to 26.04, whose ghostscript 10.06 cannot open
@@ -54,6 +61,9 @@ jobs:
         run: |
           git add -A
           git commit -m "chore: lint and build"
-          git push
+          # The branch may have moved since checkout (a run cancelled too late
+          # to stop): rebase onto it rather than fail the push.
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
           echo "Build canceled due to changes pushed."
           exit 0
