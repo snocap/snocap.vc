@@ -36,14 +36,24 @@ foreign `Origin` is refused.
 
 On a phone the deck shows one card: swipe, or the **First / Prev / Next / Last**
 buttons under it. On a keyboard: ← → (or j k) for Prev/Next, ↑ and **Home** for
-First, ↓ and **End** for Last.
+First, ↓ and **End** for Last. Moving between cards never puts the caret in
+the comment box, so the arrow keys keep paging; the one exception is the
+auto-advance after **Post comment**, which lands in the next card's box ready to
+type.
+
+The page fills the screen with the nav pinned at the bottom. A card grows down
+to the nav at most and then scrolls inside itself; a shorter card ends at its own
+height. In the card, the "Last:" line, the timeline's titles and bodies show
+any `http(s)://` or `www.` URL as a link opening a new tab (`src/linkify.ts`),
+and a long one is cut to one line with an ellipsis at the card's edge, as are
+the contacts' link buttons.
 
 On a wide screen it is a row. As many 400px cards as fit show side by side,
 always an odd number (1, 3 or 5) so the selected card sits in the center,
 outlined; its neighbours are dimmed and read-only, and clicking one selects it
 and re-centers the row. At either end of the list the selected card stays in the
 center with empty slots beside it. Opening a card's history grows that card
-downward in place; the row does not move. It is one set of cards and one
+downward in place, up to the nav; the row does not move. It is one set of cards and one
 `show()` either way: the page measures the width, picks the count
 (`visibleCount`) and lays the window out (`carouselSlots`), both in
 `src/client.ts`.

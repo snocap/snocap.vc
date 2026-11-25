@@ -7,6 +7,7 @@ import * as client from "./client.ts";
 import type { SearchEntry } from "./client.ts";
 import { formatDay } from "./dates.ts";
 import { MACROS, macroEffect } from "./macros.ts";
+import { linkify } from "./linkify.ts";
 import { KB, type Person } from "./mentions.ts";
 import { renderTemplate } from "../../shared/template.ts";
 import cardTemplate from "./templates/card.html";
@@ -145,7 +146,7 @@ export function renderCard(
     representative: card.representative || "—",
     nextTouch: card.nextTouchLabel,
     touchClass: card.overdue ? "overdue" : "",
-    latest,
+    latest: linkify(latest),
     actionPath: ACTION_PATH,
     csrf: deck.csrf,
     macros: macroChips(card, deck.people),
@@ -215,8 +216,8 @@ export function renderDetail(
             kind: e.kind,
             when: e.at ? formatDay(e.at) : "undated",
             who: e.who || "—",
-            title: e.title,
-            body: e.body,
+            title: linkify(e.title),
+            body: linkify(e.body),
           }),
         )
         .join("")

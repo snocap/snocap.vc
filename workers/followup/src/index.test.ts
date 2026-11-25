@@ -77,6 +77,7 @@ function fakeAirtable(
           Summary: "Sent the deck",
           Channel: "Email",
           "Occurred on": "2026-10-01T16:00:00.000Z",
+          Details: "Deck at https://docsend.com/view/abc.",
         },
       },
     ],
@@ -813,9 +814,14 @@ test("the expanded card merges history and lists the LP's contacts", async () =>
   assert.equal(response.status, 200);
   const page = await response.text();
   assert.match(page, /Email · Sent the deck/);
+  // A URL in the details is a link; the sentence's period is not part of it.
   assert.match(
     page,
-    /Aug 15, 2026 · —<\/div>\s*<div>Added to the Campaign Tracker<\/div>/,
+    /Deck at <a\s+class="text-link"\s+href="https:\/\/docsend\.com\/view\/abc"[^>]*>https:\/\/docsend\.com\/view\/abc<\/a\s*>\./,
+  );
+  assert.match(
+    page,
+    /Aug 15, 2026 · —<\/div>\s*<div class="title">Added to the Campaign Tracker<\/div>/,
   );
 });
 
