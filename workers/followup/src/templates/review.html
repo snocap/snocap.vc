@@ -104,16 +104,31 @@
       // re-lays the row, so typing never scrolls the page.
       if (visible !== before) show(at);
     });
+    // The deck is never shorter than the selected card's minimum: its info
+    // area's min-height (layout.html) plus its response area, which grows with
+    // attachments and the Closed Lost Reason picker, so it is watched.
+    function fitMinimum() {
+      const card = cards[at];
+      const info = card.querySelector(".card-info");
+      const form = card.querySelector("form.actions");
+      const border = card.offsetHeight - card.clientHeight;
+      deck.style.minHeight =
+        parseFloat(getComputedStyle(info).minHeight) +
+        form.offsetHeight +
+        border +
+        "px";
+    }
+    const responseArea = new ResizeObserver(fitMinimum);
     cards.forEach((card, i) =>
       card.addEventListener("click", () => {
         if (card.classList.contains("neighbor")) show(i);
       }),
     );
 
-    // Only the auto-advance after a post puts the caret in the next card's
-    // box (at the end, after the KB prefill, so a dictation tool can start
-    // talking at once). Every other move takes no focus, so arrow keys keep
-    // paging through the deck.
+    // Only the auto-advance after a post focuses the next card's box, with
+    // its whole text (the KB prefill) selected: typing replaces it, and a
+    // tap or → first keeps it and appends. Every other move takes no focus,
+    // so arrow keys keep paging through the deck.
     function show(index, focus = false) {
       at = Math.min(Math.max(index, 0), cards.length - 1);
       const slots = carouselSlots(at, cards.length, visible);
@@ -132,11 +147,14 @@
       // Back leaves the page instead of stepping through every prior card.
       history.replaceState(null, "", hashForCard(ids[at]));
       window.scrollTo(0, 0);
-      cards[at].scrollTop = 0;
+      cards[at].querySelector(".card-info").scrollTop = 0;
+      responseArea.disconnect();
+      responseArea.observe(cards[at].querySelector("form.actions"));
+      fitMinimum();
       const box = cards[at].querySelector("form.actions textarea");
       if (focus && box && !box.readOnly) {
         box.focus({ preventScroll: true });
-        box.setSelectionRange(box.value.length, box.value.length);
+        box.select();
       }
     }
     document.querySelector("[data-first]").onclick = () => show(0);
