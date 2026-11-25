@@ -24,6 +24,10 @@ globs = ["**/*.html"]
 #   npx wrangler secret put FOLLOWUP_SESSION_SECRET  # a fresh random string; NOT
 #                                                    # any other worker's secret
 # Until all three are set, every path answers a 503 "not configured yet" page.
+#
+# Optional fourth, for the "Make suggestion" chip (hidden while unset): the same
+# value as FOLLOWUP_SUGGEST_SECRET in kernelbot's .env.
+#   npx wrangler secret put FOLLOWUP_SUGGEST_SECRET
 
 # Workers Logs: every console line (followup_error carries Airtable's status and
 # error code) is kept and searchable in the Cloudflare dashboard.

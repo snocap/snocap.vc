@@ -20,11 +20,13 @@ import macroChipTemplate from "./templates/macro-chip.html";
 import noticeTemplate from "./templates/notice.html";
 import reasonTemplate from "./templates/reason.html";
 import reviewTemplate from "./templates/review.html";
+import suggestChipTemplate from "./templates/suggest-chip.html";
 import timelineEntryTemplate from "./templates/timeline-entry.html";
 
 export const SIGN_OUT_PATH = `${TOOL_PATH}/signout`;
 export const ACTION_PATH = `${TOOL_PATH}/action`;
 export const DETAIL_PATH = `${TOOL_PATH}/campaign`;
+export const SUGGEST_PATH = `${TOOL_PATH}/suggest`;
 
 function layout(title: string, body: string): string {
   return renderTemplate(layoutTemplate, { title, body });
@@ -102,6 +104,8 @@ export interface DeckContext {
   csrf: string;
   closedLostReasons: string[];
   people: Person[];
+  /** Whether KB's suggest API is configured: the "Make suggestion" chip. */
+  suggest: boolean;
 }
 
 /** The page's pure helpers (client.ts), each as its own source text so the
@@ -150,6 +154,7 @@ export function renderCard(
     actionPath: ACTION_PATH,
     csrf: deck.csrf,
     macros: macroChips(card, deck.people),
+    suggest: deck.suggest ? suggestChipTemplate : "",
     reasons: deck.closedLostReasons
       .map((reason) => renderTemplate(reasonTemplate, { reason }))
       .join(""),
@@ -181,6 +186,7 @@ export function renderReview(
       helpers: clientScript(),
       signOutPath: SIGN_OUT_PATH,
       detailPath: DETAIL_PATH,
+      suggestPath: SUGGEST_PATH,
     }),
   );
 }

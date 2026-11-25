@@ -19,9 +19,10 @@ import {
   searchDeck,
   shrinkScale,
   submitFlow,
+  suggestFlow,
   visibleCount,
 } from "./client.ts";
-import type { SubmitEvent } from "./client.ts";
+import type { SubmitEvent, SuggestReply } from "./client.ts";
 import { clientScript } from "./pages.ts";
 
 const DECK = [
@@ -419,4 +420,97 @@ test("a stream cut off before its outcome is an error", async () => {
     readSubmit(streamOf('{"phase":"comment"}\n'), () => {}),
     /without an outcome/,
   );
+});
+
+/** A chip for suggestFlow: KB's answers scripted in order, with what the
+ * chip, the box and the result line went through. */
+function fakeChip(
+  opts: {
+    start?: () => Promise<SuggestReply>;
+    polls?: (SuggestReply | Error)[];
+  } = {},
+) {
+  const log: string[] = [];
+  const answers = [...(opts.polls ?? [])];
+  const chip = { log, filled: null as string | null, detail: "", waits: 0 };
+  const io = {
+    lock(busy: boolean) {
+      log.push(busy ? "lock" : "unlock");
+    },
+    start: opts.start ?? (async () => ({ ok: true, id: "job-1" })),
+    async poll(id: string) {
+      assert.equal(id, "job-1");
+      const next = answers.shift() ?? { ok: true, status: "pending" };
+      if (next instanceof Error) throw next;
+      return next;
+    },
+    async wait(ms: number) {
+      assert.equal(ms, 2000);
+      chip.waits++;
+    },
+    fill(text: string) {
+      chip.filled = text;
+      log.push("fill");
+    },
+    detail(text: string) {
+      chip.detail = text;
+    },
+  };
+  return { chip, io };
+}
+
+test("Make suggestion locks the chip, polls until done, then fills the box and gives the chip back", async () => {
+  const { chip, io } = fakeChip({
+    polls: [
+      { ok: true, status: "pending" },
+      { ok: true, status: "done", text: "@Kernel Bottie draft a nudge" },
+    ],
+  });
+  assert.equal(await suggestFlow(io), true);
+  assert.deepEqual(chip.log, ["lock", "unlock", "fill"]);
+  assert.equal(chip.filled, "@Kernel Bottie draft a nudge");
+  assert.equal(chip.waits, 2, "one wait before each poll");
+  assert.equal(chip.detail, "");
+});
+
+test("a refused start puts its sentence on the result line and gives the chip back", async () => {
+  const { chip, io } = fakeChip({
+    start: async () => ({ ok: false, message: "This page is stale." }),
+  });
+  assert.equal(await suggestFlow(io), false);
+  assert.deepEqual(chip.log, ["lock", "unlock"]);
+  assert.equal(chip.detail, "This page is stale.");
+  assert.equal(chip.filled, null);
+});
+
+test("a start lost to the network is a failure, not a silent spinner", async () => {
+  const { chip, io } = fakeChip({
+    start: async () => {
+      throw new TypeError("Failed to fetch");
+    },
+  });
+  assert.equal(await suggestFlow(io), false);
+  assert.match(chip.detail, /network error/);
+  assert.deepEqual(chip.log, ["lock", "unlock"]);
+});
+
+test("a poll that throws counts as pending; an error from KB ends it", async () => {
+  const { chip, io } = fakeChip({
+    polls: [
+      new TypeError("Failed to fetch"),
+      { ok: false, message: "KB could not make a suggestion: no comments yet" },
+    ],
+  });
+  assert.equal(await suggestFlow(io), false);
+  assert.equal(chip.waits, 2);
+  assert.equal(chip.detail, "KB could not make a suggestion: no comments yet");
+  assert.equal(chip.filled, null);
+});
+
+test("polling stops at the cap with the chip back and a reason", async () => {
+  const { chip, io } = fakeChip();
+  assert.equal(await suggestFlow(io, 2000, 5), false);
+  assert.equal(chip.waits, 5);
+  assert.match(chip.detail, /still thinking/);
+  assert.deepEqual(chip.log, ["lock", "unlock"]);
 });

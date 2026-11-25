@@ -11,27 +11,45 @@ export interface Env {
   /** Encrypts the session and OAuth-state cookies. Its own value — never a gate
    * worker's secret. */
   FOLLOWUP_SESSION_SECRET?: string;
+  /** Shared with kernelbot's api (its own FOLLOWUP_SUGGEST_SECRET) for the
+   * "Make suggestion" chip. Optional: while it is unset the chip is hidden and
+   * nothing else changes. */
+  FOLLOWUP_SUGGEST_SECRET?: string;
 }
 
 export interface Config {
   clientId: string;
   clientSecret: string;
   sessionSecret: string;
+  /** The x-followup-secret for KB's suggest API; absent means no chip. */
+  suggestSecret?: string;
 }
 
 /** The three secrets, or null when any is unset — the 503 "not configured yet"
- * page rather than a crash or a half-working sign-in. */
+ * page rather than a crash or a half-working sign-in. The suggest secret is not
+ * one of them: without it only the "Make suggestion" chip is missing. */
 export function configFrom(env: Env): Config | null {
   const clientId = env.AIRTABLE_CLIENT_ID?.trim();
   const clientSecret = env.AIRTABLE_CLIENT_SECRET?.trim();
   const sessionSecret = env.FOLLOWUP_SESSION_SECRET?.trim();
   if (!clientId || !clientSecret || !sessionSecret) return null;
-  return { clientId, clientSecret, sessionSecret };
+  const suggestSecret = env.FOLLOWUP_SUGGEST_SECRET?.trim();
+  return {
+    clientId,
+    clientSecret,
+    sessionSecret,
+    ...(suggestSecret ? { suggestSecret } : {}),
+  };
 }
+
+export const RECORD_ID = /^rec[A-Za-z0-9]{14}$/;
 
 export const ORIGIN = "https://snocap.vc";
 export const TOOL_PATH = "/fundraising/followup";
 export const OAUTH_PATH = `${TOOL_PATH}/oauth`;
+/** KB's "Make suggestion" API (kernelbot, src/local/api/routes/followup-suggest.ts):
+ * POST {campaign, requester} → 202 {id}; GET /<id> → {status, text | error}. */
+export const SUGGEST_API = "https://api.sno.llc/followup/suggest";
 export const REDIRECT_URI = `${ORIGIN}${OAUTH_PATH}/callback`;
 
 /** What a submit may carry. maxBytes is Airtable's uploadAttachment limit: the

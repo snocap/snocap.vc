@@ -27,6 +27,7 @@
 <div
   data-deck
   data-detail-path="{{ detailPath }}"
+  data-suggest-path="{{ suggestPath }}"
   data-csrf="{{ csrf }}"
   data-user="{{ userId }}"
   data-people="{{ people }}"
@@ -600,6 +601,53 @@
           fill(chip.dataset.template, mentions);
         });
       });
+      // "Make suggestion": KB drafts the comment, and it lands in the box by
+      // the macro rules. Nothing posts; a failure shows under the button.
+      const suggestChip = form.querySelector(".chip[data-suggest]");
+      let suggesting = false;
+      suggestChip?.addEventListener("click", () => {
+        if (busy || suggesting) return;
+        const path = deck.dataset.suggestPath;
+        const csrf = deck.dataset.csrf;
+        const campaign = form.elements.campaign.value;
+        suggestFlow({
+          lock: (on) => {
+            suggesting = on;
+            suggestChip.disabled = on || busy;
+            suggestChip.textContent = on ? "Thinking…" : "Make suggestion";
+          },
+          start: async () => {
+            const body = new FormData();
+            body.append("csrf", csrf);
+            body.append("campaign", campaign);
+            const res = await fetch(path, {
+              method: "POST",
+              headers: { Accept: "application/json" },
+              body,
+            });
+            return res.json();
+          },
+          poll: async (id) => {
+            const res = await fetch(path + "/" + encodeURIComponent(id), {
+              headers: { Accept: "application/json", "X-CSRF-Token": csrf },
+            });
+            return res.json();
+          },
+          wait: (ms) => new Promise((done) => setTimeout(done, ms)),
+          // KB writes mentions as @Name; the people named become real
+          // mentions on submit, like a picked one.
+          fill: (text) =>
+            fill(
+              text,
+              people.filter((p) => text.includes("@" + p.name)),
+            ),
+          detail: (text) => {
+            result.className = text ? "result error" : "result";
+            result.textContent = text;
+          },
+        });
+      });
+
       reasonPick.addEventListener("change", () => {
         if (!pendingReason || !reasonPick.value) return;
         fill(
@@ -623,6 +671,7 @@
         form
           .querySelectorAll(".chip[data-macro], .thumbs .remove")
           .forEach((control) => (control.disabled = on));
+        if (suggestChip) suggestChip.disabled = on || suggesting;
         form.classList.toggle("busy", on);
         if (on) closeList();
       }
