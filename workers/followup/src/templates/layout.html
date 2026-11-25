@@ -42,14 +42,40 @@
       .wide main {
         max-width: calc(var(--visible) * 416px);
       }
+      /* The deck page fills the screen: the nav sits at the bottom, and a card
+         grows down to it at most, then scrolls inside itself. A shorter card
+         ends at its own height. */
+      .js body {
+        height: 100vh;
+        height: 100dvh;
+        padding-bottom: 16px;
+      }
+      .js main {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .js main > * {
+        flex-shrink: 0;
+      }
       .js [data-deck] {
         display: grid;
         grid-template-columns: repeat(var(--visible, 1), minmax(0, 1fr));
+        grid-template-rows: minmax(0, 1fr);
         gap: 16px;
         align-items: start;
+        flex: 1 1 0;
+        min-height: 0;
       }
       .js [data-deck] > .card {
         grid-row: 1;
+        max-height: 100%;
+        /* Contains the absolutely placed file input, which would otherwise
+           escape the card scroller and stretch the page. */
+        position: relative;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
       .wide .card.current {
         border-color: #f15800;
@@ -157,6 +183,19 @@
         background: #151515;
         border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 18px 16px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      /* A URL in the text is one line, cut with an ellipsis at the card's
+         edge; the full address is its title and its target. */
+      a.text-link,
+      .contact .links a {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: bottom;
       }
       .js .card[hidden] {
         display: none;
@@ -233,6 +272,7 @@
       }
       .contacts {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 8px;
         margin-bottom: 8px;
       }
