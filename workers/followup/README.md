@@ -16,6 +16,8 @@ actions that write back to Airtable.
 | `GET …/campaign/<recId>` (session)       | The expanded card: contacts + Interactions and comments merged  |
 | `POST …/action` (session + CSRF)         | Attachments, then the comment; sets no dates                    |
 | `POST …/signout` (session + CSRF)        | Clears the session cookie                                       |
+| `POST …/suggest` (session + CSRF)        | Asks KB for a suggested comment; `202 {ok, id}`                 |
+| `GET …/suggest/<id>` (session + CSRF)    | That suggestion: `pending`, `done` with its text, or a reason   |
 
 ## No Airtable token of its own
 
@@ -157,6 +159,29 @@ mention and `{reason}` is a picked Closed Lost Reason.
 
 There is no Punt macro: every comment already gets a next touch from KB, a week out by default.
 
+**Make suggestion** is the one chip whose text KB writes. KB drafts the comment
+Jon would most likely write on this card, from the card's situation and Jon's
+own past Campaign comments on similar cards (kernelbot's campaign-tracker skill
+→ "Make suggestion"). Pressing it locks the chip as **Thinking…**; the page asks
+the Worker (`POST …/suggest`), which proxies to KB's API at
+`api.sno.llc/followup/suggest` with the shared `FOLLOWUP_SUGGEST_SECRET` and
+the signed-in Airtable user's email as the requester, then polls
+`GET …/suggest/<id>` every 2 seconds for up to 3 minutes. The text lands in the
+box by the same rules as a macro (`applyMacro`): it replaces the prefill or a
+macro's untouched text, otherwise it is appended. It never posts. A failure, or
+running out of polls, shows its reason under the button and gives the chip back
+(`suggestFlow`, `src/client.ts`; the proxy is `src/suggest.ts`). KB writes
+mentions as `@Name` (itself as `@Kernel Bottie`), so they become real
+mentions on submit like a picked one. Without the secret the chip is not
+rendered and both routes answer `404`; the deck is otherwise unchanged.
+
+**Chip colors mark the kind of action**, never the card. Macros are neutral
+(orange when pressed). **Attach** is dashed: it opens the file picker. **Violet**
+(`.chips .chip.ai`, one rule in `src/templates/layout.html`) means **"uses
+AI"**: KB writes what the chip produces, so read it before posting. It is the same
+on every card. Any future AI-driven chip takes the `ai` class and no color of
+its own.
+
 The Closed Lost Reasons are read from the base schema on every page load, never
 hardcoded or cached, so an option added in Airtable shows on the next reload.
 The options carry their own colors for both OS themes (an open select's popup
@@ -225,6 +250,15 @@ openssl rand -base64 48 | npx wrangler secret put FOLLOWUP_SESSION_SECRET
 `FOLLOWUP_SESSION_SECRET` is a fresh random value and never another worker's
 secret. Until all three are set, every path answers the `503` page. Rotating the
 session secret signs everyone out; nothing else is lost.
+
+A fourth, optional secret turns on **Make suggestion**. It is the same value as
+`FOLLOWUP_SUGGEST_SECRET` in kernelbot's `.env` (the api reads it per request):
+
+```bash
+npx wrangler secret put FOLLOWUP_SUGGEST_SECRET
+```
+
+Unset, the chip is hidden and nothing else changes.
 
 ## Deploying
 

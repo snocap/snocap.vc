@@ -28,6 +28,7 @@ import {
   FIELD,
   OAUTH_PATH,
   ORIGIN,
+  RECORD_ID,
   TOOL_PATH,
   configFrom,
 } from "./config.ts";
@@ -52,6 +53,7 @@ import {
   ACTION_PATH,
   DETAIL_PATH,
   SIGN_OUT_PATH,
+  SUGGEST_PATH,
   renderDetail,
   renderError,
   renderNoAccess,
@@ -78,6 +80,8 @@ import {
   sessionCookie,
 } from "./session.ts";
 import type { Session } from "./session.ts";
+import { pollSuggestion, startSuggestion } from "./suggest.ts";
+import type { SuggestOutcome } from "./suggest.ts";
 import { readCookie } from "../../shared/cookie.ts";
 
 const BASE_HEADERS = {
@@ -142,8 +146,6 @@ const CONTACT_FIELDS = [
 
 /** Collaborator fields whose people can be mentioned. */
 const PEOPLE_FIELDS = [FIELD.representative, FIELD.createdBy];
-
-const RECORD_ID = /^rec[A-Za-z0-9]{14}$/;
 
 /** A status that means "this account cannot open the base", not "try again". */
 function isNoAccess(err: unknown): boolean {
@@ -218,6 +220,7 @@ async function handleCallback(
 async function handleReview(
   airtable: Airtable,
   session: Session,
+  suggest: boolean,
 ): Promise<Response> {
   const campaigns = await airtable.listView(
     AIRTABLE.campaigns,
@@ -283,6 +286,7 @@ async function handleReview(
       csrf: session.csrf,
       closedLostReasons: selectOptions(schema, FIELD.closedLostReason),
       people,
+      suggest,
     }),
   );
 }
@@ -533,6 +537,42 @@ async function handleAction(
   return reply(outcome);
 }
 
+/** The "Make suggestion" chip's start (POST) and poll (GET), as JSON. Without
+ * the suggest secret the chip is not rendered and these answer 404. */
+async function handleSuggest(
+  request: Request,
+  path: string,
+  session: Session,
+  config: Config,
+): Promise<Response> {
+  const secret = config.suggestSecret;
+  let outcome: SuggestOutcome;
+  if (!secret) {
+    outcome = {
+      status: 404,
+      body: { ok: false, message: "Suggestions are not set up." },
+    };
+  } else if (request.method === "POST" && path === SUGGEST_PATH) {
+    outcome = await startSuggestion(request, session, secret);
+  } else if (request.method === "GET" && path !== SUGGEST_PATH) {
+    outcome = await pollSuggestion(
+      request,
+      session,
+      secret,
+      path.slice(SUGGEST_PATH.length + 1),
+    );
+  } else {
+    outcome = {
+      status: 405,
+      body: { ok: false, message: "Not a suggestion request." },
+    };
+  }
+  return Response.json(outcome.body, {
+    status: outcome.status,
+    headers: BASE_HEADERS,
+  });
+}
+
 async function route(
   request: Request,
   url: URL,
@@ -558,7 +598,7 @@ async function route(
     const message = stored
       ? "Your Airtable session ended. Sign in again."
       : undefined;
-    if (request.method === "POST" && wantsJson(request)) {
+    if (wantsJson(request)) {
       return json(
         {
           ok: false,
@@ -577,7 +617,11 @@ async function route(
   let response: Response;
   try {
     if (request.method === "GET" && isRoot) {
-      response = await handleReview(airtable, session);
+      response = await handleReview(
+        airtable,
+        session,
+        Boolean(config.suggestSecret),
+      );
     } else if (request.method === "GET" && path.startsWith(`${DETAIL_PATH}/`)) {
       response = await handleDetail(
         airtable,
@@ -585,6 +629,8 @@ async function route(
       );
     } else if (request.method === "POST" && path === ACTION_PATH) {
       response = await handleAction(request, airtable, session);
+    } else if (path === SUGGEST_PATH || path.startsWith(`${SUGGEST_PATH}/`)) {
+      response = await handleSuggest(request, path, session, config);
     } else if (request.method === "POST" && path === SIGN_OUT_PATH) {
       const form = await request.formData();
       if (!csrfOk(request, session, form.get("csrf"), ORIGIN)) {

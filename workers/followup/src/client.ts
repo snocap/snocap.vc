@@ -272,3 +272,73 @@ export async function submitFlow<F extends { name: string; size: number }>(
   io.posted();
   return true;
 }
+
+/** What KB's suggest routes answer: an `id` to a start, a `status` to a poll,
+ * or `ok: false` with the sentence to show. */
+export interface SuggestReply {
+  ok?: boolean;
+  id?: string;
+  status?: string;
+  text?: string;
+  message?: string;
+}
+
+/** What the page lends one press of "Make suggestion". */
+export interface SuggestIO {
+  /** Disables the chip and labels it "Thinking…"; `false` gives it back. */
+  lock(busy: boolean): void;
+  start(): Promise<SuggestReply>;
+  poll(id: string): Promise<SuggestReply>;
+  wait(ms: number): Promise<void>;
+  /** Puts the suggestion in the box by the macro rules (applyMacro). */
+  fill(text: string): void;
+  /** The sentence on the card's result line; "" clears it. */
+  detail(text: string): void;
+}
+
+/** One press of "Make suggestion": ask, then poll every `every` ms, at most
+ * `polls` times, until KB's text is ready, which goes in the box. It never
+ * posts. A poll that throws (a phone dropping the network for a moment)
+ * counts as still pending; a refusal, an error from KB or running out of
+ * polls puts the reason on the result line and gives the chip back. */
+export async function suggestFlow(
+  io: SuggestIO,
+  every = 2000,
+  polls = 90,
+): Promise<boolean> {
+  io.lock(true);
+  io.detail("");
+  const fail = (message: string): boolean => {
+    io.lock(false);
+    io.detail(message);
+    return false;
+  };
+  let started: SuggestReply;
+  try {
+    started = await io.start();
+  } catch {
+    return fail("The suggestion did not start: network error. Try again.");
+  }
+  if (!started.ok || !started.id) {
+    return fail(started.message || "KB could not start a suggestion.");
+  }
+  for (let i = 0; i < polls; i++) {
+    await io.wait(every);
+    let reply: SuggestReply;
+    try {
+      reply = await io.poll(started.id);
+    } catch {
+      continue;
+    }
+    if (!reply.ok)
+      return fail(reply.message || "KB could not make a suggestion.");
+    if (reply.status === "done" && reply.text) {
+      io.lock(false);
+      io.fill(reply.text);
+      return true;
+    }
+  }
+  return fail(
+    "KB is still thinking about this one. Try Make suggestion again in a minute.",
+  );
+}

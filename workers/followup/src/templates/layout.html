@@ -309,7 +309,7 @@
         color: #ddd;
         padding: 8px 11px;
       }
-      .chips .chip:active {
+      .chips .chip:not(.ai):active {
         border-color: #f15800;
         background: rgba(241, 88, 0, 0.15);
       }
@@ -427,6 +427,13 @@
       .actions.dropping {
         outline: 2px dashed #f15800;
         outline-offset: 4px;
+      }
+      /* The "uses AI" marker: a chip whose text KB writes. One fixed violet on
+         every card, never a macro's orange, for every AI-driven chip. */
+      .chips .chip.ai {
+        border-color: rgba(167, 139, 250, 0.75);
+        color: #c4b5fd;
+        background: rgba(167, 139, 250, 0.1);
       }
       .chips .attach {
         cursor: pointer;
