@@ -61,21 +61,45 @@
       .js [data-deck] {
         display: grid;
         grid-template-columns: repeat(var(--visible, 1), minmax(0, 1fr));
+        /* The page script sets this row's min-height to the selected card's
+           minimum (info minimum + response area), so on a screen too small for
+           it the page scrolls instead of hiding either part. */
         grid-template-rows: minmax(0, 1fr);
         gap: 16px;
         align-items: start;
         flex: 1 1 0;
-        min-height: 0;
       }
+      /* A card is its info area over its response area. Only the info area
+         scrolls; the response area (the chips, box and button under the rule)
+         is always in view, and the info area always keeps a minimum height. */
       .js [data-deck] > .card {
         grid-row: 1;
         max-height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
         /* Contains the absolutely placed file input, which would otherwise
-           escape the card scroller and stretch the page. */
+           escape the card and stretch the page. */
         position: relative;
+        overflow: hidden;
+      }
+      .js .card-body {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        flex: 1 1 auto;
+      }
+      .js .card-info {
+        flex: 1 1 auto;
+        min-height: 180px;
         overflow-x: hidden;
         overflow-y: auto;
         overscroll-behavior: contain;
+        padding: 18px 16px 4px;
+      }
+      .js .card .actions {
+        flex: none;
+        padding: 14px 16px 18px;
       }
       .wide .card.current {
         border-color: #f15800;

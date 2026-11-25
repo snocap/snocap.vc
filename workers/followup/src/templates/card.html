@@ -1,31 +1,33 @@
 <article class="card" id="c-{{ id }}" data-id="{{ id }}">
   <div class="card-body">
-    <div class="mono">{{ position }} of {{ total }} · {{ dealStatus }}</div>
-    <h2>{{ name }}</h2>
-    <div class="lp">{{ lp }}</div>
-    <dl class="facts">
-      <div>
-        <dt>Value</dt>
-        <dd>{{ value }}</dd>
-      </div>
-      <div>
-        <dt>Probability</dt>
-        <dd>{{ probability }}</dd>
-      </div>
-      <div class="{{ touchClass }}">
-        <dt>Next touch</dt>
-        <dd>{{ nextTouch }}</dd>
-      </div>
-      <div>
-        <dt>Rep</dt>
-        <dd>{{ representative }}</dd>
-      </div>
-    </dl>
-    <div class="latest">{{{ latest }}}</div>
-    <details class="more">
-      <summary>History, comments &amp; contacts</summary>
-      <div data-detail>Loading…</div>
-    </details>
+    <div class="card-info">
+      <div class="mono">{{ position }} of {{ total }} · {{ dealStatus }}</div>
+      <h2>{{ name }}</h2>
+      <div class="lp">{{ lp }}</div>
+      <dl class="facts">
+        <div>
+          <dt>Value</dt>
+          <dd>{{ value }}</dd>
+        </div>
+        <div>
+          <dt>Probability</dt>
+          <dd>{{ probability }}</dd>
+        </div>
+        <div class="{{ touchClass }}">
+          <dt>Next touch</dt>
+          <dd>{{ nextTouch }}</dd>
+        </div>
+        <div>
+          <dt>Rep</dt>
+          <dd>{{ representative }}</dd>
+        </div>
+      </dl>
+      <div class="latest">{{{ latest }}}</div>
+      <details class="more">
+        <summary>History, comments &amp; contacts</summary>
+        <div data-detail>Loading…</div>
+      </details>
+    </div>
     <form
       class="actions"
       method="post"

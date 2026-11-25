@@ -38,12 +38,17 @@ On a phone the deck shows one card: swipe, or the **First / Prev / Next / Last**
 buttons under it. On a keyboard: ← → (or j k) for Prev/Next, ↑ and **Home** for
 First, ↓ and **End** for Last. Moving between cards never puts the caret in
 the comment box, so the arrow keys keep paging; the one exception is the
-auto-advance after **Post comment**, which lands in the next card's box ready to
-type.
+auto-advance after **Post comment**, which lands in the next card's box with its
+whole text (the KB prefill) selected: typing replaces it, and tapping or →
+first keeps it and appends.
 
-The page fills the screen with the nav pinned at the bottom. A card grows down
-to the nav at most and then scrolls inside itself; a shorter card ends at its own
-height. In the card, the "Last:" line, the timeline's titles and bodies show
+The page fills the screen with the nav pinned at the bottom. A card is its info
+area (status, facts, "Last:", history) over its response area (the macros, box
+and button, under the rule). The card grows down to the nav at most; past that
+only the info area scrolls, so the response area is always in view. A shorter
+card ends at its own height. The info area never shrinks below 180px: the page
+script holds the deck at that plus the selected card's response area
+(`fitMinimum`), so on a screen too short for both the page scrolls instead. In the card, the "Last:" line, the timeline's titles and bodies show
 any `http(s)://` or `www.` URL as a link opening a new tab (`src/linkify.ts`),
 and a long one is cut to one line with an ellipsis at the card's edge, as are
 the contacts' link buttons.
